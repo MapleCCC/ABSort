@@ -46,6 +46,24 @@ def absort_decls(decls: List[TYPE_DECL_STMT]) -> List[TYPE_DECL_STMT]:
     return []
 
 
+def transform(top_level_stmts: List[ast.stmt]) -> List[ast.stmt]:
+    new_stmts = []
+    buffer = []
+    for stmt in top_level_stmts:
+        if isinstance(stmt, DECL_STMT_CLASSES):
+            buffer.append(stmt)
+        else:
+            if buffer:
+                new_stmts.extend(absort_decls(buffer))
+                buffer.clear()
+            new_stmts.append(stmt)
+    if buffer:
+        new_stmts.extend(absort_decls(buffer))
+        # FIXME no need to clear
+        buffer.clear()
+    return new_stmts
+
+
 @click.command()
 @click.argument("file")
 def main(file: str) -> None:
@@ -59,19 +77,7 @@ def main(file: str) -> None:
     if len(decl_names) != len(set(decl_names)):
         raise ValueError("Name redefinition exists. Not supported yet.")
 
-    new_stmts = []
-    buffer = []
-    for stmt in top_level_stmts:
-        if isinstance(stmt, DECL_STMT_CLASSES):
-            buffer.append(stmt)
-        else:
-            if buffer:
-                new_stmts.extend(absort_decls(buffer))
-                buffer.clear()
-            new_stmts.append(stmt)
-    if buffer:
-        new_stmts.extend(absort_decls(buffer))
-        buffer.clear()
+    new_stmts = transform(top_level_stmts)
 
 
 if __name__ == "__main__":
