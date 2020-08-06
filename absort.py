@@ -54,6 +54,11 @@ def main(file: str) -> None:
 
     top_level_stmts = tree.body
 
+    decls = [stmt for stmt in top_level_stmts if isinstance(stmt, DECL_STMT_CLASSES)]
+    decl_names = [decl.name for decl in decls]
+    if len(decl_names) != len(set(decl_names)):
+        raise ValueError("Name redefinition exists. Not supported yet.")
+
     new_stmts = []
     buffer = []
     for stmt in top_level_stmts:
