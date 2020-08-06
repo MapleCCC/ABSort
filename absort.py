@@ -25,17 +25,17 @@ def get_dependency_of_decl(decl: TYPE_DECL_STMT) -> Set[str]:
     with TemporaryDirectory() as tempdir:
         tempfile = Path(tempdir) / "file.py"
         tempfile.write_text(src, encoding="utf-8")
-        lint_stdout, lint_stderr = epylint.py_run(str(tempfile), return_std=True)  # type: ignore
+        # cli = f"{tempfile} --errors-only --output-format=parseable --from-stdin \n{src}"
+        cli = f"{tempfile} --errors-only --output-format=parseable"
+        lint_stdout, lint_stderr = epylint.py_run(cli, return_std=True)  # type: ignore
         out = lint_stdout.read()
         err = lint_stderr.read()
         assert not err
         for line in out.splitlines():
-            m = re.fullmatch(
-                r".*: error \(E0602, undefined-variable, (?P<declname>\w+)\) Undefined variable '(?P<dependency>\w+)'",
-                line,
-            )
-            if m:
-                deps.add(m.group("dependency"))
+            pattern = r".*: error \(E0602, undefined-variable, (?P<declname>\w+)\) Undefined variable '(?P<dependency>\w+)'"
+            matchobj = re.fullmatch(pattern, line)
+            if matchobj:
+                deps.add(matchobj.group("dependency"))
         return deps
 
 
