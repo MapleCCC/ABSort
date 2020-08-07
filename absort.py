@@ -89,11 +89,11 @@ def transform(top_level_stmts: List[ast.stmt]) -> List[ast.stmt]:
 def ast_remove_location_info(node: ast.AST) -> None:
     """ in-place """
     nodes = ast_ordered_walk(node)
+    location_info_attrs = ("lineno", "col_offset", "end_lineno", "end_col_offset")
     for node in nodes:
-        delattr(node, "lineno")
-        delattr(node, "col_offset")
-        delattr(node, "end_lineno")
-        delattr(node, "end_col_offset")
+        for attr in location_info_attrs:
+            if hasattr(node, attr):
+                delattr(node, attr)
 
 
 def preliminary_sanity_check(top_level_stmts: List[ast.stmt]) -> None:
