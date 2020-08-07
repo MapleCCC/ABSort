@@ -82,10 +82,7 @@ def transform(top_level_stmts: List[ast.stmt]) -> List[ast.stmt]:
                 new_stmts.extend(absort_decls(buffer))
                 buffer.clear()
             new_stmts.append(stmt)
-    if buffer:
-        new_stmts.extend(absort_decls(buffer))
-        # FIXME no need to clear
-        buffer.clear()
+    new_stmts.extend(absort_decls(buffer))
     return new_stmts
 
 
