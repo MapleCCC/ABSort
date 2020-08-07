@@ -86,20 +86,36 @@ def transform(top_level_stmts: List[ast.stmt]) -> List[ast.stmt]:
     return new_stmts
 
 
+def ast_remove_location_info(node: ast.AST) -> None:
+    """ in-place """
+    nodes = ast_ordered_walk(node)
+    for node in nodes:
+        delattr(node, "lineno")
+        delattr(node, "col_offset")
+        delattr(node, "end_lineno")
+        delattr(node, "end_col_offset")
+
+
+# TODO click.Path
 @click.command()
 @click.argument("file")
 def main(file: str) -> None:
     content = Path(file).read_text(encoding="utf-8")
-    tree = ast.parse(content)
+    module_tree = ast.parse(content)
 
-    top_level_stmts = tree.body
+    top_level_stmts = module_tree.body
 
     decls = [stmt for stmt in top_level_stmts if isinstance(stmt, DECL_STMT_CLASSES)]
-    decl_names = [decl.name for decl in decls]
-    if len(decl_names) != len(set(decl_names)):
+    decl_ids = [decl.name for decl in decls]
+    if len(decl_ids) != len(set(decl_ids)):
         raise ValueError("Name redefinition exists. Not supported yet.")
 
     new_stmts = transform(top_level_stmts)
+
+    new_module_tree = ast.Module(body=new_stmts)
+    ast_remove_location_info(new_module_tree)
+    ast.fix_missing_locations(new_module_tree)
+    print(astor.to_source(new_module_tree))
 
 
 if __name__ == "__main__":
