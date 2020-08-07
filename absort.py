@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import ast
-from pathlib import Path
+import io
 from pprint import PrettyPrinter
 from typing import Iterator, List, Set, Union
 
@@ -104,11 +104,9 @@ def preliminary_sanity_check(top_level_stmts: List[ast.stmt]) -> None:
 
 
 @click.command()
-@click.argument("filename", type=click.Path(exists=True))
-def main(file: str) -> None:
-    content = Path(file).read_text(encoding="utf-8")
-
-    module_tree = ast.parse(content)
+@click.argument("file", type=click.File("r", encoding="utf-8"))
+def main(file: io.TextIOWrapper) -> None:
+    module_tree = ast.parse(file.read())
 
     top_level_stmts = module_tree.body
 
