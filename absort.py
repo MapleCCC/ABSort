@@ -96,6 +96,13 @@ def ast_remove_location_info(node: ast.AST) -> None:
         delattr(node, "end_col_offset")
 
 
+def preliminary_sanity_check(top_level_stmts: List[ast.stmt]) -> None:
+    decls = [stmt for stmt in top_level_stmts if isinstance(stmt, DECL_STMT_CLASSES)]
+    decl_ids = [decl.name for decl in decls]
+    if len(decl_ids) != len(set(decl_ids)):
+        raise ValueError("Name redefinition exists. Not supported yet.")
+
+
 # TODO click.Path
 @click.command()
 @click.argument("file")
@@ -105,10 +112,7 @@ def main(file: str) -> None:
 
     top_level_stmts = module_tree.body
 
-    decls = [stmt for stmt in top_level_stmts if isinstance(stmt, DECL_STMT_CLASSES)]
-    decl_ids = [decl.name for decl in decls]
-    if len(decl_ids) != len(set(decl_ids)):
-        raise ValueError("Name redefinition exists. Not supported yet.")
+    preliminary_sanity_check(top_level_stmts)
 
     new_stmts = transform(top_level_stmts)
 
