@@ -40,10 +40,10 @@ def get_dependency_of_decl(decl: TYPE_DECL_STMT) -> Set[str]:
     descendants = ast_ordered_walk(decl)
 
     # TODO rename to bound_ids
-    store_cxt_name_ids = []
+    store_cxt_name_ids = set()
     if isinstance(decl, (ast.FunctionDef, ast.AsyncFunctionDef)):
         arg_ids = get_funcdef_arg_ids(decl)
-        store_cxt_name_ids.extend(arg_ids)
+        store_cxt_name_ids.update(arg_ids)
 
     names = [node for node in descendants if isinstance(node, ast.Name)]
 
@@ -51,7 +51,7 @@ def get_dependency_of_decl(decl: TYPE_DECL_STMT) -> Set[str]:
 
     for name in names:
         if isinstance(name.ctx, ast.Store):
-            store_cxt_name_ids.append(name.id)
+            store_cxt_name_ids.update(name.id)
         elif isinstance(name.ctx, ast.Load):
             if name.id in store_cxt_name_ids:
                 # FIXME IT'S NOT THAT SIMPLE!!!
