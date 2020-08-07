@@ -72,8 +72,8 @@ def absort_decls(decls: List[TYPE_DECL_STMT]) -> List[TYPE_DECL_STMT]:
 
 
 def transform(top_level_stmts: List[ast.stmt]) -> List[ast.stmt]:
-    new_stmts = []
-    buffer = []
+    new_stmts: List[ast.stmt] = []
+    buffer: List[TYPE_DECL_STMT] = []
     for stmt in top_level_stmts:
         if isinstance(stmt, DECL_STMT_CLASSES):
             buffer.append(stmt)
