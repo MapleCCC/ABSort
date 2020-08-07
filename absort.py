@@ -1,16 +1,12 @@
 #!/usr/bin/env python3
 
-import atexit
 import ast
-import re
 from pathlib import Path
 from pprint import PrettyPrinter
-from tempfile import TemporaryDirectory
-from typing import List, Set, Union
+from typing import Iterator, List, Set, Union
 
 import astor
 import click
-from pylint import epylint
 
 pprint = PrettyPrinter().pprint
 
@@ -19,27 +15,52 @@ DECL_STMT_CLASSES = (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)
 TYPE_DECL_STMT = Union[ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef]
 
 
-tempdir = TemporaryDirectory()
-# FIXME No need to explicitly cleanup.
-atexit.register(tempdir.cleanup)
-tempfile = Path(tempdir.name) / "file.py"
+def ast_ordered_walk(node: ast.AST) -> Iterator[ast.AST]:
+    """ Depth-First Traversal of the AST """
+    children = ast.iter_child_nodes(node)
+    for child in children:
+        yield child
+        yield from ast_ordered_walk(child)
+
+
+def get_funcdef_arg_ids(
+    funcdef: Union[ast.FunctionDef, ast.AsyncFunctionDef]
+) -> List[str]:
+    arguments = funcdef.args
+    args = arguments.posonlyargs + arguments.args + arguments.kwonlyargs
+    if arguments.vararg:
+        args.append(arguments.vararg)
+    if arguments.kwarg:
+        args.append(arguments.kwarg)
+    arg_ids = [arg.arg for arg in args]
+    return arg_ids
 
 
 def get_dependency_of_decl(decl: TYPE_DECL_STMT) -> Set[str]:
-    src = astor.to_source(decl)
+    descendants = ast_ordered_walk(decl)
+
+    # TODO rename to bound_ids
+    store_cxt_name_ids = []
+    if isinstance(decl, (ast.FunctionDef, ast.AsyncFunctionDef)):
+        arg_ids = get_funcdef_arg_ids(decl)
+        store_cxt_name_ids.extend(arg_ids)
+
+    names = [node for node in descendants if isinstance(node, ast.Name)]
+
     deps = set()
-    tempfile.write_text(src, encoding="utf-8")
-    # cli = f"{tempfile} --errors-only --output-format=parseable --from-stdin \n{src}"
-    cli = f"{tempfile} --errors-only --output-format=parseable"
-    lint_stdout, lint_stderr = epylint.py_run(cli, return_std=True)  # type: ignore
-    out = lint_stdout.read()
-    err = lint_stderr.read()
-    assert not err
-    for line in out.splitlines():
-        pattern = r".*: error \(E0602, undefined-variable, (?P<declname>\w+)\) Undefined variable '(?P<dependency>\w+)'"
-        matchobj = re.fullmatch(pattern, line)
-        if matchobj:
-            deps.add(matchobj.group("dependency"))
+
+    for name in names:
+        if isinstance(name.ctx, ast.Store):
+            store_cxt_name_ids.append(name.id)
+        elif isinstance(name.ctx, ast.Load):
+            if name.id in store_cxt_name_ids:
+                # FIXME IT'S NOT THAT SIMPLE!!!
+                pass
+            else:
+                deps.add(name.id)
+        else:
+            raise NotImplementedError
+
     return deps
 
 
