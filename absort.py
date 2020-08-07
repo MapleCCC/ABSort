@@ -103,11 +103,11 @@ def preliminary_sanity_check(top_level_stmts: List[ast.stmt]) -> None:
         raise ValueError("Name redefinition exists. Not supported yet.")
 
 
-# TODO click.Path
 @click.command()
-@click.argument("file")
+@click.argument("filename", type=click.Path(exists=True))
 def main(file: str) -> None:
     content = Path(file).read_text(encoding="utf-8")
+
     module_tree = ast.parse(content)
 
     top_level_stmts = module_tree.body
