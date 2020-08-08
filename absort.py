@@ -2,17 +2,24 @@
 
 import ast
 import io
-from pprint import PrettyPrinter
 from typing import Iterator, List, Set, Union
 
 import astor
+import black
 import click
-
-pprint = PrettyPrinter().pprint
 
 
 DECL_STMT_CLASSES = (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)
 TYPE_DECL_STMT = Union[ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef]
+
+
+def ast_pretty_dump(node: ast.AST) -> str:
+    dumped = ast.dump(node)
+    try:
+        prettied = black.format_str(dumped, mode=black.FileMode())
+    except AttributeError:
+        raise RuntimeError("black version incompatible")
+    return prettied
 
 
 def ast_ordered_walk(node: ast.AST) -> Iterator[ast.AST]:
