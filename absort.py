@@ -2,32 +2,15 @@
 
 import ast
 import io
-from typing import Iterator, List, Set, Union
+from typing import List, Set, Union
 
 import astor
-import black
 import click
 
+from ast_utils import ast_ordered_walk, ast_pretty_dump, ast_remove_location_info
 
 DECL_STMT_CLASSES = (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)
 TYPE_DECL_STMT = Union[ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef]
-
-
-def ast_pretty_dump(node: ast.AST) -> str:
-    dumped = ast.dump(node)
-    try:
-        prettied = black.format_str(dumped, mode=black.FileMode())
-    except AttributeError:
-        raise RuntimeError("black version incompatible")
-    return prettied
-
-
-def ast_ordered_walk(node: ast.AST) -> Iterator[ast.AST]:
-    """ Depth-First Traversal of the AST """
-    children = ast.iter_child_nodes(node)
-    for child in children:
-        yield child
-        yield from ast_ordered_walk(child)
 
 
 def get_funcdef_arg_ids(
@@ -91,16 +74,6 @@ def transform(top_level_stmts: List[ast.stmt]) -> List[ast.stmt]:
             new_stmts.append(stmt)
     new_stmts.extend(absort_decls(buffer))
     return new_stmts
-
-
-def ast_remove_location_info(node: ast.AST) -> None:
-    """ in-place """
-    nodes = ast_ordered_walk(node)
-    location_info_attrs = ("lineno", "col_offset", "end_lineno", "end_col_offset")
-    for node in nodes:
-        for attr in location_info_attrs:
-            if hasattr(node, attr):
-                delattr(node, attr)
 
 
 def preliminary_sanity_check(top_level_stmts: List[ast.stmt]) -> None:
