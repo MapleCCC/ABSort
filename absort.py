@@ -14,7 +14,7 @@ TYPE_DECL_STMT = Union[ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef]
 
 
 def get_funcdef_arg_ids(
-    funcdef: Union[ast.FunctionDef, ast.AsyncFunctionDef]
+    funcdef: Union[ast.FunctionDef, ast.AsyncFunctionDef, ast.Lambda]
 ) -> List[str]:
     arguments = funcdef.args
     args = arguments.posonlyargs + arguments.args + arguments.kwonlyargs
