@@ -13,7 +13,7 @@ DECL_STMT_CLASSES = (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)
 TYPE_DECL_STMT = Union[ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef]
 
 
-def get_funcdef_arg_ids(
+def get_funcdef_arg_names(
     funcdef: Union[ast.FunctionDef, ast.AsyncFunctionDef, ast.Lambda]
 ) -> List[str]:
     arguments = funcdef.args
@@ -22,16 +22,15 @@ def get_funcdef_arg_ids(
         args.append(arguments.vararg)
     if arguments.kwarg:
         args.append(arguments.kwarg)
-    arg_ids = [arg.arg for arg in args]
-    return arg_ids
+    arg_names = [arg.arg for arg in args]
+    return arg_names
 
 
-# TODO rename to less obscure function name
-def get_descendant_name_ids(node: ast.AST) -> Set[str]:
+def get_descendant_names(node: ast.AST) -> Set[str]:
     descendants = ast.walk(node)
     names = [node for node in descendants if isinstance(node, ast.Name)]
-    ids = {name.id for name in names}
-    return ids
+    identifiers = {name.id for name in names}
+    return identifiers
 
 
 # TODO rename dependency to undefined-variable/name/symbol
@@ -55,9 +54,9 @@ class GetDependencyVisitor(ast.NodeVisitor):
         return self._deps
 
     # FIXME no need to traverse in reverse order
-    def _env_lookup(self, id: str) -> bool:
+    def _env_lookup(self, name: str) -> bool:
         for env in self._env_list[::-1]:
-            if id in env:
+            if name in env:
                 return True
         return False
 
@@ -92,8 +91,8 @@ class GetDependencyVisitor(ast.NodeVisitor):
 
         self._env_list.append(set())
 
-        arg_ids = get_funcdef_arg_ids(node)
-        self._env_list[-1].update(arg_ids)
+        arg_names = get_funcdef_arg_names(node)
+        self._env_list[-1].update(arg_names)
 
         for stmt in node.body:
             self.visit(stmt)
@@ -109,8 +108,8 @@ class GetDependencyVisitor(ast.NodeVisitor):
 
         self._env_list.append(set())
 
-        arg_ids = get_funcdef_arg_ids(node)
-        self._env_list[-1].update(arg_ids)
+        arg_names = get_funcdef_arg_names(node)
+        self._env_list[-1].update(arg_names)
 
         for stmt in node.body:
             self.visit(stmt)
@@ -142,8 +141,8 @@ class GetDependencyVisitor(ast.NodeVisitor):
         self._env_list.append(set())
 
         # FIXME I am not sure this is correct
-        target_name_ids = get_descendant_name_ids(node.target)
-        self._env_list[-1].update(target_name_ids)
+        target_names = get_descendant_names(node.target)
+        self._env_list[-1].update(target_names)
 
         for stmt in node.body:
             self.visit(stmt)
@@ -161,8 +160,8 @@ class GetDependencyVisitor(ast.NodeVisitor):
         self._env_list.append(set())
 
         # FIXME I am not sure this is correct
-        target_name_ids = get_descendant_name_ids(node.target)
-        self._env_list[-1].update(target_name_ids)
+        target_names = get_descendant_names(node.target)
+        self._env_list[-1].update(target_names)
 
         for stmt in node.body:
             self.visit(stmt)
@@ -213,9 +212,9 @@ class GetDependencyVisitor(ast.NodeVisitor):
             optional_vars = withitem.optional_vars
             if optional_vars:
                 # FIXME I am not sure this is correct
-                optional_var_name_ids = get_descendant_name_ids(optional_vars)
+                optional_var_names = get_descendant_names(optional_vars)
                 # self._env_list[-1].update(optional_var_name_ids)
-                introduced_names.update(optional_var_name_ids)
+                introduced_names.update(optional_var_names)
 
         self._env_list.append(set())
 
@@ -235,9 +234,9 @@ class GetDependencyVisitor(ast.NodeVisitor):
             optional_vars = withitem.optional_vars
             if optional_vars:
                 # FIXME I am not sure this is correct
-                optional_var_name_ids = get_descendant_name_ids(optional_vars)
+                optional_var_names = get_descendant_names(optional_vars)
                 # self._env_list[-1].update(optional_var_name_ids)
-                introduced_names.update(optional_var_name_ids)
+                introduced_names.update(optional_var_names)
 
         self._env_list.append(set())
 
@@ -283,8 +282,8 @@ class GetDependencyVisitor(ast.NodeVisitor):
     def visit_Lambda(self, node: ast.Lambda) -> None:
         self._env_list.append(set())
 
-        arg_ids = get_funcdef_arg_ids(node)
-        self._env_list[-1].update(arg_ids)
+        arg_names = get_funcdef_arg_names(node)
+        self._env_list[-1].update(arg_names)
 
         self.visit(node.body)
 
@@ -313,15 +312,15 @@ class GetDependencyVisitor(ast.NodeVisitor):
 
     def visit_Delete(self, node: ast.Delete) -> None:
         # FIXME I am not sure this is correct
-        name_ids = get_descendant_name_ids(node)
-        for id in name_ids:
+        to_delete_names = get_descendant_names(node)
+        for name in to_delete_names:
             # FIXME we need to change the lookup scope to the scopes that are
             # allowed by the `del` keyword, as per the Python language grammar.
-            if id in self._env_list[-1]:
-                self._env_list[-1].remove(id)
+            if name in self._env_list[-1]:
+                self._env_list[-1].remove(name)
             else:
                 # there is no corresponding name in local scope
-                self._deps.add(id)
+                self._deps.add(name)
 
     def visit_Import(self, node: ast.Import) -> None:
         aliases = node.names
