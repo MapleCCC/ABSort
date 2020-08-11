@@ -315,9 +315,13 @@ class GetDependencyVisitor(ast.NodeVisitor):
         # FIXME I am not sure this is correct
         name_ids = get_descendant_name_ids(node)
         for id in name_ids:
-            # FIXME Should we use set.remove (raise KeyError if not contained) or
-            # set.discard (remove if present)?
-            self._env_list[-1].remove(id)
+            # FIXME we need to change the lookup scope to the scopes that are
+            # allowed by the `del` keyword, as per the Python language grammar.
+            if id in self._env_list[-1]:
+                self._env_list[-1].remove(id)
+            else:
+                # there is no corresponding name in local scope
+                self._deps.add(id)
 
     def visit_Import(self, node: ast.Import) -> None:
         aliases = node.names
@@ -335,13 +339,26 @@ class GetDependencyVisitor(ast.NodeVisitor):
             else:
                 self._env_list[-1].add(alias.name)
 
-    # FIXME what if there is no corresponding name in outter scopes?
     def visit_Global(self, node: ast.Global) -> None:
-        self._env_list[-1].update(node.names)
+        for name in node.names:
+            # FIXME we need to narrow down the lookup scope to global scope, the scope
+            # that are allowed by the `global` keyword, as per the Python language
+            # grammar.
+            if self._env_lookup(name):
+                self._env_list[-1].add(name)
+            else:
+                # there is no corresponding name in outter scopes
+                self._deps.add(name)
 
-    # FIXME what if there is no corresponding name in outter scopes?
     def visit_Nonlocal(self, node: ast.Nonlocal) -> None:
-        self._env_list[-1].update(node.names)
+        for name in node.names:
+            # FIXME we need to narrow down the lookup scope to the scopes that are
+            # allowed by the `nonlocal` keyword, as per the Python language grammar.
+            if self._env_lookup(name):
+                self._env_list[-1].add(name)
+            else:
+                # there is no corresponding name in outter scopes
+                self._deps.add(name)
 
     # TODO fill and complete
 
