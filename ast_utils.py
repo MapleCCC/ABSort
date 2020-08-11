@@ -7,6 +7,8 @@ __all__ = ["ast_pretty_dump", "ast_ordered_walk", "ast_remove_location_info"]
 
 
 def ast_pretty_dump(node: ast.AST, *args: Any, **kwargs: Any) -> str:
+    """ Use black formatting library to prettify the dumped AST """
+
     dumped = ast.dump(node, *args, **kwargs)
     try:
         prettied = black.format_str(dumped, mode=black.FileMode())
@@ -23,6 +25,7 @@ def ast_ordered_walk(node: ast.AST) -> Iterator[ast.AST]:
         yield from ast_ordered_walk(child)
 
 
+# TODO Alternatively, we can have a non-in-place version. Try to compare the benefits.
 def ast_remove_location_info(node: ast.AST) -> None:
     """ in-place """
     nodes = ast_ordered_walk(node)

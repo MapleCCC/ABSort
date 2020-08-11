@@ -36,6 +36,7 @@ def get_descendant_names(node: ast.AST) -> Set[str]:
 # TODO rename dependency to undefined-variable/name/symbol
 # TODO order by their appearance in https://docs.python.org/3/library/ast.html#abstract-grammar
 # TODO add runtime type checking
+# TODO fill in docstring to elaborate on details.
 class GetDependencyVisitor(ast.NodeVisitor):
     """
 
@@ -72,7 +73,7 @@ class GetDependencyVisitor(ast.NodeVisitor):
             else:
                 self._deps.add(node.id)
         else:
-            # TODO
+            # TODO fill in cases for contexts Del, AugLoad, AugStore, Param
             raise NotImplementedError
 
     ########################################################################
@@ -213,7 +214,6 @@ class GetDependencyVisitor(ast.NodeVisitor):
             if optional_vars:
                 # FIXME I am not sure this is correct
                 optional_var_names = get_descendant_names(optional_vars)
-                # self._env_list[-1].update(optional_var_name_ids)
                 introduced_names.update(optional_var_names)
 
         self._env_list.append(set())
@@ -235,7 +235,6 @@ class GetDependencyVisitor(ast.NodeVisitor):
             if optional_vars:
                 # FIXME I am not sure this is correct
                 optional_var_names = get_descendant_names(optional_vars)
-                # self._env_list[-1].update(optional_var_name_ids)
                 introduced_names.update(optional_var_names)
 
         self._env_list.append(set())
@@ -260,11 +259,15 @@ class GetDependencyVisitor(ast.NodeVisitor):
         for handler in handlers:
             if handler.type:
                 self.visit(handler.type)
+
             self._env_list.append(set())
+
             if handler.name:
                 self._env_list[-1].add(handler.name)
+
             for stmt in handler.body:
                 self.visit(stmt)
+
             self._env_list.pop()
 
         self._env_list.append(set())
@@ -312,6 +315,9 @@ class GetDependencyVisitor(ast.NodeVisitor):
 
     def visit_Delete(self, node: ast.Delete) -> None:
         # FIXME I am not sure this is correct
+        # WARNING: this is not correct. This code currently can't handle the case of
+        # deleting attribute references, subscriptions, slicing, etc.
+        # e.g. `del a.b, a[1], a[1:2]`
         to_delete_names = get_descendant_names(node)
         for name in to_delete_names:
             # FIXME we need to change the lookup scope to the scopes that are
@@ -400,6 +406,9 @@ def preliminary_sanity_check(top_level_stmts: List[ast.stmt]) -> None:
 
 @click.command()
 @click.argument("file", type=click.File("r", encoding="utf-8"))
+# TODO in-place
+# TODO multi thread
+# TODO fix main to bottom
 def main(file: io.TextIOWrapper) -> None:
     module_tree = ast.parse(file.read())
 
@@ -410,6 +419,7 @@ def main(file: io.TextIOWrapper) -> None:
     new_stmts = transform(top_level_stmts)
 
     new_module_tree = ast.Module(body=new_stmts)
+
     ast_remove_location_info(new_module_tree)
     ast.fix_missing_locations(new_module_tree)
     print(astor.to_source(new_module_tree))
