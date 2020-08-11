@@ -15,14 +15,14 @@ TYPE_DECL_STMT = Union[ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef]
 
 def get_funcdef_arg_names(
     funcdef: Union[ast.FunctionDef, ast.AsyncFunctionDef, ast.Lambda]
-) -> List[str]:
+) -> Set[str]:
     arguments = funcdef.args
     args = arguments.posonlyargs + arguments.args + arguments.kwonlyargs
     if arguments.vararg:
         args.append(arguments.vararg)
     if arguments.kwarg:
         args.append(arguments.kwarg)
-    arg_names = [arg.arg for arg in args]
+    arg_names = {arg.arg for arg in args}
     return arg_names
 
 
