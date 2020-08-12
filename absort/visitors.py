@@ -84,12 +84,12 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
                     return True
             return False
 
-        in_decl_context = False
+        within_decl_context = False
         for scope_ctx in self._scope_context_stack:
             if scope_ctx in (ScopeContext.Function, ScopeContext.Class):
-                in_decl_context = True
+                within_decl_context = True
 
-        if in_decl_context:
+        if within_decl_context:
             return symbol_table_lookup(name) or declaration_name_table_lookup(name)
         else:
             return symbol_table_lookup(name)
@@ -279,7 +279,7 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
         self._visit_new_scope(node.finalbody, ScopeContext.TryFinal)
 
     def visit_ListComp(self, node: ast.ListComp) -> None:
-        # Bottom-up building new node
+        # Bottom-up building new tree
         new_tree: ast.stmt = ast.Expr(value=node.elt)
         for generator in node.generators:
             for if_test in generator.ifs:
@@ -291,7 +291,7 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
         self.visit(new_tree)
 
     def visit_SetComp(self, node: ast.SetComp) -> None:
-        # Bottom-up building new node
+        # Bottom-up building new tree
         new_tree: ast.stmt = ast.Expr(value=node.elt)
         for generator in node.generators:
             for if_test in generator.ifs:
@@ -303,7 +303,7 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
         self.visit(new_tree)
 
     def visit_DictComp(self, node: ast.DictComp) -> None:
-        # Bottom-up building new node
+        # Bottom-up building new tree
         new_tree: ast.stmt = ast.Expr(
             value=ast.Tuple(elts=[node.key, node.value], ctx=ast.Load())
         )
@@ -317,7 +317,7 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
         self.visit(new_tree)
 
     def visit_GeneratorExp(self, node: ast.GeneratorExp) -> None:
-        # Bottom-up building new node
+        # Bottom-up building new tree
         new_tree: ast.stmt = ast.Expr(value=node.elt)
         for generator in node.generators:
             for if_test in generator.ifs:
@@ -329,7 +329,7 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
         self.visit(new_tree)
 
     ########################################################################
-    # Handle stmts that introduce new symbols, or delete existing symbols
+    # Handle stmts that introduce new symbols, or access/delete existing symbols
     ########################################################################
 
     def visit_Delete(self, node: ast.Delete) -> None:
@@ -386,17 +386,11 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
 
     def visit_Name(self, node: ast.Name) -> None:
         if isinstance(node.ctx, ast.Store):
-            if self._symbol_lookup(node.id):
-                pass
-            else:
+            if not self._symbol_lookup(node.id):
                 self._symbol_table_stack[-1].add(node.id)
         elif isinstance(node.ctx, ast.Load):
-            if self._symbol_lookup(node.id):
-                pass
-            else:
+            if not self._symbol_lookup(node.id):
                 self._undefined_vars.add(node.id)
         else:
             # TODO fill in cases for contexts Del, AugLoad, AugStore, Param
             raise NotImplementedError
-
-    # TODO fill and complete

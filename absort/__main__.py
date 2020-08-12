@@ -35,20 +35,23 @@ def absort_decls(decls: List[TYPE_DECL_STMT]) -> Iterator[TYPE_DECL_STMT]:
 
 def transform(module_tree: ast.Module) -> ast.Module:
     top_level_stmts = module_tree.body
+
     new_stmts: List[ast.stmt] = []
     buffer: List[TYPE_DECL_STMT] = []
     for stmt in top_level_stmts:
         if isinstance(stmt, DECL_STMT_CLASSES):
             buffer.append(stmt)
         else:
-            if buffer:
-                new_stmts.extend(absort_decls(buffer))
-                buffer.clear()
+            new_stmts.extend(absort_decls(buffer))
+            buffer.clear()
             new_stmts.append(stmt)
     new_stmts.extend(absort_decls(buffer))
+
     new_module_tree = ast.Module(body=new_stmts)
+
     ast_remove_location_info(new_module_tree)
     ast.fix_missing_locations(new_module_tree)
+
     return new_module_tree
 
 
