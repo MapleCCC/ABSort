@@ -54,7 +54,7 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
     def __init__(self) -> None:
         super().__init__()
         self._undefined_vars: Set[str] = set()
-        self._scope_stack: List[ScopeContext] = []
+        self._scope_context_stack: List[ScopeContext] = []
         self._symbol_table_stack: List[Set[str]] = []
 
     __slots__ = ("_undefined_vars", "_scope_stack", "_symbol_table_stack")
@@ -76,7 +76,7 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
         scope_ctx: ScopeContext,
         inject_names: Set[str] = None,
     ) -> None:
-        self._scope_stack.append(scope_ctx)
+        self._scope_context_stack.append(scope_ctx)
         self._symbol_table_stack.append(set())
 
         if inject_names:
@@ -86,7 +86,7 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
             self.visit(node)
 
         self._symbol_table_stack.pop()
-        self._scope_stack.pop()
+        self._scope_context_stack.pop()
 
     ########################################################################
     # Handle language constructs that introduce new scopes (and possibly new names)
