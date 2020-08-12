@@ -2,12 +2,13 @@
 
 import ast
 import io
-from typing import List, Set, Union
+from typing import Iterator, List, Set, Union
 
 import astor
 import click
 
 from .ast_utils import ast_ordered_walk, ast_pretty_dump, ast_remove_location_info
+from .graph import Graph
 from .visitors import GetUndefinedVariableVisitor
 
 
@@ -21,11 +22,15 @@ def get_dependency_of_decl(decl: TYPE_DECL_STMT) -> Set[str]:
     return visitor.visit(temp_module)
 
 
-def absort_decls(decls: List[TYPE_DECL_STMT]) -> List[TYPE_DECL_STMT]:
-    infos = {}
+def absort_decls(decls: List[TYPE_DECL_STMT]) -> Iterator[TYPE_DECL_STMT]:
+    graph = Graph()
     for decl in decls:
-        infos[decl] = get_dependency_of_decl(decl)
-    return []
+        deps = get_dependency_of_decl(decl)
+        for dep in deps:
+            graph.add_edge(decl.name, dep)
+    sorted_names = graph.topological_sort()
+    for name in sorted_names:
+        yield from filter(lambda decl: decl.name == name, decls)
 
 
 def transform(module_tree: ast.Module) -> ast.Module:
