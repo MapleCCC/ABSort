@@ -2,10 +2,13 @@
 
 import ast
 import io
+import os
+import sys
 
 import click
 
-from ast_utils import ast_pretty_dump
+sys.path.append(os.getcwd())
+from absort.ast_utils import ast_pretty_dump
 
 
 @click.command()

@@ -43,8 +43,9 @@ class ScopeContext(Enum):
 
 
 # TODO order by their appearance in https://docs.python.org/3/library/ast.html#abstract-grammar
-# TODO add runtime type checking
+# TODO add runtime type checking. @runtime_type_check
 # TODO fill in docstring to elaborate on details.
+# TODO @assert_symtab_stack_depth
 class GetUndefinedVariableVisitor(ast.NodeVisitor):
     """
 
@@ -229,7 +230,9 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
         for generator in node.generators:
             for if_test in generator.ifs:
                 new_tree = ast.If(test=if_test, body=[new_tree])
-            new_tree = ast.For(target=generator.target, iter=generator.iter, body=[new_tree])
+            new_tree = ast.For(
+                target=generator.target, iter=generator.iter, body=[new_tree]
+            )
 
         self.visit(new_tree)
 
@@ -239,17 +242,23 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
         for generator in node.generators:
             for if_test in generator.ifs:
                 new_tree = ast.If(test=if_test, body=[new_tree])
-            new_tree = ast.For(target=generator.target, iter=generator.iter, body=[new_tree])
+            new_tree = ast.For(
+                target=generator.target, iter=generator.iter, body=[new_tree]
+            )
 
         self.visit(new_tree)
 
     def visit_DictComp(self, node: ast.DictComp) -> None:
         # Bottom-up building new node
-        new_tree: ast.stmt = ast.Expr(value=ast.Tuple(elts=[node.key, node.value], ctx=ast.Load()))
+        new_tree: ast.stmt = ast.Expr(
+            value=ast.Tuple(elts=[node.key, node.value], ctx=ast.Load())
+        )
         for generator in node.generators:
             for if_test in generator.ifs:
                 new_tree = ast.If(test=if_test, body=[new_tree])
-            new_tree = ast.For(target=generator.target, iter=generator.iter, body=[new_tree])
+            new_tree = ast.For(
+                target=generator.target, iter=generator.iter, body=[new_tree]
+            )
 
         self.visit(new_tree)
 
@@ -259,7 +268,9 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
         for generator in node.generators:
             for if_test in generator.ifs:
                 new_tree = ast.If(test=if_test, body=[new_tree])
-            new_tree = ast.For(target=generator.target, iter=generator.iter, body=[new_tree])
+            new_tree = ast.For(
+                target=generator.target, iter=generator.iter, body=[new_tree]
+            )
 
         self.visit(new_tree)
 

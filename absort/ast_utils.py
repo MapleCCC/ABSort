@@ -17,6 +17,7 @@ def ast_pretty_dump(node: ast.AST, *args: Any, **kwargs: Any) -> str:
     return prettied
 
 
+# FIXME are you sure that ast.iter_child_nodes() returned result is ordered?
 def ast_ordered_walk(node: ast.AST) -> Iterator[ast.AST]:
     """ Depth-First Traversal of the AST """
     children = ast.iter_child_nodes(node)
