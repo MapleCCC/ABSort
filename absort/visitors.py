@@ -1,6 +1,6 @@
 import ast
 from enum import Enum, auto
-from typing import Iterable, List, Set, Union
+from typing import Iterable, List, Sequence, Set, Union
 
 __all__ = ["GetUndefinedVariableVisitor"]
 
@@ -96,7 +96,7 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
 
     def _visit_new_scope(
         self,
-        nodes: List[ast.AST],
+        nodes: Sequence[ast.AST],
         scope_ctx: ScopeContext,
         inject_names: Set[str] = None,
     ) -> None:
