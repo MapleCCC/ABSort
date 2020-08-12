@@ -1,7 +1,7 @@
 MAKEFLAGS += .silent
 
 all:
-	./absort.py sample.py
+	python -m absort sample.py
 
 format:
 	autopep8 --in-place --recursive --aggressive --aggressive --select E501 --max-line-length 88 .
@@ -11,6 +11,21 @@ format:
 prof:
 	kernprof -lv absort.py sample.py
 
-clean:
+type-check:
+	mypy .
+	pyright
+	# TODO pytype, pyre-check
 
-.PHONY: all format prof clean
+lint:
+	find . -type f -name "*.py" | xargs pylint
+
+unused-imports:
+	find . -type f -name "*.py" | xargs pylint --disable=all --enable=W0611
+
+todo:
+	rg "# TODO|# FIXME" --glob !Makefile
+
+clean:
+	rm -rf __pycache__/
+
+.PHONY: all format prof type-check lint unused-imports todo clean
