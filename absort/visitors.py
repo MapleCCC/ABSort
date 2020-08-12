@@ -50,35 +50,40 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
                 return True
         return False
 
+    def _visit_new_scope(
+        self, nodes: List[ast.AST], inject_names: Set[str] = None
+    ) -> None:
+        self._symbol_table_stack.append(set())
+
+        if inject_names:
+            self._symbol_table_stack[-1].update(inject_names)
+
+        for node in nodes:
+            self.visit(node)
+
+        self._symbol_table_stack.pop()
+
     ########################################################################
     # Handle language constructs that introduce new scopes (and possibly new names)
     ########################################################################
 
     def visit_Module(self, node: ast.Module) -> None:
-        self._symbol_table_stack.append(set())
-
-        for stmt in node.body:
-            self.visit(stmt)
-
-        self._symbol_table_stack.pop()
+        self._visit_new_scope(node.body)
 
     # TODO what is the node.returns attribute?
     def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
         for decorator in node.decorator_list:
             self.visit(decorator)
 
-        self._symbol_table_stack.append(set())
+        inject_names = set()
 
         # Allow recursion
-        self._symbol_table_stack[-1].add(node.name)
+        inject_names.add(node.name)
 
         arg_names = get_funcdef_arg_names(node)
-        self._symbol_table_stack[-1].update(arg_names)
+        inject_names.update(arg_names)
 
-        for stmt in node.body:
-            self.visit(stmt)
-
-        self._symbol_table_stack.pop()
+        self._visit_new_scope(node.body, inject_names)
 
         self._symbol_table_stack[-1].add(node.name)
 
@@ -87,18 +92,15 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
         for decorator in node.decorator_list:
             self.visit(decorator)
 
-        self._symbol_table_stack.append(set())
+        inject_names = set()
 
         # Allow recursion
-        self._symbol_table_stack[-1].add(node.name)
+        inject_names.add(node.name)
 
         arg_names = get_funcdef_arg_names(node)
-        self._symbol_table_stack[-1].update(arg_names)
+        inject_names.update(arg_names)
 
-        for stmt in node.body:
-            self.visit(stmt)
-
-        self._symbol_table_stack.pop()
+        self._visit_new_scope(node.body, inject_names)
 
         self._symbol_table_stack[-1].add(node.name)
 
@@ -110,84 +112,43 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
         for base in node.bases:
             self.visit(base)
 
-        self._symbol_table_stack.append(set())
-
-        self._symbol_table_stack[-1].add(node.name)
-
-        for stmt in node.body:
-            self.visit(stmt)
-
-        self._symbol_table_stack.pop()
+        self._visit_new_scope(node.body, inject_names={node.name})
 
         self._symbol_table_stack[-1].add(node.name)
 
     def visit_For(self, node: ast.For) -> None:
         self.visit(node.iter)
 
-        self._symbol_table_stack.append(set())
-
         # FIXME I am not sure this is correct
         target_names = get_descendant_names(node.target)
-        self._symbol_table_stack[-1].update(target_names)
 
-        for stmt in node.body:
-            self.visit(stmt)
+        self._visit_new_scope(node.body, inject_names=target_names)
 
-        self._symbol_table_stack[-1].clear()
-
-        for stmt in node.orelse:
-            self.visit(stmt)
-
-        self._symbol_table_stack.pop()
+        self._visit_new_scope(node.orelse)
 
     def visit_AsyncFor(self, node: ast.AsyncFor) -> None:
         self.visit(node.iter)
 
-        self._symbol_table_stack.append(set())
-
         # FIXME I am not sure this is correct
         target_names = get_descendant_names(node.target)
-        self._symbol_table_stack[-1].update(target_names)
 
-        for stmt in node.body:
-            self.visit(stmt)
+        self._visit_new_scope(node.body, inject_names=target_names)
 
-        self._symbol_table_stack[-1].clear()
-
-        for stmt in node.orelse:
-            self.visit(stmt)
-
-        self._symbol_table_stack.pop()
+        self._visit_new_scope(node.orelse)
 
     def visit_While(self, node: ast.While) -> None:
         self.visit(node.test)
 
-        self._symbol_table_stack.append(set())
+        self._visit_new_scope(node.body)
 
-        for stmt in node.body:
-            self.visit(stmt)
-
-        self._symbol_table_stack[-1].clear()
-
-        for stmt in node.orelse:
-            self.visit(stmt)
-
-        self._symbol_table_stack.pop()
+        self._visit_new_scope(node.orelse)
 
     def visit_If(self, node: ast.If) -> None:
         self.visit(node.test)
 
-        self._symbol_table_stack.append(set())
+        self._visit_new_scope(node.body)
 
-        for stmt in node.body:
-            self.visit(stmt)
-
-        self._symbol_table_stack[-1].clear()
-
-        for stmt in node.orelse:
-            self.visit(stmt)
-
-        self._symbol_table_stack.pop()
+        self._visit_new_scope(node.orelse)
 
     def visit_With(self, node: ast.With) -> None:
         introduced_names: Set[str] = set()
@@ -200,14 +161,7 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
                 optional_var_names = get_descendant_names(optional_vars)
                 introduced_names.update(optional_var_names)
 
-        self._symbol_table_stack.append(set())
-
-        self._symbol_table_stack[-1].update(introduced_names)
-
-        for stmt in node.body:
-            self.visit(stmt)
-
-        self._symbol_table_stack.pop()
+        self._visit_new_scope(node.body, inject_names=introduced_names)
 
     def visit_AsyncWith(self, node: ast.AsyncWith) -> None:
         introduced_names: Set[str] = set()
@@ -220,49 +174,26 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
                 optional_var_names = get_descendant_names(optional_vars)
                 introduced_names.update(optional_var_names)
 
-        self._symbol_table_stack.append(set())
-
-        self._symbol_table_stack[-1].update(introduced_names)
-
-        for stmt in node.body:
-            self.visit(stmt)
-
-        self._symbol_table_stack.pop()
+        self._visit_new_scope(node.body, inject_names=introduced_names)
 
     def visit_Try(self, node: ast.Try) -> None:
-        self._symbol_table_stack.append(set())
-
-        for stmt in node.body:
-            self.visit(stmt)
-
-        self._symbol_table_stack.pop()
+        self._visit_new_scope(node.body)
 
         for handler in node.handlers:
             if handler.type:
                 self.visit(handler.type)
 
-            self._symbol_table_stack.append(set())
-
+            inject_names = set()
             if handler.name:
-                self._symbol_table_stack[-1].add(handler.name)
+                inject_names.add(handler.name)
 
-            for stmt in handler.body:
-                self.visit(stmt)
+            self._visit_new_scope(handler.body, inject_names=inject_names)
 
-            self._symbol_table_stack.pop()
+        self._visit_new_scope(node.orelse)
 
-        self._symbol_table_stack.append(set())
+        self._visit_new_scope(node.finalbody)
 
-        for stmt in node.orelse:
-            self.visit(stmt)
-
-        self._symbol_table_stack[-1].clear()
-
-        for stmt in node.finalbody:
-            self.visit(stmt)
-
-        self._symbol_table_stack.pop()
-
+    # TODO alternative is to create new tree and visit the new tree
     def visit_ListComp(self, node: ast.ListComp) -> None:
         nested_level = 0
 
