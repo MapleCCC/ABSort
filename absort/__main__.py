@@ -7,7 +7,7 @@ from typing import Iterator, List, Set, Union
 import astor
 import click
 
-from .ast_utils import ast_ordered_walk, ast_pretty_dump, ast_remove_location_info
+from .ast_utils import ast_remove_location_info
 from .graph import Graph
 from .visitors import GetUndefinedVariableVisitor
 
