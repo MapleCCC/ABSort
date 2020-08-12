@@ -1,6 +1,6 @@
 import ast
 from enum import Enum, auto
-from typing import List, Set, Union
+from typing import Iterable, List, Set, Union
 
 __all__ = ["GetUndefinedVariableVisitor"]
 
@@ -56,19 +56,43 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
         self._undefined_vars: Set[str] = set()
         self._scope_context_stack: List[ScopeContext] = []
         self._symbol_table_stack: List[Set[str]] = []
+        self._declaration_name_table_stack: List[Set[str]] = []
 
-    __slots__ = ("_undefined_vars", "_scope_stack", "_symbol_table_stack")
+    __slots__ = (
+        "_undefined_vars",
+        "_scope_stack",
+        "_symbol_table_stack",
+        "_declaration_name_table_stack",
+    )
 
     def visit(self, node: ast.AST) -> Set[str]:
         super().visit(node)
         return self._undefined_vars
 
-    # FIXME no need to traverse in reverse order
-    def _symbol_table_lookup(self, name: str) -> bool:
-        for symbol_table in self._symbol_table_stack[::-1]:
-            if name in symbol_table:
-                return True
-        return False
+    def _symbol_lookup(self, name: str) -> bool:
+        # FIXME no need to traverse in reverse order
+        def symbol_table_lookup(name: str) -> bool:
+            for symbol_table in self._symbol_table_stack[::-1]:
+                if name in symbol_table:
+                    return True
+            return False
+
+        # FIXME no need to traverse in reverse order
+        def declaration_name_table_lookup(name: str) -> bool:
+            for declaration_symbol_table in self._declaration_name_table_stack[::-1]:
+                if name in declaration_symbol_table:
+                    return True
+            return False
+
+        in_decl_context = False
+        for scope_ctx in self._scope_context_stack:
+            if scope_ctx in (ScopeContext.Function, ScopeContext.Class):
+                in_decl_context = True
+
+        if in_decl_context:
+            return symbol_table_lookup(name) or declaration_name_table_lookup(name)
+        else:
+            return symbol_table_lookup(name)
 
     def _visit_new_scope(
         self,
@@ -77,14 +101,31 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
         inject_names: Set[str] = None,
     ) -> None:
         self._scope_context_stack.append(scope_ctx)
-        self._symbol_table_stack.append(set())
 
+        self._symbol_table_stack.append(set())
         if inject_names:
             self._symbol_table_stack[-1].update(inject_names)
+
+        def collect_visible_declarations(nodes: Iterable[ast.AST]) -> Set[str]:
+            visible_decls = set()
+            for node in nodes:
+                if isinstance(
+                    node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)
+                ):
+                    visible_decls.add(node.name)
+                else:
+                    visible_decls.update(
+                        collect_visible_declarations(ast.iter_child_nodes(node))
+                    )
+            return visible_decls
+
+        visible_decls = collect_visible_declarations(nodes)
+        self._declaration_name_table_stack.append(visible_decls)
 
         for node in nodes:
             self.visit(node)
 
+        self._declaration_name_table_stack.pop()
         self._symbol_table_stack.pop()
         self._scope_context_stack.pop()
 
@@ -344,7 +385,7 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
             # FIXME we need to narrow down the lookup scope to global scope, the scope
             # that are allowed by the `global` keyword, as per the Python language
             # grammar.
-            if self._symbol_table_lookup(name):
+            if self._symbol_lookup(name):
                 self._symbol_table_stack[-1].add(name)
             else:
                 # there is no corresponding name in outter scopes
@@ -354,7 +395,7 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
         for name in node.names:
             # FIXME we need to narrow down the lookup scope to the scopes that are
             # allowed by the `nonlocal` keyword, as per the Python language grammar.
-            if self._symbol_table_lookup(name):
+            if self._symbol_lookup(name):
                 self._symbol_table_stack[-1].add(name)
             else:
                 # there is no corresponding name in outter scopes
@@ -362,12 +403,12 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
 
     def visit_Name(self, node: ast.Name) -> None:
         if isinstance(node.ctx, ast.Store):
-            if self._symbol_table_lookup(node.id):
+            if self._symbol_lookup(node.id):
                 pass
             else:
                 self._symbol_table_stack[-1].add(node.id)
         elif isinstance(node.ctx, ast.Load):
-            if self._symbol_table_lookup(node.id):
+            if self._symbol_lookup(node.id):
                 pass
             else:
                 self._undefined_vars.add(node.id)
