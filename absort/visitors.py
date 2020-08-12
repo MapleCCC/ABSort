@@ -69,6 +69,9 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
 
         self._symbol_table_stack.append(set())
 
+        # Allow recursion
+        self._symbol_table_stack[-1].add(node.name)
+
         arg_names = get_funcdef_arg_names(node)
         self._symbol_table_stack[-1].update(arg_names)
 
@@ -85,6 +88,9 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
             self.visit(decorator)
 
         self._symbol_table_stack.append(set())
+
+        # Allow recursion
+        self._symbol_table_stack[-1].add(node.name)
 
         arg_names = get_funcdef_arg_names(node)
         self._symbol_table_stack[-1].update(arg_names)
@@ -105,6 +111,8 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
             self.visit(base)
 
         self._symbol_table_stack.append(set())
+
+        self._symbol_table_stack[-1].add(node.name)
 
         for stmt in node.body:
             self.visit(stmt)
