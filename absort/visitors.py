@@ -50,6 +50,7 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
                 return True
         return False
 
+    # TODO move to bottom to align to the order specified in Python abstract grammar doc.
     def visit_Name(self, node: ast.Name) -> None:
         if isinstance(node.ctx, ast.Store):
             if self._symbol_table_lookup(node.id):
@@ -270,6 +271,8 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
 
         self._symbol_table_stack.pop()
 
+    # TODO remove because despite introducing new scope, only one expression exisits in
+    # the scope so no need to actually create a new scope.
     def visit_Lambda(self, node: ast.Lambda) -> None:
         self._symbol_table_stack.append(set())
 
@@ -280,7 +283,11 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
 
         self._symbol_table_stack.pop()
 
+    # TODO remove because despite introducing new scope, only one expression exisits in
+    # the scope so no need to actually create a new scope.
     def visit_IfExp(self, node: ast.IfExp) -> None:
+        self.visit(node.test)
+
         self._symbol_table_stack.append(set())
 
         self.visit(node.body)
@@ -292,10 +299,96 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
         self._symbol_table_stack.pop()
 
     def visit_ListComp(self, node: ast.ListComp) -> None:
-        self._symbol_table_stack.append(set())
+        nested_level = 0
+
         for generator in node.generators:
-            pass
-        self._symbol_table_stack[-1]
+            self.visit(generator.iter)
+
+            self._symbol_table_stack.append(set())
+
+            # FIXME I am not sure this is correct
+            target_names = get_descendant_names(generator.target)
+            self._symbol_table_stack[-1].update(target_names)
+
+            # No need to actually create scope for every if_test
+            for if_test in generator.ifs:
+                self.visit(if_test)
+
+            nested_level += 1
+
+        self.visit(node.elt)
+
+        for _ in range(nested_level):
+            self._symbol_table_stack.pop()
+
+    def visit_SetComp(self, node: ast.SetComp) -> None:
+        nested_level = 0
+
+        for generator in node.generators:
+            self.visit(generator.iter)
+
+            self._symbol_table_stack.append(set())
+
+            # FIXME I am not sure this is correct
+            target_names = get_descendant_names(generator.target)
+            self._symbol_table_stack[-1].update(target_names)
+
+            # No need to actually create scope for every if_test
+            for if_test in generator.ifs:
+                self.visit(if_test)
+
+            nested_level += 1
+
+        self.visit(node.elt)
+
+        for _ in range(nested_level):
+            self._symbol_table_stack.pop()
+
+    def visit_DictComp(self, node: ast.DictComp) -> None:
+        nested_level = 0
+
+        for generator in node.generators:
+            self.visit(generator.iter)
+
+            self._symbol_table_stack.append(set())
+
+            # FIXME I am not sure this is correct
+            target_names = get_descendant_names(generator.target)
+            self._symbol_table_stack[-1].update(target_names)
+
+            # No need to actually create scope for every if_test
+            for if_test in generator.ifs:
+                self.visit(if_test)
+
+            nested_level += 1
+
+        self.visit(node.key)
+        self.visit(node.value)
+
+        for _ in range(nested_level):
+            self._symbol_table_stack.pop()
+
+    def visit_GeneratorExp(self, node: ast.GeneratorExp) -> None:
+        nested_level = 0
+
+        for generator in node.generators:
+            self.visit(generator.iter)
+
+            self._symbol_table_stack.append(set())
+
+            # FIXME I am not sure this is correct
+            target_names = get_descendant_names(generator.target)
+            self._symbol_table_stack[-1].update(target_names)
+
+            for if_test in generator.ifs:
+                self.visit(if_test)
+
+            nested_level += 1
+
+        self.visit(node.elt)
+
+        for _ in range(nested_level):
+            self._symbol_table_stack.pop()
 
     ########################################################################
     # Handle stmts that introduce new symbols, or delete existing symbols
