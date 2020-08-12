@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
 import ast
-import io
-from typing import Iterator, List, Set, Union
+from pathlib import Path
+from typing import Iterator, List, Set, Tuple, Union
 
 import astor
 import click
@@ -70,18 +70,30 @@ def preliminary_sanity_check(module_tree: ast.Module) -> None:
 
 
 @click.command()
-@click.argument("file", type=click.File("r", encoding="utf-8"))
+@click.argument(
+    "filenames",
+    nargs=-1,
+    type=click.Path(exists=True, dir_okay=False, readable=True, allow_dash=True),
+)
 # TODO in-place
 # TODO multi thread
 # TODO fix main to bottom
-def main(file: io.TextIOWrapper) -> None:
-    module_tree = ast.parse(file.read())
+def main(filenames: Tuple[str]) -> None:
 
-    preliminary_sanity_check(module_tree)
+    for filename in filenames:
+        module_tree = ast.parse(Path(filename).read_text(encoding="utf-8"))
 
-    new_module_tree = transform(module_tree)
+        preliminary_sanity_check(module_tree)
 
-    print(astor.to_source(new_module_tree))
+        new_module_tree = transform(module_tree)
+
+        # TODO add more styled output (e.g. colorized)
+        print("---------------------------------------")
+        print(filename)
+        print("***************************************")
+        print(astor.to_source(new_module_tree))
+        print("***************************************")
+        print()
 
 
 if __name__ == "__main__":
