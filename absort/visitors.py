@@ -39,8 +39,8 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
 
     __slots__ = ("_undefined_vars", "_symbol_table_stack")
 
-    @property
-    def undefined_variables(self) -> Set[str]:
+    def visit(self, node: ast.AST) -> Set[str]:
+        super().visit(node)
         return self._undefined_vars
 
     # FIXME no need to traverse in reverse order

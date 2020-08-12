@@ -16,10 +16,9 @@ TYPE_DECL_STMT = Union[ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef]
 
 
 def get_dependency_of_decl(decl: TYPE_DECL_STMT) -> Set[str]:
-    visitor = GetUndefinedVariableVisitor()
     temp_module = ast.Module(body=[decl])
-    visitor.visit(temp_module)
-    return visitor.undefined_variables
+    visitor = GetUndefinedVariableVisitor()
+    return visitor.visit(temp_module)
 
 
 def absort_decls(decls: List[TYPE_DECL_STMT]) -> List[TYPE_DECL_STMT]:
