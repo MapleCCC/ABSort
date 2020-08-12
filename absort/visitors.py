@@ -129,6 +129,19 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
         self._symbol_table_stack.pop()
         self._scope_context_stack.pop()
 
+    def _add_declaration_name_to_symbol_table_stack(self, name: str) -> None:
+        decl_name_visible_scope_index = len(self._scope_context_stack) - 1
+        for index, scope_ctx in enumerate(self._scope_context_stack[::-1]):
+            if scope_ctx in (
+                ScopeContext.Module,
+                ScopeContext.Function,
+                ScopeContext.Class,
+            ):
+                decl_name_visible_scope_index = (
+                    len(self._scope_context_stack) - 1 - index
+                )
+        self._symbol_table_stack[decl_name_visible_scope_index].add(name)
+
     ########################################################################
     # Handle language constructs that introduce new scopes (and possibly new names)
     ########################################################################
@@ -151,17 +164,7 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
 
         self._visit_new_scope(node.body, ScopeContext.Function, inject_names)
 
-        func_name_visible_scope_index = len(self._scope_context_stack) - 1
-        for index, scope_ctx in enumerate(self._scope_context_stack[::-1]):
-            if scope_ctx in (
-                ScopeContext.Module,
-                ScopeContext.Function,
-                ScopeContext.Class,
-            ):
-                func_name_visible_scope_index = (
-                    len(self._scope_context_stack) - 1 - index
-                )
-        self._symbol_table_stack[func_name_visible_scope_index].add(node.name)
+        self._add_declaration_name_to_symbol_table_stack(node.name)
 
     # TODO what is the node.returns attribute?
     def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
@@ -178,17 +181,7 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
 
         self._visit_new_scope(node.body, ScopeContext.Function, inject_names)
 
-        func_name_visible_scope_index = len(self._scope_context_stack) - 1
-        for index, scope_ctx in enumerate(self._scope_context_stack[::-1]):
-            if scope_ctx in (
-                ScopeContext.Module,
-                ScopeContext.Function,
-                ScopeContext.Class,
-            ):
-                func_name_visible_scope_index = (
-                    len(self._scope_context_stack) - 1 - index
-                )
-        self._symbol_table_stack[func_name_visible_scope_index].add(node.name)
+        self._add_declaration_name_to_symbol_table_stack(node.name)
 
     # TODO what is the node.keywords attribute?
     def visit_ClassDef(self, node: ast.ClassDef) -> None:
@@ -200,17 +193,7 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
 
         self._visit_new_scope(node.body, ScopeContext.Class, inject_names={node.name})
 
-        class_name_visible_scope_index = len(self._scope_context_stack) - 1
-        for index, scope_ctx in enumerate(self._scope_context_stack[::-1]):
-            if scope_ctx in (
-                ScopeContext.Module,
-                ScopeContext.Function,
-                ScopeContext.Class,
-            ):
-                class_name_visible_scope_index = (
-                    len(self._scope_context_stack) - 1 - index
-                )
-        self._symbol_table_stack[class_name_visible_scope_index].add(node.name)
+        self._add_declaration_name_to_symbol_table_stack(node.name)
 
     def visit_For(self, node: ast.For) -> None:
         self.visit(node.iter)
