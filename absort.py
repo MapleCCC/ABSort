@@ -79,9 +79,12 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
     ########################################################################
 
     def visit_Module(self, node: ast.Module) -> None:
-        self._symbol_table_stack = []
+        self._symbol_table_stack.append(set())
+
         for stmt in node.body:
             self.visit(stmt)
+
+        self._symbol_table_stack.pop()
 
     # TODO what is the node.returns attribute?
     def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
