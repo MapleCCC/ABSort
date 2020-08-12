@@ -1,4 +1,5 @@
 import ast
+from enum import Enum, auto
 from typing import List, Set, Union
 
 __all__ = ["GetUndefinedVariableVisitor"]
@@ -24,6 +25,23 @@ def get_descendant_names(node: ast.AST) -> Set[str]:
     return identifiers
 
 
+class ScopeContext(Enum):
+    Module = auto()
+    Function = auto()
+    Class = auto()
+    For = auto()
+    ForElse = auto()
+    While = auto()
+    WhileElse = auto()
+    If = auto()
+    IfElse = auto()
+    With = auto()
+    Try = auto()
+    ExceptHandler = auto()
+    TryElse = auto()
+    TryFinal = auto()
+
+
 # TODO order by their appearance in https://docs.python.org/3/library/ast.html#abstract-grammar
 # TODO add runtime type checking
 # TODO fill in docstring to elaborate on details.
@@ -35,9 +53,10 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
     def __init__(self) -> None:
         super().__init__()
         self._undefined_vars: Set[str] = set()
+        self._scope_stack: List[ScopeContext] = []
         self._symbol_table_stack: List[Set[str]] = []
 
-    __slots__ = ("_undefined_vars", "_symbol_table_stack")
+    __slots__ = ("_undefined_vars", "_scope_stack", "_symbol_table_stack")
 
     def visit(self, node: ast.AST) -> Set[str]:
         super().visit(node)
@@ -51,8 +70,12 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
         return False
 
     def _visit_new_scope(
-        self, nodes: List[ast.AST], inject_names: Set[str] = None
+        self,
+        nodes: List[ast.AST],
+        scope_ctx: ScopeContext,
+        inject_names: Set[str] = None,
     ) -> None:
+        self._scope_stack.append(scope_ctx)
         self._symbol_table_stack.append(set())
 
         if inject_names:
@@ -62,13 +85,14 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
             self.visit(node)
 
         self._symbol_table_stack.pop()
+        self._scope_stack.pop()
 
     ########################################################################
     # Handle language constructs that introduce new scopes (and possibly new names)
     ########################################################################
 
     def visit_Module(self, node: ast.Module) -> None:
-        self._visit_new_scope(node.body)
+        self._visit_new_scope(node.body, ScopeContext.Module)
 
     # TODO what is the node.returns attribute?
     def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
@@ -83,7 +107,7 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
         arg_names = get_funcdef_arg_names(node)
         inject_names.update(arg_names)
 
-        self._visit_new_scope(node.body, inject_names)
+        self._visit_new_scope(node.body, ScopeContext.Function, inject_names)
 
         self._symbol_table_stack[-1].add(node.name)
 
@@ -100,7 +124,7 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
         arg_names = get_funcdef_arg_names(node)
         inject_names.update(arg_names)
 
-        self._visit_new_scope(node.body, inject_names)
+        self._visit_new_scope(node.body, ScopeContext.Function, inject_names)
 
         self._symbol_table_stack[-1].add(node.name)
 
@@ -112,7 +136,7 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
         for base in node.bases:
             self.visit(base)
 
-        self._visit_new_scope(node.body, inject_names={node.name})
+        self._visit_new_scope(node.body, ScopeContext.Class, inject_names={node.name})
 
         self._symbol_table_stack[-1].add(node.name)
 
@@ -122,9 +146,9 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
         # FIXME I am not sure this is correct
         target_names = get_descendant_names(node.target)
 
-        self._visit_new_scope(node.body, inject_names=target_names)
+        self._visit_new_scope(node.body, ScopeContext.For, inject_names=target_names)
 
-        self._visit_new_scope(node.orelse)
+        self._visit_new_scope(node.orelse, ScopeContext.ForElse)
 
     def visit_AsyncFor(self, node: ast.AsyncFor) -> None:
         self.visit(node.iter)
@@ -132,23 +156,23 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
         # FIXME I am not sure this is correct
         target_names = get_descendant_names(node.target)
 
-        self._visit_new_scope(node.body, inject_names=target_names)
+        self._visit_new_scope(node.body, ScopeContext.For, inject_names=target_names)
 
-        self._visit_new_scope(node.orelse)
+        self._visit_new_scope(node.orelse, ScopeContext.ForElse)
 
     def visit_While(self, node: ast.While) -> None:
         self.visit(node.test)
 
-        self._visit_new_scope(node.body)
+        self._visit_new_scope(node.body, ScopeContext.While)
 
-        self._visit_new_scope(node.orelse)
+        self._visit_new_scope(node.orelse, ScopeContext.WhileElse)
 
     def visit_If(self, node: ast.If) -> None:
         self.visit(node.test)
 
-        self._visit_new_scope(node.body)
+        self._visit_new_scope(node.body, ScopeContext.If)
 
-        self._visit_new_scope(node.orelse)
+        self._visit_new_scope(node.orelse, ScopeContext.IfElse)
 
     def visit_With(self, node: ast.With) -> None:
         introduced_names: Set[str] = set()
@@ -161,7 +185,9 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
                 optional_var_names = get_descendant_names(optional_vars)
                 introduced_names.update(optional_var_names)
 
-        self._visit_new_scope(node.body, inject_names=introduced_names)
+        self._visit_new_scope(
+            node.body, ScopeContext.With, inject_names=introduced_names
+        )
 
     def visit_AsyncWith(self, node: ast.AsyncWith) -> None:
         introduced_names: Set[str] = set()
@@ -174,10 +200,12 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
                 optional_var_names = get_descendant_names(optional_vars)
                 introduced_names.update(optional_var_names)
 
-        self._visit_new_scope(node.body, inject_names=introduced_names)
+        self._visit_new_scope(
+            node.body, ScopeContext.With, inject_names=introduced_names
+        )
 
     def visit_Try(self, node: ast.Try) -> None:
-        self._visit_new_scope(node.body)
+        self._visit_new_scope(node.body, ScopeContext.Try)
 
         for handler in node.handlers:
             if handler.type:
@@ -187,11 +215,13 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
             if handler.name:
                 inject_names.add(handler.name)
 
-            self._visit_new_scope(handler.body, inject_names=inject_names)
+            self._visit_new_scope(
+                handler.body, ScopeContext.ExceptHandler, inject_names=inject_names
+            )
 
-        self._visit_new_scope(node.orelse)
+        self._visit_new_scope(node.orelse, ScopeContext.TryElse)
 
-        self._visit_new_scope(node.finalbody)
+        self._visit_new_scope(node.finalbody, ScopeContext.TryFinal)
 
     def visit_ListComp(self, node: ast.ListComp) -> None:
         # Bottom-up building new node
