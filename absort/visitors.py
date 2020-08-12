@@ -271,33 +271,6 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
 
         self._symbol_table_stack.pop()
 
-    # TODO remove because despite introducing new scope, only one expression exisits in
-    # the scope so no need to actually create a new scope.
-    def visit_Lambda(self, node: ast.Lambda) -> None:
-        self._symbol_table_stack.append(set())
-
-        arg_names = get_funcdef_arg_names(node)
-        self._symbol_table_stack[-1].update(arg_names)
-
-        self.visit(node.body)
-
-        self._symbol_table_stack.pop()
-
-    # TODO remove because despite introducing new scope, only one expression exisits in
-    # the scope so no need to actually create a new scope.
-    def visit_IfExp(self, node: ast.IfExp) -> None:
-        self.visit(node.test)
-
-        self._symbol_table_stack.append(set())
-
-        self.visit(node.body)
-
-        self._symbol_table_stack[-1].clear()
-
-        self.visit(node.orelse)
-
-        self._symbol_table_stack.pop()
-
     def visit_ListComp(self, node: ast.ListComp) -> None:
         nested_level = 0
 
