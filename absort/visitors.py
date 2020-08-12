@@ -193,98 +193,45 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
 
         self._visit_new_scope(node.finalbody)
 
-    # TODO alternative is to create new tree and visit the new tree
     def visit_ListComp(self, node: ast.ListComp) -> None:
-        nested_level = 0
-
+        # Bottom-up building new node
+        new_node: ast.AST = node.elt
         for generator in node.generators:
-            self.visit(generator.iter)
-
-            self._symbol_table_stack.append(set())
-
-            # FIXME I am not sure this is correct
-            target_names = get_descendant_names(generator.target)
-            self._symbol_table_stack[-1].update(target_names)
-
-            # No need to actually create scope for every if_test
             for if_test in generator.ifs:
-                self.visit(if_test)
+                new_node = ast.If(test=if_test, body=[new_node])
+            new_node = ast.For(target=generator.target, iter=generator.iter, body=[new_node])
 
-            nested_level += 1
-
-        self.visit(node.elt)
-
-        for _ in range(nested_level):
-            self._symbol_table_stack.pop()
+        self.visit(new_node)
 
     def visit_SetComp(self, node: ast.SetComp) -> None:
-        nested_level = 0
-
+        # Bottom-up building new node
+        new_node: ast.AST = node.elt
         for generator in node.generators:
-            self.visit(generator.iter)
-
-            self._symbol_table_stack.append(set())
-
-            # FIXME I am not sure this is correct
-            target_names = get_descendant_names(generator.target)
-            self._symbol_table_stack[-1].update(target_names)
-
-            # No need to actually create scope for every if_test
             for if_test in generator.ifs:
-                self.visit(if_test)
+                new_node = ast.If(test=if_test, body=[new_node])
+            new_node = ast.For(target=generator.target, iter=generator.iter, body=[new_node])
 
-            nested_level += 1
-
-        self.visit(node.elt)
-
-        for _ in range(nested_level):
-            self._symbol_table_stack.pop()
+        self.visit(new_node)
 
     def visit_DictComp(self, node: ast.DictComp) -> None:
-        nested_level = 0
-
+        # Bottom-up building new node
+        new_node: ast.AST = ast.Tuple(elts=[node.key, node.value])
         for generator in node.generators:
-            self.visit(generator.iter)
-
-            self._symbol_table_stack.append(set())
-
-            # FIXME I am not sure this is correct
-            target_names = get_descendant_names(generator.target)
-            self._symbol_table_stack[-1].update(target_names)
-
-            # No need to actually create scope for every if_test
             for if_test in generator.ifs:
-                self.visit(if_test)
+                new_node = ast.If(test=if_test, body=[new_node])
+            new_node = ast.For(target=generator.target, iter=generator.iter, body=[new_node])
 
-            nested_level += 1
-
-        self.visit(node.key)
-        self.visit(node.value)
-
-        for _ in range(nested_level):
-            self._symbol_table_stack.pop()
+        self.visit(new_node)
 
     def visit_GeneratorExp(self, node: ast.GeneratorExp) -> None:
-        nested_level = 0
-
+        # Bottom-up building new node
+        new_node: ast.AST = node.elt
         for generator in node.generators:
-            self.visit(generator.iter)
-
-            self._symbol_table_stack.append(set())
-
-            # FIXME I am not sure this is correct
-            target_names = get_descendant_names(generator.target)
-            self._symbol_table_stack[-1].update(target_names)
-
             for if_test in generator.ifs:
-                self.visit(if_test)
+                new_node = ast.If(test=if_test, body=[new_node])
+            new_node = ast.For(target=generator.target, iter=generator.iter, body=[new_node])
 
-            nested_level += 1
-
-        self.visit(node.elt)
-
-        for _ in range(nested_level):
-            self._symbol_table_stack.pop()
+        self.visit(new_node)
 
     ########################################################################
     # Handle stmts that introduce new symbols, or delete existing symbols
