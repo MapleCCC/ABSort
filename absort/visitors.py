@@ -50,22 +50,6 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
                 return True
         return False
 
-    # TODO move to bottom to align to the order specified in Python abstract grammar doc.
-    def visit_Name(self, node: ast.Name) -> None:
-        if isinstance(node.ctx, ast.Store):
-            if self._symbol_table_lookup(node.id):
-                pass
-            else:
-                self._symbol_table_stack[-1].add(node.id)
-        elif isinstance(node.ctx, ast.Load):
-            if self._symbol_table_lookup(node.id):
-                pass
-            else:
-                self._undefined_vars.add(node.id)
-        else:
-            # TODO fill in cases for contexts Del, AugLoad, AugStore, Param
-            raise NotImplementedError
-
     ########################################################################
     # Handle language constructs that introduce new scopes (and possibly new names)
     ########################################################################
@@ -418,5 +402,20 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
             else:
                 # there is no corresponding name in outter scopes
                 self._undefined_vars.add(name)
+
+    def visit_Name(self, node: ast.Name) -> None:
+        if isinstance(node.ctx, ast.Store):
+            if self._symbol_table_lookup(node.id):
+                pass
+            else:
+                self._symbol_table_stack[-1].add(node.id)
+        elif isinstance(node.ctx, ast.Load):
+            if self._symbol_table_lookup(node.id):
+                pass
+            else:
+                self._undefined_vars.add(node.id)
+        else:
+            # TODO fill in cases for contexts Del, AugLoad, AugStore, Param
+            raise NotImplementedError
 
     # TODO fill and complete
