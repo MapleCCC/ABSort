@@ -1,6 +1,8 @@
 # TODO: replace with builtin implementation after functools.TopologicalSorter
 # is added to public interface after Python3.9.
 
+from __future__ import annotations
+
 from collections import defaultdict, deque
 from typing import Any, Dict, Iterator, List, Optional, Set, Tuple
 
@@ -84,7 +86,7 @@ class Graph:
                 current_path.pop()
         return None
 
-    def get_invert_graph(self) -> "Graph":
+    def get_invert_graph(self) -> Graph:
         new_adjlist: AdjacencyList = dict()
         for key in self._adjacency_list.keys():
             new_adjlist[key] = set()
@@ -96,7 +98,7 @@ class Graph:
         new_graph._adjacency_list = new_adjlist
         return new_graph
 
-    def copy(self) -> "Graph":
+    def copy(self) -> Graph:
         # Deep copy
         new_adjlist = dict()
         for node, children in self._adjacency_list.items():
