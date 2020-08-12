@@ -7,8 +7,8 @@ from typing import List, Set, Union
 import astor
 import click
 
-from ast_utils import ast_ordered_walk, ast_pretty_dump, ast_remove_location_info
-from visitors import GetUndefinedVariableVisitor
+from .ast_utils import ast_ordered_walk, ast_pretty_dump, ast_remove_location_info
+from .visitors import GetUndefinedVariableVisitor
 
 
 DECL_STMT_CLASSES = (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)
