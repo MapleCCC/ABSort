@@ -10,6 +10,9 @@ Edge = Tuple[Node, Node]
 AdjacencyList = Dict[Node, Set[Node]]
 
 
+__all__ = ["CircularDependencyError", "Graph"]
+
+
 class CircularDependencyError(Exception):
     pass
 
@@ -25,7 +28,9 @@ class Graph:
         if v == w:
             raise CircularDependencyError("Self-pointing dependency is not accepted")
         self._adjacency_list[v].add(w)
-        # add w to adjacency list. This line is necessary because without it, some nodes who are sinks of the graph (i.e., have zero out-going edge) would not appear as keys in adjacency list.
+        # add w to adjacency list. This line is necessary because without it, some
+        # nodes who are sinks of the graph (i.e., have zero out-going edge) would
+        # not appear as keys in adjacency list.
         self._adjacency_list[w]
 
     def add_node(self, node: Node) -> None:
@@ -47,9 +52,10 @@ class Graph:
             queue.extend(self._adjacency_list[node])
 
     # Optionally, we can implement dfs in iterative manner instead of recursive manner.
-    # The main difference is whether user-maintain stack or runtime stack is used to contain information.
+    # The main difference is whether user-maintained stack or runtime stack is
+    # used to track information.
     def dfs(self, source: Node) -> Iterator[Node]:
-        traversed = set()
+        traversed: Set[Node] = set()
         yield from self._dfs(source, traversed)
 
     def _dfs(self, node: Node, traversed: Set[Node]) -> Iterator[Node]:
@@ -79,7 +85,7 @@ class Graph:
         return None
 
     def get_invert_graph(self) -> "Graph":
-        new_adjlist = dict()
+        new_adjlist: AdjacencyList = dict()
         for key in self._adjacency_list.keys():
             new_adjlist[key] = set()
         for node, children in self._adjacency_list.items():
@@ -121,11 +127,8 @@ class Graph:
             return srcs
 
         _graph = self.copy()
-        # TODO: use walrus operator to refactor
-        srcs = remove_sources(_graph)
-        while srcs:
-            yield from srcs  # type: ignore
-            srcs = remove_sources(_graph)
+        while srcs := remove_sources(_graph):
+            yield from srcs
 
     def __str__(self) -> str:
         return "Graph({})".format(dict(self._adjacency_list))
