@@ -195,43 +195,43 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
 
     def visit_ListComp(self, node: ast.ListComp) -> None:
         # Bottom-up building new node
-        new_node: ast.AST = node.elt
+        new_tree: ast.AST = node.elt
         for generator in node.generators:
             for if_test in generator.ifs:
-                new_node = ast.If(test=if_test, body=[new_node])
-            new_node = ast.For(target=generator.target, iter=generator.iter, body=[new_node])
+                new_tree = ast.If(test=if_test, body=[new_tree])
+            new_tree = ast.For(target=generator.target, iter=generator.iter, body=[new_tree])
 
-        self.visit(new_node)
+        self.visit(new_tree)
 
     def visit_SetComp(self, node: ast.SetComp) -> None:
         # Bottom-up building new node
-        new_node: ast.AST = node.elt
+        new_tree: ast.AST = node.elt
         for generator in node.generators:
             for if_test in generator.ifs:
-                new_node = ast.If(test=if_test, body=[new_node])
-            new_node = ast.For(target=generator.target, iter=generator.iter, body=[new_node])
+                new_tree = ast.If(test=if_test, body=[new_tree])
+            new_tree = ast.For(target=generator.target, iter=generator.iter, body=[new_tree])
 
-        self.visit(new_node)
+        self.visit(new_tree)
 
     def visit_DictComp(self, node: ast.DictComp) -> None:
         # Bottom-up building new node
-        new_node: ast.AST = ast.Tuple(elts=[node.key, node.value])
+        new_tree: ast.AST = ast.Tuple(elts=[node.key, node.value])
         for generator in node.generators:
             for if_test in generator.ifs:
-                new_node = ast.If(test=if_test, body=[new_node])
-            new_node = ast.For(target=generator.target, iter=generator.iter, body=[new_node])
+                new_tree = ast.If(test=if_test, body=[new_tree])
+            new_tree = ast.For(target=generator.target, iter=generator.iter, body=[new_tree])
 
-        self.visit(new_node)
+        self.visit(new_tree)
 
     def visit_GeneratorExp(self, node: ast.GeneratorExp) -> None:
         # Bottom-up building new node
-        new_node: ast.AST = node.elt
+        new_tree: ast.AST = node.elt
         for generator in node.generators:
             for if_test in generator.ifs:
-                new_node = ast.If(test=if_test, body=[new_node])
-            new_node = ast.For(target=generator.target, iter=generator.iter, body=[new_node])
+                new_tree = ast.If(test=if_test, body=[new_tree])
+            new_tree = ast.For(target=generator.target, iter=generator.iter, body=[new_tree])
 
-        self.visit(new_node)
+        self.visit(new_tree)
 
     ########################################################################
     # Handle stmts that introduce new symbols, or delete existing symbols
