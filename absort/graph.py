@@ -4,7 +4,7 @@
 from __future__ import annotations
 
 from collections import defaultdict, deque
-from typing import Any, Dict, Iterator, List, Optional, Set, Tuple
+from typing import Any, Callable, Dict, Iterator, List, Optional, Set, Tuple
 
 # Thin semantic type abstraction
 Node = Any
@@ -107,7 +107,9 @@ class Graph:
         new_graph._adjacency_list = new_adjlist
         return new_graph
 
-    def topological_sort(self) -> Iterator[Node]:
+    def topological_sort(
+        self, same_rank_sorter: Callable[[List[Node]], List[Node]] = None
+    ) -> Iterator[Node]:
         def find_sources(graph: Graph) -> Set[Node]:
             adjlist = graph._adjacency_list
             sources = set(adjlist.keys())
@@ -128,9 +130,12 @@ class Graph:
                 graph._adjacency_list[node] -= srcs
             return srcs
 
+        if same_rank_sorter is None:
+            same_rank_sorter = lambda x: x
+
         _graph = self.copy()
         while srcs := remove_sources(_graph):
-            yield from srcs
+            yield from same_rank_sorter(list(srcs))
 
     def __str__(self) -> str:
         return "Graph({})".format(dict(self._adjacency_list))

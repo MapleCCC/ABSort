@@ -23,12 +23,18 @@ def get_dependency_of_decl(decl: TYPE_DECL_STMT) -> Set[str]:
 
 
 def absort_decls(decls: List[TYPE_DECL_STMT]) -> Iterator[TYPE_DECL_STMT]:
+    def same_rank_sorter(names: List[str]) -> List[str]:
+        # Currently sort by lexigraphical order.
+        # More advanced option is to utilize power of machine learning to put two
+        # visually similar function/class definition near each other.
+        return sorted(names)
+
     graph = Graph()
     for decl in decls:
         deps = get_dependency_of_decl(decl)
         for dep in deps:
             graph.add_edge(decl.name, dep)
-    sorted_names = graph.topological_sort()
+    sorted_names = graph.topological_sort(same_rank_sorter=same_rank_sorter)
     for name in sorted_names:
         yield from filter(lambda decl: decl.name == name, decls)
 
