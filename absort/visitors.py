@@ -202,8 +202,7 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
         for withitem in node.items:
             self.visit(withitem.context_expr)
 
-            optional_vars = withitem.optional_vars
-            if optional_vars:
+            if optional_vars := withitem.optional_vars:
                 # FIXME I am not sure this is correct
                 optional_var_names = get_descendant_names(optional_vars)
                 introduced_names.update(optional_var_names)
@@ -223,8 +222,7 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
         for withitem in node.items:
             self.visit(withitem.context_expr)
 
-            optional_vars = withitem.optional_vars
-            if optional_vars:
+            if optional_vars := withitem.optional_vars:
                 # FIXME I am not sure this is correct
                 optional_var_names = get_descendant_names(optional_vars)
                 introduced_names.update(optional_var_names)
@@ -246,9 +244,7 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
 
         self._symbol_table_stack.pop()
 
-        handlers = node.handlers
-
-        for handler in handlers:
+        for handler in node.handlers:
             if handler.type:
                 self.visit(handler.type)
 

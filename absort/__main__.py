@@ -28,7 +28,8 @@ def absort_decls(decls: List[TYPE_DECL_STMT]) -> List[TYPE_DECL_STMT]:
     return []
 
 
-def transform(top_level_stmts: List[ast.stmt]) -> List[ast.stmt]:
+def transform(module_tree: ast.Module) -> ast.Module:
+    top_level_stmts = module_tree.body
     new_stmts: List[ast.stmt] = []
     buffer: List[TYPE_DECL_STMT] = []
     for stmt in top_level_stmts:
@@ -40,10 +41,14 @@ def transform(top_level_stmts: List[ast.stmt]) -> List[ast.stmt]:
                 buffer.clear()
             new_stmts.append(stmt)
     new_stmts.extend(absort_decls(buffer))
-    return new_stmts
+    new_module_tree = ast.Module(body=new_stmts)
+    ast_remove_location_info(new_module_tree)
+    ast.fix_missing_locations(new_module_tree)
+    return new_module_tree
 
 
-def preliminary_sanity_check(top_level_stmts: List[ast.stmt]) -> None:
+def preliminary_sanity_check(module_tree: ast.Module) -> None:
+    top_level_stmts = module_tree.body
     decls = [stmt for stmt in top_level_stmts if isinstance(stmt, DECL_STMT_CLASSES)]
     decl_ids = [decl.name for decl in decls]
     if len(decl_ids) != len(set(decl_ids)):
@@ -58,16 +63,10 @@ def preliminary_sanity_check(top_level_stmts: List[ast.stmt]) -> None:
 def main(file: io.TextIOWrapper) -> None:
     module_tree = ast.parse(file.read())
 
-    top_level_stmts = module_tree.body
+    preliminary_sanity_check(module_tree)
 
-    preliminary_sanity_check(top_level_stmts)
+    new_module_tree = transform(module_tree)
 
-    new_stmts = transform(top_level_stmts)
-
-    new_module_tree = ast.Module(body=new_stmts)
-
-    ast_remove_location_info(new_module_tree)
-    ast.fix_missing_locations(new_module_tree)
     print(astor.to_source(new_module_tree))
 
 
