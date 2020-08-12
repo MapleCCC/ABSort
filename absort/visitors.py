@@ -149,10 +149,12 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
     def visit_Module(self, node: ast.Module) -> None:
         self._visit_new_scope(node.body, ScopeContext.Module)
 
-    # TODO what is the node.returns attribute?
     def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
         for decorator in node.decorator_list:
             self.visit(decorator)
+
+        if node.returns:
+            self.visit(node.returns)
 
         inject_names = set()
 
@@ -166,10 +168,12 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
 
         self._add_declaration_name_to_symbol_table_stack(node.name)
 
-    # TODO what is the node.returns attribute?
     def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
         for decorator in node.decorator_list:
             self.visit(decorator)
+
+        if node.returns:
+            self.visit(node.returns)
 
         inject_names = set()
 
