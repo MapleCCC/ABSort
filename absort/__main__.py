@@ -3,7 +3,7 @@
 import ast
 import difflib
 from pathlib import Path
-from typing import Iterator, List, Set, Tuple, Union
+from typing import Any, Dict, Iterator, List, Set, Tuple, Union
 
 import astor
 import click
@@ -24,7 +24,9 @@ def get_dependency_of_decl(decl: TYPE_DECL_STMT) -> Set[str]:
     return visitor.visit(temp_module)
 
 
-def absort_decls(decls: List[TYPE_DECL_STMT]) -> Iterator[TYPE_DECL_STMT]:
+def absort_decls(
+    decls: List[TYPE_DECL_STMT], options: Dict[str, Any]
+) -> Iterator[TYPE_DECL_STMT]:
     def same_rank_sorter(names: List[str]) -> List[str]:
         # Currently sort by lexigraphical order.
         # TODO More advanced option is to utilize power of machine learning to put two
@@ -36,12 +38,17 @@ def absort_decls(decls: List[TYPE_DECL_STMT]) -> Iterator[TYPE_DECL_STMT]:
         deps = get_dependency_of_decl(decl)
         for dep in deps:
             graph.add_edge(decl.name, dep)
-    sorted_names = graph.topological_sort(same_rank_sorter=same_rank_sorter)
+    sorted_names = list(graph.topological_sort(same_rank_sorter=same_rank_sorter))
+
+    if options["fix_main_to_bottom"] and "main" in sorted_names:
+        sorted_names.remove("main")
+        sorted_names.append("main")
+
     for name in sorted_names:
         yield from filter(lambda decl: decl.name == name, decls)
 
 
-def transform(module_tree: ast.Module) -> ast.Module:
+def transform(module_tree: ast.Module, options: Dict[str, Any]) -> ast.Module:
     top_level_stmts = module_tree.body
 
     new_stmts: List[ast.stmt] = []
@@ -50,10 +57,10 @@ def transform(module_tree: ast.Module) -> ast.Module:
         if isinstance(stmt, DECL_STMT_CLASSES):
             buffer.append(stmt)
         else:
-            new_stmts.extend(absort_decls(buffer))
+            new_stmts.extend(absort_decls(buffer, options))
             buffer.clear()
             new_stmts.append(stmt)
-    new_stmts.extend(absort_decls(buffer))
+    new_stmts.extend(absort_decls(buffer, options))
 
     new_module_tree = ast.Module(body=new_stmts)
 
@@ -80,11 +87,12 @@ def preliminary_sanity_check(module_tree: ast.Module) -> None:
     type=click.Path(exists=True, dir_okay=False, readable=True, allow_dash=True),
 )
 @click.option("-d", "--diff", "display_diff", is_flag=True, default=False)
+@click.option("--fix-main-to-bottom", is_flag=True, default=True)
 # TODO in-place
 # TODO multi thread
 # TODO fix main to bottom
 # TODO keep comments
-def main(filenames: Tuple[str], display_diff: bool) -> None:
+def main(filenames: Tuple[str], display_diff: bool, fix_main_to_bottom: bool) -> None:
 
     for filename in filenames:
         old_source = Path(filename).read_text(encoding="utf-8")
@@ -93,7 +101,8 @@ def main(filenames: Tuple[str], display_diff: bool) -> None:
 
         preliminary_sanity_check(module_tree)
 
-        new_module_tree = transform(module_tree)
+        options = {"fix_main_to_bottom": fix_main_to_bottom}
+        new_module_tree = transform(module_tree, options)
 
         new_source = astor.to_source(new_module_tree)
 
