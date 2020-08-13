@@ -1,9 +1,13 @@
 import difflib
-from typing import Any, List, Iterator
+from typing import Any, List, Iterable, Iterator
 
 from colorama import Fore, Style
 
-__all__ = ["beginswith", "colored_unified_diff"]
+__all__ = ["reverse", "beginswith", "colored_unified_diff"]
+
+
+def reverse(iterable: Iterable) -> List:
+    return list(iterable)[::-1]
 
 
 def beginswith(s: str, prefix: str) -> bool:
