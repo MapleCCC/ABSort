@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import ast
-import difflib
 from pathlib import Path
 from typing import Iterator, List, Set, Tuple, Union
 
@@ -9,6 +8,7 @@ import click
 
 from .iblack8 import format_code
 from .graph import Graph
+from .utils import colored_unified_diff
 from .visitors import GetUndefinedVariableVisitor
 
 
@@ -117,7 +117,8 @@ def main(
         if display_diff:
             old_src_lines = old_source.splitlines(keepends=True)
             new_src_lines = new_source.splitlines(keepends=True)
-            print("".join(difflib.unified_diff(old_src_lines, new_src_lines)), end="")
+            diff_view_lines = colored_unified_diff( old_src_lines, new_src_lines)
+            print("".join(diff_view_lines), end="")
         else:
             print(new_source)
 
