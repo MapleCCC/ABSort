@@ -60,12 +60,15 @@ def ast_get_leading_comment_source_segment(
     )
     white_section = reverse(takewhile(white_criteria, leading_lines[::-1]))
 
-    comments = filter(lambda line: beginswith(line.lstrip(), "#"), white_section)
+    comments = list(filter(lambda line: beginswith(line.lstrip(), "#"), white_section))
 
     if not padded:
-        comments = map(str.lstrip, comments)
+        comments = list(map(str.lstrip, comments))
 
-    return "\n".join(comments) + "\n"
+    if comments:
+        return "\n".join(comments) + "\n"
+    else:
+        return ""
 
 
 def ast_get_decorator_list_source_segment(
