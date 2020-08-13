@@ -1,5 +1,5 @@
 import difflib
-from typing import List, Iterator
+from typing import Any, List, Iterator
 
 from colorama import Fore, Style
 
@@ -27,8 +27,10 @@ def bright_blue(s: str) -> str:
     return Style.BRIGHT + Fore.BLUE + s + Style.RESET_ALL  # type: ignore
 
 
-def colored_unified_diff( a: List[str], b: List[str]) -> Iterator[str]:
-    for line in difflib.unified_diff(a, b):
+def colored_unified_diff(
+    a: List[str], b: List[str], *args: Any, **kwargs: Any
+) -> Iterator[str]:
+    for line in difflib.unified_diff(a, b, *args, **kwargs):
         code = line[0]
         if line[:3] in ("---", "+++") or line[:2] == "@@":
             # Control lines

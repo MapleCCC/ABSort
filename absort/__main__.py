@@ -117,7 +117,11 @@ def main(
         if display_diff:
             old_src_lines = old_source.splitlines(keepends=True)
             new_src_lines = new_source.splitlines(keepends=True)
-            diff_view_lines = colored_unified_diff( old_src_lines, new_src_lines)
+            fromfile = "old/" + filename
+            tofile = "new/" + filename
+            diff_view_lines = colored_unified_diff(
+                old_src_lines, new_src_lines, fromfile, tofile
+            )
             print("".join(diff_view_lines), end="")
         else:
             print(new_source)
