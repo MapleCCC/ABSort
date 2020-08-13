@@ -9,6 +9,7 @@ import astor
 import click
 
 from .ast_utils import ast_remove_location_info
+from .iblack8 import format_code
 from .graph import Graph
 from .visitors import GetUndefinedVariableVisitor
 
@@ -92,6 +93,8 @@ def main(filenames: Tuple[str], display_diff: bool) -> None:
         new_module_tree = transform(module_tree)
 
         new_source = astor.to_source(new_module_tree)
+
+        new_source = format_code(new_source)
 
         # TODO add more styled output (e.g. colorized)
         print("---------------------------------------")
