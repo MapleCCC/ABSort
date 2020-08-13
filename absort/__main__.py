@@ -71,6 +71,18 @@ def transform(old_source: str) -> str:
         new_source += "\n".join(white_section) + "\n"
 
         segment = ast.get_source_segment(old_source, stmt, padded=True)
+
+        # TODO it's surprising that ast.get_source_segment doesn't include source
+        # segment of decorator_list.
+        if hasattr(stmt, "decorator_list"):
+            decorator_list_source_segment = ""
+            for decorator in stmt.decorator_list:  # type: ignore
+                decorator_source_segment = "@" + ast.get_source_segment(
+                    old_source, decorator, padded=True
+                )
+                decorator_list_source_segment += decorator_source_segment + "\n"
+            segment = decorator_list_source_segment + segment
+
         new_source += segment + "\n"
 
     return new_source
