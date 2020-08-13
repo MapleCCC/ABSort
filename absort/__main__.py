@@ -107,12 +107,18 @@ def preliminary_sanity_check(source_code: str) -> None:
     type=click.Path(exists=True, dir_okay=False, readable=True, allow_dash=True),
 )
 @click.option("-d", "--diff", "display_diff", is_flag=True)
+@click.option("-i", "--in-place", is_flag=True)
 @click.option("--no-fix-main-to-bottom", is_flag=True)
-# TODO in-place
 # TODO multi thread
 def main(
-    filenames: Tuple[str], display_diff: bool, no_fix_main_to_bottom: bool
+    filenames: Tuple[str],
+    display_diff: bool,
+    in_place: bool,
+    no_fix_main_to_bottom: bool,
 ) -> None:
+
+    if display_diff and in_place:
+        raise RuntimeError("Can't specify both `--diff` and `--in-place` options")
 
     colorama.init()
 
@@ -135,6 +141,8 @@ def main(
             )
             print("".join(diff_view_lines), end="")
             print("\n", end="")
+        elif in_place:
+            Path(filename).write_text(new_source, encoding="utf-8")
         else:
             print("---------------------------------------")
             print(filename)
