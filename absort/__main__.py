@@ -115,9 +115,9 @@ def main(
         print("***************************************")
 
         if display_diff:
-            old_src_lines = old_source.splitlines()
-            new_src_lines = new_source.splitlines()
-            print("\n".join(difflib.unified_diff(old_src_lines, new_src_lines)))
+            old_src_lines = old_source.splitlines(keepends=True)
+            new_src_lines = new_source.splitlines(keepends=True)
+            print("".join(difflib.unified_diff(old_src_lines, new_src_lines)), end="")
         else:
             print(new_source)
 
