@@ -25,6 +25,9 @@
 - Add unit tests
 - Release 1.0.0 version
 - Handle comments. We don't want to lose comments after absort processing a file.
+- Check whether ast.iter_child_nodes yield ordered results?
+- Reserve comments and blank lines and whitespace layouts. They are important part of the code style.
+  - Reserve top level comments
 
 
 ## Changelog

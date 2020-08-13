@@ -24,6 +24,8 @@ $ absort <python files>
 
 <!-- TODO insert click library `--help` message -->
 
+Alternatively, you can pass Python code from `stdin`.
+
 ## Limitations
 
 The script is a static analysis tool. It's impossible to handle some heavily dynamic behaviours, e.g. dynamic manipulation of the globals(), locals().

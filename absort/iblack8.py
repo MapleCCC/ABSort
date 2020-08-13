@@ -2,7 +2,7 @@
 
 from functools import partial
 from pathlib import Path
-from typing import Any, Iterable, cast
+from typing import Any, Iterable
 
 import autopep8
 import black
@@ -31,12 +31,9 @@ autopep8_options = {"aggressive": 2, "select": ["E501"]}
 def format_code(s: str) -> str:
     fixed = autopep8.fix_code(s, options=autopep8_options)
 
-    sorted_ = isort.code(fixed)
+    isorted = isort.code(fixed)
 
-    # to inform the type checker that sorted_ is of str type
-    sorted_ = cast(str, sorted_)
-
-    formatted = black.format_str(sorted_, mode=black.FileMode())
+    formatted = black.format_str(isorted, mode=black.FileMode())
 
     return formatted
 

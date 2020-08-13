@@ -3,7 +3,7 @@
 import ast
 import difflib
 from pathlib import Path
-from typing import Any, Dict, Iterator, List, Set, Tuple, Union
+from typing import Iterator, List, Set, Tuple, Union
 
 import click
 
@@ -25,6 +25,7 @@ def get_dependency_of_decl(decl: TYPE_DECL_STMT) -> Set[str]:
 def absort_decls(decls: List[TYPE_DECL_STMT]) -> Iterator[TYPE_DECL_STMT]:
     def same_rank_sorter(names: List[str]) -> List[str]:
         # Currently sort by lexigraphical order.
+        # Alternatives: sort by body size, sort by name length, etc.
         # TODO More advanced option is to utilize power of machine learning to put two
         # visually/semantically similar function/class definitions near each other.
         return sorted(names)
@@ -61,6 +62,8 @@ def transform(old_source: str) -> str:
             new_stmts.append(stmt)
     new_stmts.extend(absort_decls(buffer))
 
+    # TODO reserve top level comments
+
     new_source = ""
     for stmt in new_stmts:
         segment = ast.get_source_segment(old_source, stmt, padded=True)
@@ -76,6 +79,7 @@ def preliminary_sanity_check(source_code: str) -> None:
     top_level_stmts = module_tree.body
     decls = [stmt for stmt in top_level_stmts if isinstance(stmt, DECL_STMT_CLASSES)]
     decl_ids = [decl.name for decl in decls]
+
     if len(decl_ids) != len(set(decl_ids)):
         raise ValueError("Name redefinition exists. Not supported yet.")
 
@@ -90,8 +94,8 @@ def preliminary_sanity_check(source_code: str) -> None:
 @click.option("--no-fix-main-to-bottom", is_flag=True)
 # TODO in-place
 # TODO multi thread
-# TODO fix main to bottom
-# TODO keep comments
+# TODO reserve comments
+# TODO reserve blank lines and other whitespaces
 def main(
     filenames: Tuple[str], display_diff: bool, no_fix_main_to_bottom: bool
 ) -> None:
