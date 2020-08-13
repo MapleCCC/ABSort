@@ -110,9 +110,6 @@ def main(
         new_source = format_code(new_source)
 
         # TODO add more styled output (e.g. colorized)
-        print("---------------------------------------")
-        print(filename)
-        print("***************************************")
 
         if display_diff:
             old_src_lines = old_source.splitlines(keepends=True)
@@ -123,11 +120,14 @@ def main(
                 old_src_lines, new_src_lines, fromfile, tofile
             )
             print("".join(diff_view_lines), end="")
+            print("\n", end="")
         else:
+            print("---------------------------------------")
+            print(filename)
+            print("***************************************")
             print(new_source)
-
-        print("***************************************")
-        print("\n", end="")
+            print("***************************************")
+            print("\n", end="")
 
 
 if __name__ == "__main__":
