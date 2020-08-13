@@ -20,9 +20,6 @@ def hasattrs(obj: Any, names: Iterable[str]) -> bool:
     return all(map(partial(hasattr, obj), names))
 
 
-if not hasattr(isort, "SortImports"):
-    raise VersionIncompatibleError("isort version incompatible")
-
 # FIXME Change to black's public interface after black publishes the first
 # stable release in the future.
 if not hasattrs(black, ["format_str", "FileMode"]):
@@ -34,7 +31,7 @@ autopep8_options = {"aggressive": 2, "select": ["E501"]}
 def format_code(s: str) -> str:
     fixed = autopep8.fix_code(s, options=autopep8_options)
 
-    sorted_ = isort.SortImports(file_contents=fixed).output
+    sorted_ = isort.code(fixed)
 
     # to inform the type checker that sorted_ is of str type
     sorted_ = cast(str, sorted_)
