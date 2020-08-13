@@ -73,7 +73,7 @@ def transform(old_source: str) -> str:
             old_source, stmt, padded=True
         )
 
-        # TODO it's surprising that ast.get_source_segment doesn't include source
+        # WARNING: it's surprising that ast.get_source_segment doesn't include source
         # segment of decorator_list.
         new_source += ast_get_decorator_list_source_segment(
             old_source, stmt, padded=True
@@ -110,8 +110,6 @@ def preliminary_sanity_check(source_code: str) -> None:
 @click.option("--no-fix-main-to-bottom", is_flag=True)
 # TODO in-place
 # TODO multi thread
-# TODO reserve comments
-# TODO reserve blank lines and other whitespaces
 def main(
     filenames: Tuple[str], display_diff: bool, no_fix_main_to_bottom: bool
 ) -> None:

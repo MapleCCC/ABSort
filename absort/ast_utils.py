@@ -55,6 +55,7 @@ def ast_get_leading_comment_source_segment(
     white_criteria = (
         lambda line: len(line.strip()) == 0
         or beginswith(line.lstrip(), "#")
+        # It's possible to have comments between decorator_list and function/class definition
         or beginswith(line.lstrip(), "@")
     )
     white_section = reverse(takewhile(white_criteria, leading_lines[::-1]))

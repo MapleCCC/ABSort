@@ -12,7 +12,6 @@
 - Add docstring to module, function, method, etc. Elaborate on what they really do.
 - Deploy poetry.
 - Deploy pre-commit.
-- Add LICENSE
 
 ## Low Priority
 
@@ -21,13 +20,9 @@
 - More detail in symbol table.
   - More detail in symbol table to distinguish different variable with same identifier.
 - When programming, use Tickey to broadcast keyboard sound.
-- Add setup.py
 - Add unit tests
 - Release 1.0.0 version
-- Handle comments. We don't want to lose comments after absort processing a file.
 - Check whether ast.iter_child_nodes yield ordered results?
-- Reserve comments and blank lines and whitespace layouts. They are important part of the code style.
-  - Reserve top level comments
 
 
 ## Changelog
@@ -37,3 +32,8 @@
 - Consider global and nonlocal.
 - Remove unused imports.
 - Copy Graph.py from Source-Concater reposiroty.
+- Reserve comments and blank lines and whitespace layouts. They are important part of the code style.
+  - Reserve top level comments
+- Handle comments. We don't want to lose comments after absort processing a file.
+- Add LICENSE
+- Add setup.py
