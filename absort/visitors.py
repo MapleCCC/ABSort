@@ -287,9 +287,13 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
         new_tree: ast.stmt = ast.Expr(value=node.elt)
         for generator in node.generators:
             for if_test in generator.ifs:
-                new_tree = ast.If(test=if_test, body=[new_tree])
+                new_tree = ast.If(test=if_test, body=[new_tree], orelse=[])
             new_tree = ast.For(
-                target=generator.target, iter=generator.iter, body=[new_tree]
+                target=generator.target,
+                iter=generator.iter,
+                body=[new_tree],
+                orelse=[],
+                type_comment=None,
             )
 
         self.visit(new_tree)
@@ -299,9 +303,13 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
         new_tree: ast.stmt = ast.Expr(value=node.elt)
         for generator in node.generators:
             for if_test in generator.ifs:
-                new_tree = ast.If(test=if_test, body=[new_tree])
+                new_tree = ast.If(test=if_test, body=[new_tree], orelse=[])
             new_tree = ast.For(
-                target=generator.target, iter=generator.iter, body=[new_tree]
+                target=generator.target,
+                iter=generator.iter,
+                body=[new_tree],
+                orelse=[],
+                type_comment=None,
             )
 
         self.visit(new_tree)
@@ -313,9 +321,13 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
         )
         for generator in node.generators:
             for if_test in generator.ifs:
-                new_tree = ast.If(test=if_test, body=[new_tree])
+                new_tree = ast.If(test=if_test, body=[new_tree], orelse=[])
             new_tree = ast.For(
-                target=generator.target, iter=generator.iter, body=[new_tree]
+                target=generator.target,
+                iter=generator.iter,
+                body=[new_tree],
+                orelse=[],
+                type_comment=None,
             )
 
         self.visit(new_tree)
@@ -325,9 +337,13 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
         new_tree: ast.stmt = ast.Expr(value=node.elt)
         for generator in node.generators:
             for if_test in generator.ifs:
-                new_tree = ast.If(test=if_test, body=[new_tree])
+                new_tree = ast.If(test=if_test, body=[new_tree], orelse=[])
             new_tree = ast.For(
-                target=generator.target, iter=generator.iter, body=[new_tree]
+                target=generator.target,
+                iter=generator.iter,
+                body=[new_tree],
+                orelse=[],
+                type_comment=None,
             )
 
         self.visit(new_tree)
