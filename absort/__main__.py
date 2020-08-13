@@ -68,8 +68,7 @@ def transform(old_source: str) -> str:
         leading_lines = old_source.splitlines()[: stmt.lineno - 1]
         white_criteria = lambda line: len(line.strip()) == 0 or beginswith(line, "#")
         white_section = reverse(takewhile(white_criteria, leading_lines[::-1]))
-        comments = filter(lambda line: beginswith(line, "#"), white_section)
-        new_source += "\n".join(comments) + "\n"
+        new_source += "\n".join(white_section) + "\n"
 
         segment = ast.get_source_segment(old_source, stmt, padded=True)
         new_source += segment + "\n"
