@@ -3,7 +3,14 @@ from typing import Any, List, Iterator
 
 from colorama import Fore, Style
 
-__all__ = ["colored_unified_diff"]
+__all__ = ["beginswith", "colored_unified_diff"]
+
+
+def beginswith(s: str, prefix: str) -> bool:
+    if len(s) < len(prefix):
+        return False
+    else:
+        return s[: len(prefix)] == prefix
 
 
 def bright_red(s: str) -> str:

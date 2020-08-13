@@ -8,7 +8,7 @@ import click
 
 from .iblack8 import format_code
 from .graph import Graph
-from .utils import colored_unified_diff
+from .utils import beginswith, colored_unified_diff
 from .visitors import GetUndefinedVariableVisitor
 
 
@@ -62,11 +62,16 @@ def transform(old_source: str) -> str:
             new_stmts.append(stmt)
     new_stmts.extend(absort_decls(buffer))
 
-    # TODO reserve top level comments
-
     new_source = ""
+    last_segment_end_lineno = 0
     for stmt in new_stmts:
+        section = old_source.splitlines()[last_segment_end_lineno + 1 : stmt.lineno]
+        for line in section:
+            if beginswith(line, "#"):
+                new_source += line + "\n"
+
         segment = ast.get_source_segment(old_source, stmt, padded=True)
+        last_segment_end_lineno = stmt.end_lineno
         new_source += segment + "\n"
 
     return new_source
