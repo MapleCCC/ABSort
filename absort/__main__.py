@@ -26,7 +26,7 @@ def get_dependency_of_decl(decl: TYPE_DECL_STMT) -> Set[str]:
 def absort_decls(decls: List[TYPE_DECL_STMT]) -> Iterator[TYPE_DECL_STMT]:
     def same_rank_sorter(names: List[str]) -> List[str]:
         # Currently sort by lexigraphical order.
-        # Alternatives: sort by body size, sort by name length, etc.
+        # Possible alternatives: sort by body size, sort by name length, etc.
         # TODO More advanced option is to utilize power of machine learning to put two
         # visually/semantically similar function/class definitions near each other.
         return sorted(names)
@@ -65,12 +65,13 @@ def transform(old_source: str) -> str:
 
     new_source = ""
     for stmt in new_stmts:
+        # WARNING: ast.AST.lineno is 1-indexed
         leading_lines = old_source.splitlines()[: stmt.lineno - 1]
-        white_criteria = lambda line: len(line.strip()) == 0 or beginswith(line, "#")
-        white_section = reverse(takewhile(white_criteria, leading_lines[::-1]))
-        new_source += "\n".join(white_section) + "\n"
+        comment_criteria = lambda line: len(line.strip()) == 0 or beginswith(line, "#")
+        comment_section = reverse(takewhile(comment_criteria, leading_lines[::-1]))
+        new_source += "\n".join(comment_section) + "\n"
 
-        segment = ast.get_source_segment(old_source, stmt, padded=True)
+        source_segment = ast.get_source_segment(old_source, stmt, padded=True)
 
         # TODO it's surprising that ast.get_source_segment doesn't include source
         # segment of decorator_list.
@@ -81,9 +82,11 @@ def transform(old_source: str) -> str:
                     old_source, decorator, padded=True
                 )
                 decorator_list_source_segment += decorator_source_segment + "\n"
-            segment = decorator_list_source_segment + segment
+            source_segment = decorator_list_source_segment + source_segment
 
-        new_source += segment + "\n"
+        new_source += source_segment + "\n"
+
+    new_source = format_code(new_source)
 
     return new_source
 
@@ -122,8 +125,6 @@ def main(
         preliminary_sanity_check(old_source)
 
         new_source = transform(old_source)
-
-        new_source = format_code(new_source)
 
         # TODO add more styled output (e.g. colorized)
 
