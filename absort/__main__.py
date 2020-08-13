@@ -1,15 +1,18 @@
 #!/usr/bin/env python3
 
 import ast
-from itertools import takewhile
 from pathlib import Path
 from typing import Iterator, List, Set, Tuple, Union
 
 import click
 
+from .ast_utils import (
+    ast_get_leading_comment_source_segment,
+    ast_get_decorator_list_source_segment,
+)
 from .iblack8 import format_code
 from .graph import Graph
-from .utils import reverse, beginswith, colored_unified_diff
+from .utils import colored_unified_diff
 from .visitors import GetUndefinedVariableVisitor
 
 
@@ -65,31 +68,19 @@ def transform(old_source: str) -> str:
 
     new_source = ""
     for stmt in new_stmts:
-        # WARNING: ast.AST.lineno is 1-indexed
-        leading_lines = old_source.splitlines()[: stmt.lineno - 1]
-        white_criteria = (
-            lambda line: len(line.strip()) == 0
-            or beginswith(line, "#")
-            or beginswith(line, "@")
+        new_source += ast_get_leading_comment_source_segment(
+            old_source, stmt, padded=True
         )
-        white_section = reverse(takewhile(white_criteria, leading_lines[::-1]))
-        comments = filter(lambda line: beginswith(line, "#"), white_section)
-        new_source += "\n".join(comments) + "\n"
-
-        source_segment = ast.get_source_segment(old_source, stmt, padded=True)
 
         # TODO it's surprising that ast.get_source_segment doesn't include source
         # segment of decorator_list.
-        if hasattr(stmt, "decorator_list"):
-            decorator_list_source_segment = ""
-            for decorator in stmt.decorator_list:  # type: ignore
-                decorator_source_segment = "@" + ast.get_source_segment(
-                    old_source, decorator, padded=True
-                )
-                decorator_list_source_segment += decorator_source_segment + "\n"
-            source_segment = decorator_list_source_segment + source_segment
+        new_source += ast_get_decorator_list_source_segment(
+            old_source, stmt, padded=True
+        )
 
-        new_source += source_segment + "\n"
+        new_source += ast.get_source_segment(old_source, stmt, padded=True)
+
+        new_source += "\n"
 
     new_source = format_code(new_source)
 
