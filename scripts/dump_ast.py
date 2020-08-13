@@ -13,8 +13,9 @@ from absort.ast_utils import ast_pretty_dump
 
 @click.command()
 @click.argument("file", type=click.File("r", encoding="utf-8"))
-def main(file: io.TextIOWrapper) -> None:
-    print(ast_pretty_dump(ast.parse(file.read())))
+@click.option("-c", "--compact", "compact", is_flag=True, default=False)
+def main(file: io.TextIOWrapper, compact: bool) -> None:
+    print(ast_pretty_dump(ast.parse(file.read()), annotate_fields=not compact))
 
 
 if __name__ == "__main__":
