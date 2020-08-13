@@ -86,8 +86,8 @@ def preliminary_sanity_check(module_tree: ast.Module) -> None:
     nargs=-1,
     type=click.Path(exists=True, dir_okay=False, readable=True, allow_dash=True),
 )
-@click.option("-d", "--diff", "display_diff", is_flag=True, default=False)
-@click.option("--fix-main-to-bottom", is_flag=True, default=True)
+@click.option("-d", "--diff", "display_diff", is_flag=True)
+@click.option("--fix-main-to-bottom", is_flag=True)
 # TODO in-place
 # TODO multi thread
 # TODO fix main to bottom
