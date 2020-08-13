@@ -5,10 +5,8 @@ import difflib
 from pathlib import Path
 from typing import Any, Dict, Iterator, List, Set, Tuple, Union
 
-import astor
 import click
 
-from .ast_utils import ast_remove_location_info
 from .iblack8 import format_code
 from .graph import Graph
 from .visitors import GetUndefinedVariableVisitor
@@ -63,12 +61,10 @@ def transform(old_source: str) -> str:
             new_stmts.append(stmt)
     new_stmts.extend(absort_decls(buffer))
 
-    new_module_tree = ast.Module(body=new_stmts)
-
-    ast_remove_location_info(new_module_tree)
-    ast.fix_missing_locations(new_module_tree)
-
-    new_source = astor.to_source(new_module_tree)
+    new_source = ""
+    for stmt in new_stmts:
+        segment = ast.get_source_segment(old_source, stmt, padded=True)
+        new_source += segment + "\n"
 
     return new_source
 
