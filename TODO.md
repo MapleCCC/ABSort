@@ -23,6 +23,8 @@
 - When programming, use Tickey to broadcast keyboard sound.
 - Add setup.py
 - Add unit tests
+- Release 1.0.0 version
+- Handle comments. We don't want to lose comments after absort processing a file.
 
 
 ## Changelog

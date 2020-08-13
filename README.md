@@ -4,12 +4,16 @@
 
 ## Overview
 
-ABSort is a lightweight library and a command line utility to sort Python function/class definitions by their abstraction levels.
+`isort`, one of the top libraries in Python ecosystem, is aimed at sorting import statements. But what about a tool that sorts function/class definitions? Don't worry, `ABSort` got your back!
+
+`ABSort` is a lightweight library and a command line utility to sort Python function/class definitions by their abstraction levels.
 
 ## Installation
 
+<!-- TODO Specify release version when installing -->
+
 ```bash
-$ python -m pip install git+https://github.com/MapleCCC/absort
+$ python -m pip install git+https://github.com/MapleCCC/absort.git#egg=absort
 ```
 
 ## Usage
@@ -17,6 +21,8 @@ $ python -m pip install git+https://github.com/MapleCCC/absort
 ```bash
 $ absort <python files>
 ```
+
+<!-- TODO insert click library `--help` message -->
 
 ## Limitations
 

@@ -27,8 +27,8 @@ def get_dependency_of_decl(decl: TYPE_DECL_STMT) -> Set[str]:
 def absort_decls(decls: List[TYPE_DECL_STMT]) -> Iterator[TYPE_DECL_STMT]:
     def same_rank_sorter(names: List[str]) -> List[str]:
         # Currently sort by lexigraphical order.
-        # More advanced option is to utilize power of machine learning to put two
-        # visually similar function/class definition near each other.
+        # TODO More advanced option is to utilize power of machine learning to put two
+        # visually/semantically similar function/class definitions near each other.
         return sorted(names)
 
     graph = Graph()
@@ -64,6 +64,8 @@ def transform(module_tree: ast.Module) -> ast.Module:
 
 
 def preliminary_sanity_check(module_tree: ast.Module) -> None:
+    # TODO add more sanity checks
+
     top_level_stmts = module_tree.body
     decls = [stmt for stmt in top_level_stmts if isinstance(stmt, DECL_STMT_CLASSES)]
     decl_ids = [decl.name for decl in decls]
@@ -81,6 +83,7 @@ def preliminary_sanity_check(module_tree: ast.Module) -> None:
 # TODO in-place
 # TODO multi thread
 # TODO fix main to bottom
+# TODO keep comments
 def main(filenames: Tuple[str], display_diff: bool) -> None:
 
     for filename in filenames:
@@ -109,7 +112,7 @@ def main(filenames: Tuple[str], display_diff: bool) -> None:
             print(new_source)
 
         print("***************************************")
-        print()
+        print("\n", end="")
 
 
 if __name__ == "__main__":
