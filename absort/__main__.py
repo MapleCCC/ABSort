@@ -67,9 +67,14 @@ def transform(old_source: str) -> str:
     for stmt in new_stmts:
         # WARNING: ast.AST.lineno is 1-indexed
         leading_lines = old_source.splitlines()[: stmt.lineno - 1]
-        comment_criteria = lambda line: len(line.strip()) == 0 or beginswith(line, "#")
-        comment_section = reverse(takewhile(comment_criteria, leading_lines[::-1]))
-        new_source += "\n".join(comment_section) + "\n"
+        white_criteria = (
+            lambda line: len(line.strip()) == 0
+            or beginswith(line, "#")
+            or beginswith(line, "@")
+        )
+        white_section = reverse(takewhile(white_criteria, leading_lines[::-1]))
+        comments = filter(lambda line: beginswith(line, "#"), white_section)
+        new_source += "\n".join(comments) + "\n"
 
         source_segment = ast.get_source_segment(old_source, stmt, padded=True)
 
