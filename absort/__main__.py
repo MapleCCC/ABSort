@@ -40,7 +40,7 @@ def absort_decls(
             graph.add_edge(decl.name, dep)
     sorted_names = list(graph.topological_sort(same_rank_sorter=same_rank_sorter))
 
-    if options["fix_main_to_bottom"] and "main" in sorted_names:
+    if options["no_fix_main_to_bottom"] and "main" in sorted_names:
         sorted_names.remove("main")
         sorted_names.append("main")
 
@@ -87,12 +87,12 @@ def preliminary_sanity_check(module_tree: ast.Module) -> None:
     type=click.Path(exists=True, dir_okay=False, readable=True, allow_dash=True),
 )
 @click.option("-d", "--diff", "display_diff", is_flag=True)
-@click.option("--fix-main-to-bottom", is_flag=True)
+@click.option("--no-fix-main-to-bottom", is_flag=True)
 # TODO in-place
 # TODO multi thread
 # TODO fix main to bottom
 # TODO keep comments
-def main(filenames: Tuple[str], display_diff: bool, fix_main_to_bottom: bool) -> None:
+def main(filenames: Tuple[str], display_diff: bool, no_fix_main_to_bottom: bool) -> None:
 
     for filename in filenames:
         old_source = Path(filename).read_text(encoding="utf-8")
@@ -101,7 +101,7 @@ def main(filenames: Tuple[str], display_diff: bool, fix_main_to_bottom: bool) ->
 
         preliminary_sanity_check(module_tree)
 
-        options = {"fix_main_to_bottom": fix_main_to_bottom}
+        options = {"no_fix_main_to_bottom": no_fix_main_to_bottom}
         new_module_tree = transform(module_tree, options)
 
         new_source = astor.to_source(new_module_tree)
