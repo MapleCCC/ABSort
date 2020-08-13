@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Iterator, List, Set, Tuple, Union
 
 import click
+import colorama
 
 from .ast_utils import (
     ast_get_leading_comment_source_segment,
@@ -114,6 +115,8 @@ def preliminary_sanity_check(source_code: str) -> None:
 def main(
     filenames: Tuple[str], display_diff: bool, no_fix_main_to_bottom: bool
 ) -> None:
+
+    colorama.init()
 
     for filename in filenames:
         old_source = Path(filename).read_text(encoding="utf-8")
