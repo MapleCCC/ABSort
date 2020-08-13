@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import ast
+import difflib
 from pathlib import Path
 from typing import Iterator, List, Set, Tuple, Union
 
@@ -75,23 +76,35 @@ def preliminary_sanity_check(module_tree: ast.Module) -> None:
     nargs=-1,
     type=click.Path(exists=True, dir_okay=False, readable=True, allow_dash=True),
 )
+@click.option("-d", "--diff", "display_diff", is_flag=True, default=False)
 # TODO in-place
 # TODO multi thread
 # TODO fix main to bottom
-def main(filenames: Tuple[str]) -> None:
+def main(filenames: Tuple[str], display_diff: bool) -> None:
 
     for filename in filenames:
-        module_tree = ast.parse(Path(filename).read_text(encoding="utf-8"))
+        old_source = Path(filename).read_text(encoding="utf-8")
+
+        module_tree = ast.parse(old_source)
 
         preliminary_sanity_check(module_tree)
 
         new_module_tree = transform(module_tree)
 
+        new_source = astor.to_source(new_module_tree)
+
         # TODO add more styled output (e.g. colorized)
         print("---------------------------------------")
         print(filename)
         print("***************************************")
-        print(astor.to_source(new_module_tree))
+
+        if display_diff:
+            old_src_lines = old_source.splitlines()
+            new_src_lines = new_source.splitlines()
+            print("\n".join(difflib.unified_diff(old_src_lines, new_src_lines)))
+        else:
+            print(new_source)
+
         print("***************************************")
         print()
 
