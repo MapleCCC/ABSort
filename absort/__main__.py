@@ -47,7 +47,9 @@ def absort_decls(decls: List[TYPE_DECL_STMT]) -> Iterator[TYPE_DECL_STMT]:
         yield from filter(lambda decl: decl.name == name, decls)
 
 
-def transform(module_tree: ast.Module) -> ast.Module:
+def transform(old_source: str) -> str:
+    module_tree = ast.parse(old_source)
+
     top_level_stmts = module_tree.body
 
     new_stmts: List[ast.stmt] = []
@@ -66,12 +68,15 @@ def transform(module_tree: ast.Module) -> ast.Module:
     ast_remove_location_info(new_module_tree)
     ast.fix_missing_locations(new_module_tree)
 
-    return new_module_tree
+    new_source = astor.to_source(new_module_tree)
+
+    return new_source
 
 
-def preliminary_sanity_check(module_tree: ast.Module) -> None:
+def preliminary_sanity_check(source_code: str) -> None:
     # TODO add more sanity checks
 
+    module_tree = ast.parse(source_code)
     top_level_stmts = module_tree.body
     decls = [stmt for stmt in top_level_stmts if isinstance(stmt, DECL_STMT_CLASSES)]
     decl_ids = [decl.name for decl in decls]
@@ -98,13 +103,9 @@ def main(
     for filename in filenames:
         old_source = Path(filename).read_text(encoding="utf-8")
 
-        module_tree = ast.parse(old_source)
+        preliminary_sanity_check(old_source)
 
-        preliminary_sanity_check(module_tree)
-
-        new_module_tree = transform(module_tree)
-
-        new_source = astor.to_source(new_module_tree)
+        new_source = transform(old_source)
 
         new_source = format_code(new_source)
 
