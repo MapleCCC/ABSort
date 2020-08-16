@@ -1,6 +1,6 @@
 import ast
 from itertools import takewhile
-from typing import Any, Iterator
+from typing import Any, Iterator, Optional
 
 import black
 
@@ -80,7 +80,13 @@ def ast_get_leading_comment_source_segment(
 
 def ast_get_decorator_list_source_segment(
     source: str, node: DecoratableType, padded: bool = False
-) -> str:
+) -> Optional[str]:
+    """
+    Return source segment of the decorator list that decorate a function/class as given
+    by the node argument.
+
+    If some location information is missing, return None.
+    """
     if not hasattr(node, "decorator_list"):
         return ""
 
@@ -89,6 +95,8 @@ def ast_get_decorator_list_source_segment(
         decorator_source_segment = ast.get_source_segment(
             source, decorator, padded=padded
         )
+        if decorator_source_segment is None:
+            return None
         pad_length = len(decorator_source_segment) - len(
             decorator_source_segment.lstrip()
         )
