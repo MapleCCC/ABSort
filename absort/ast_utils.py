@@ -1,6 +1,6 @@
 import ast
 from itertools import takewhile
-from typing import Any, Iterator
+from typing import Any, Iterator, Union
 
 import black
 
@@ -71,14 +71,17 @@ def ast_get_leading_comment_source_segment(
         return ""
 
 
+Decoratable = Union[ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef]
+
+
 def ast_get_decorator_list_source_segment(
-    source: str, node: ast.AST, padded: bool = False
+    source: str, node: Decoratable, padded: bool = False
 ) -> str:
     if not hasattr(node, "decorator_list"):
         return ""
 
     decorator_list_source_segment = ""
-    for decorator in node.decorator_list:  # type: ignore
+    for decorator in node.decorator_list:
         decorator_source_segment = "@" + ast.get_source_segment(
             source, decorator, padded=padded
         )
