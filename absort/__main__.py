@@ -11,7 +11,7 @@ from .ast_utils import (
     ast_get_leading_comment_source_segment,
     ast_get_decorator_list_source_segment,
 )
-from .extra_typing import DeclarationType, Declaration
+from .extra_typing import DeclarationType, Declaration, Decoratable
 from .graph import Graph
 from .utils import colored_unified_diff
 from .visitors import GetUndefinedVariableVisitor
@@ -76,13 +76,18 @@ def transform(old_source: str) -> str:
 
         # WARNING: it's surprising that ast.get_source_segment doesn't include source
         # segment of decorator_list.
-        new_source += ast_get_decorator_list_source_segment(
-            old_source, stmt, padded=True
-        )
+        if isinstance(stmt, Decoratable):
+            new_source += ast_get_decorator_list_source_segment(
+                old_source, stmt, padded=True
+            )
 
         new_source += ast.get_source_segment(old_source, stmt, padded=True)
 
-        new_source += "\n"
+        new_source += "\n\n"
+
+    # Only reserve one trailing newline
+    if new_source.endswith("\n\n"):
+        new_source = new_source[:-1]
 
     return new_source
 
@@ -93,9 +98,9 @@ def preliminary_sanity_check(source_code: str) -> None:
     module_tree = ast.parse(source_code)
     top_level_stmts = module_tree.body
     decls = [stmt for stmt in top_level_stmts if isinstance(stmt, Declaration)]
-    decl_ids = [decl.name for decl in decls]
+    decl_names = [decl.name for decl in decls]
 
-    if len(decl_ids) != len(set(decl_ids)):
+    if len(set(decl_names)) < len(decl_names):
         raise ValueError("Name redefinition exists. Not supported yet.")
 
 

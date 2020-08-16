@@ -48,6 +48,7 @@ def ast_remove_location_info(node: ast.AST) -> None:
                 delattr(node, attr)
 
 
+# FIXME can't handle multi-line decorator expression
 def ast_get_leading_comment_source_segment(
     source: str, node: ast.AST, padded: bool = False
 ) -> str:

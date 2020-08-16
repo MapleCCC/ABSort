@@ -20,6 +20,10 @@ $ python -m pip install git+https://github.com/MapleCCC/absort.git#egg=absort
 
 ```bash
 $ absort <python files>
+
+# Sort all files under current directory and all subdirectories
+$ absort .
+# This is equivalent to `absort **/*.py`
 ```
 
 <!-- TODO insert click library `--help` message -->
