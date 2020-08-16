@@ -2,7 +2,7 @@
 
 import ast
 from pathlib import Path
-from typing import Iterator, List, Set, Tuple, Union
+from typing import Iterator, List, Set, Tuple
 
 import click
 import colorama
@@ -11,13 +11,10 @@ from .ast_utils import (
     ast_get_leading_comment_source_segment,
     ast_get_decorator_list_source_segment,
 )
+from .extra_typing import TYPE_DECL_STMT, DECL_STMT_CLASSES
 from .graph import Graph
 from .utils import colored_unified_diff
 from .visitors import GetUndefinedVariableVisitor
-
-
-DECL_STMT_CLASSES = (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)
-TYPE_DECL_STMT = Union[ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef]
 
 
 def get_dependency_of_decl(decl: TYPE_DECL_STMT) -> Set[str]:

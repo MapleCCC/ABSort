@@ -1,9 +1,10 @@
 import ast
 from itertools import takewhile
-from typing import Any, Iterator, Union
+from typing import Any, Iterator
 
 import black
 
+from .extra_typing import Decoratable
 from .utils import reverse, beginswith
 
 
@@ -75,8 +76,6 @@ def ast_get_leading_comment_source_segment(
     else:
         return ""
 
-
-Decoratable = Union[ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef]
 
 
 def ast_get_decorator_list_source_segment(
