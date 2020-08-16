@@ -42,7 +42,8 @@ def absort_decls(decls: List[TYPE_DECL_STMT]) -> Iterator[TYPE_DECL_STMT]:
     for decl in decls:
         deps = get_dependency_of_decl(decl)
         for dep in deps:
-            graph.add_edge(decl.name, dep)
+            if dep in decl_names:
+                graph.add_edge(decl.name, dep)
     sorted_names = list(graph.topological_sort(same_rank_sorter=same_rank_sorter))
 
     cli_params = click.get_current_context().params
