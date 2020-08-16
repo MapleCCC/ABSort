@@ -82,8 +82,16 @@ def ast_get_decorator_list_source_segment(
 
     decorator_list_source_segment = ""
     for decorator in node.decorator_list:
-        decorator_source_segment = "@" + ast.get_source_segment(
+        decorator_source_segment = ast.get_source_segment(
             source, decorator, padded=padded
+        )
+        pad_length = len(decorator_source_segment) - len(
+            decorator_source_segment.lstrip()
+        )
+        decorator_source_segment = (
+            decorator_source_segment[:pad_length]
+            + "@"
+            + decorator_source_segment[pad_length:]
         )
         decorator_list_source_segment += decorator_source_segment + "\n"
     return decorator_list_source_segment
