@@ -187,13 +187,15 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
 
         self._add_declaration_name_to_symbol_table_stack(node.name)
 
-    # TODO what is the node.keywords attribute?
     def visit_ClassDef(self, node: ast.ClassDef) -> None:
         for decorator in node.decorator_list:
             self.visit(decorator)
 
         for base in node.bases:
             self.visit(base)
+
+        for keyword in node.keywords:
+            self.visit(keyword.value)
 
         self._visit_new_scope(node.body, ScopeContext.Class, inject_names={node.name})
 
