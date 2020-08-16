@@ -1,9 +1,10 @@
 import ast
 from typing import Union
 
-__all__ = ["DECL_STMT_CLASSES", "TYPE_DECL_STMT", "Decoratable"]
+__all__ = ["Declaration", "Declarationtype", "Decoratable", "DecoratableType"]
 
-DECL_STMT_CLASSES = (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)
-TYPE_DECL_STMT = Union[ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef]
+Declaration = (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)
+DeclarationType = Union[ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef]
 
-Decoratable = Union[ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef]
+Decoratable = (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)
+DecoratableType = Union[ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef]

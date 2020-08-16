@@ -4,7 +4,7 @@ from typing import Any, Iterator
 
 import black
 
-from .extra_typing import Decoratable
+from .extra_typing import DecoratableType
 from .utils import reverse, beginswith
 
 
@@ -79,7 +79,7 @@ def ast_get_leading_comment_source_segment(
 
 
 def ast_get_decorator_list_source_segment(
-    source: str, node: Decoratable, padded: bool = False
+    source: str, node: DecoratableType, padded: bool = False
 ) -> str:
     if not hasattr(node, "decorator_list"):
         return ""

@@ -11,19 +11,19 @@ from .ast_utils import (
     ast_get_leading_comment_source_segment,
     ast_get_decorator_list_source_segment,
 )
-from .extra_typing import TYPE_DECL_STMT, DECL_STMT_CLASSES
+from .extra_typing import DeclarationType, Declaration
 from .graph import Graph
 from .utils import colored_unified_diff
 from .visitors import GetUndefinedVariableVisitor
 
 
-def get_dependency_of_decl(decl: TYPE_DECL_STMT) -> Set[str]:
+def get_dependency_of_decl(decl: DeclarationType) -> Set[str]:
     temp_module = ast.Module(body=[decl])
     visitor = GetUndefinedVariableVisitor()
     return visitor.visit(temp_module)
 
 
-def absort_decls(decls: List[TYPE_DECL_STMT]) -> Iterator[TYPE_DECL_STMT]:
+def absort_decls(decls: List[DeclarationType]) -> Iterator[DeclarationType]:
     def same_rank_sorter(names: List[str]) -> List[str]:
         # Currently sort by lexigraphical order.
         # Possible alternatives: sort by body size, sort by name length, etc.
@@ -58,9 +58,9 @@ def transform(old_source: str) -> str:
     top_level_stmts = module_tree.body
 
     new_stmts: List[ast.stmt] = []
-    buffer: List[TYPE_DECL_STMT] = []
+    buffer: List[DeclarationType] = []
     for stmt in top_level_stmts:
-        if isinstance(stmt, DECL_STMT_CLASSES):
+        if isinstance(stmt, Declaration):
             buffer.append(stmt)
         else:
             new_stmts.extend(absort_decls(buffer))
@@ -92,7 +92,7 @@ def preliminary_sanity_check(source_code: str) -> None:
 
     module_tree = ast.parse(source_code)
     top_level_stmts = module_tree.body
-    decls = [stmt for stmt in top_level_stmts if isinstance(stmt, DECL_STMT_CLASSES)]
+    decls = [stmt for stmt in top_level_stmts if isinstance(stmt, Declaration)]
     decl_ids = [decl.name for decl in decls]
 
     if len(decl_ids) != len(set(decl_ids)):
