@@ -34,6 +34,10 @@ def absort_decls(decls: List[TYPE_DECL_STMT]) -> Iterator[TYPE_DECL_STMT]:
         # visually/semantically similar function/class definitions near each other.
         return sorted(names)
 
+    decl_names = [decl.name for decl in decls]
+    if len(decl_names) > len(set(decl_names)):
+        raise ValueError("Name redefinition exists. Not supported yet.")
+
     graph = Graph()
     for decl in decls:
         deps = get_dependency_of_decl(decl)
