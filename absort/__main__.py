@@ -11,7 +11,6 @@ from .ast_utils import (
     ast_get_leading_comment_source_segment,
     ast_get_decorator_list_source_segment,
 )
-from .iblack8 import format_code
 from .graph import Graph
 from .utils import colored_unified_diff
 from .visitors import GetUndefinedVariableVisitor
@@ -82,8 +81,6 @@ def transform(old_source: str) -> str:
         new_source += ast.get_source_segment(old_source, stmt, padded=True)
 
         new_source += "\n"
-
-    new_source = format_code(new_source)
 
     return new_source
 
