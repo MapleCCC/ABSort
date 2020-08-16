@@ -50,17 +50,22 @@ def ast_remove_location_info(node: ast.AST) -> None:
 def ast_get_leading_comment_source_segment(
     source: str, node: ast.AST, padded: bool = False
 ) -> str:
+    whitespace_filter = lambda line: len(line.strip()) == 0
+    comment_filter = lambda line: beginswith(line.lstrip(), "#")
+    decorator_filter = lambda line: beginswith(line.lstrip(), "@")
+
     # WARNING: ast.AST.lineno is 1-indexed
     leading_lines = source.splitlines()[: node.lineno - 1]
+
     white_criteria = (
-        lambda line: len(line.strip()) == 0
-        or beginswith(line.lstrip(), "#")
+        lambda line: whitespace_filter(line)
+        or comment_filter(line)
         # It's possible to have comments between decorator_list and function/class definition
-        or beginswith(line.lstrip(), "@")
+        or decorator_filter(line)
     )
     white_section = reverse(takewhile(white_criteria, leading_lines[::-1]))
 
-    comments = list(filter(lambda line: beginswith(line.lstrip(), "#"), white_section))
+    comments = list(filter(comment_filter, white_section))
 
     if not padded:
         comments = list(map(str.lstrip, comments))
