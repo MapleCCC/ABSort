@@ -80,9 +80,15 @@ def transform(old_source: str) -> str:
         # WARNING: it's surprising that ast.get_source_segment doesn't include source
         # segment of decorator_list.
         if isinstance(stmt, Decoratable):
-            new_source += ast_get_decorator_list_source_segment(
+            decorator_list_source_segment = ast_get_decorator_list_source_segment(
                 old_source, stmt, padded=True
             )
+            if decorator_list_source_segment is None:
+                raise ValueError(
+                    "Some location information is missing, "
+                    "get decorator_list source segment failed."
+                )
+            new_source += decorator_list_source_segment
 
         new_source += ast.get_source_segment(old_source, stmt, padded=True)
 
