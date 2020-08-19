@@ -51,7 +51,7 @@ def ast_remove_location_info(node: ast.AST) -> None:
 
 # TODO use memoization technique to optimzie performance.
 def ast_get_leading_comment_and_decorator_list_source_segment(
-    source: str, node: ast.AST, padded: bool = False
+    source: str, node: ast.AST
 ) -> str:
     # WARNING: ast.AST.lineno and ast.AST.end_lineno are 1-indexed
 
@@ -75,9 +75,7 @@ def ast_get_leading_comment_and_decorator_list_source_segment(
 
 
 # FIXME can't handle multi-line decorator expression
-def ast_get_leading_comment_source_segment(
-    source: str, node: ast.AST, padded: bool = False
-) -> str:
+def ast_get_leading_comment_source_segment(source: str, node: ast.AST) -> str:
     whitespace_filter = lambda line: len(line.strip()) == 0
     comment_filter = lambda line: beginswith(line.lstrip(), "#")
     decorator_filter = lambda line: beginswith(line.lstrip(), "@")
@@ -94,24 +92,13 @@ def ast_get_leading_comment_source_segment(
     )
     white_section = reverse(takewhile(white_criteria, above_lines[::-1]))
 
-    if not padded:
-        non_padded_white_section = []
-        for line in white_section:
-            if comment_filter(line):
-                non_padded_white_section.append(line.lstrip())
-            else:
-                non_padded_white_section.append(line)
-        white_section = non_padded_white_section
-
     if white_section:
         return "\n".join(white_section) + "\n"
     else:
         return ""
 
 
-def ast_get_decorator_list_source_segment(
-    source: str, node: ast.AST, padded: bool = False
-) -> Optional[str]:
+def ast_get_decorator_list_source_segment(source: str, node: ast.AST) -> Optional[str]:
     """
     Return source segment of the decorator list that decorate a function/class as given
     by the node argument.

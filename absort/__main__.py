@@ -118,10 +118,10 @@ def transform(old_source: str) -> str:
         # segment of decorator_list.
 
         leading_comment_source_segment = ast_get_leading_comment_source_segment(
-            old_source, stmt, padded=True
+            old_source, stmt
         )
         decorator_list_source_segment = ast_get_decorator_list_source_segment(
-            old_source, stmt, padded=True
+            old_source, stmt
         )
 
         if comment_strategy is CommentStrategy.push_top:
@@ -129,7 +129,7 @@ def transform(old_source: str) -> str:
             new_source += decorator_list_source_segment
         elif comment_strategy is CommentStrategy.attr_follow_decl:
             new_source += ast_get_leading_comment_and_decorator_list_source_segment(
-                old_source, stmt, padded=True
+                old_source, stmt
             )
         elif comment_strategy is CommentStrategy.ignore:
             new_source += decorator_list_source_segment
