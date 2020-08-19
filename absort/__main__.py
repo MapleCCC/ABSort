@@ -206,6 +206,7 @@ def collect_python_files(filepaths: Iterable[Path]) -> Iterator[Path]:
     "`attr-follow-decl`, and `ignore` (not recommended). The default value is "
     "`attr-follow-decl`.",
 )
+@click.option("-q", "--quiet", is_flag=True)
 # TODO add multi thread support, to accelerate
 # TODO add help message to every parameters.
 def main(
@@ -216,6 +217,7 @@ def main(
     reverse: bool,
     encoding: str,
     comment_strategy: CommentStrategy,
+    quiet: bool,
 ) -> None:
 
     if display_diff and in_place:
@@ -235,6 +237,7 @@ def main(
         # TODO add more styled output (e.g. colorized)
 
         if display_diff:
+            if quiet: return
             display_diff_with_filename(old_source, new_source, file.name)
         elif in_place:
             click.confirm(
@@ -242,6 +245,7 @@ def main(
             )
             file.write_text(new_source, encoding)
         else:
+            if quiet: return
             print("---------------------------------------")
             print(file)
             print("***************************************")
