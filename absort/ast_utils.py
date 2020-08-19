@@ -1,6 +1,6 @@
 import ast
 from collections import deque
-from typing import Any, Deque, Iterator, Optional, Set
+from typing import Any, Deque, Iterator, Set
 
 import black
 
@@ -97,7 +97,7 @@ def ast_get_leading_comment_source_segment(source: str, node: ast.AST) -> str:
     return "\n".join(leading_comment_lines)
 
 
-def ast_get_decorator_list_source_segment(source: str, node: ast.AST) -> Optional[str]:
+def ast_get_decorator_list_source_segment(source: str, node: ast.AST) -> str:
     """
     Return source segment of the decorator list that decorate a function/class as given
     by the node argument.

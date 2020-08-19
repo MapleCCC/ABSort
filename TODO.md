@@ -49,8 +49,8 @@
     - license
   - add examples to showcase
 - 在 GitHub 设为 public repo
-- Add .isort.cfg
 - Add .pylintrc
+- remember timestamp to ignore unmodified files
 
 ## Changelog
 
@@ -70,3 +70,4 @@
 - decl_ids 改成 decl_names
 - 添加 cli option --comment-is-attribute-of-following-declaration
 - add confirmation prompt to the dangerous options, eg. --in-place.
+- Add .isort.cfg

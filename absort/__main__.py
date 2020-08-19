@@ -104,8 +104,6 @@ def transform(old_source: str) -> str:
             new_stmts.append(stmt)
     new_stmts.extend(absort_decls(buffer))
 
-    # FIXME no need to specify `padded=True`, because they are all top-level statements.
-
     cli_params = click.get_current_context().params
     comment_strategy: CommentStrategy = cli_params["comment_strategy"]
 
@@ -136,6 +134,7 @@ def transform(old_source: str) -> str:
         else:
             raise RuntimeError("Unreachable")
 
+        # FIXME no need to specify `padded=True`, because they are all top-level statements.
         new_source += ast.get_source_segment(old_source, stmt, padded=True) + "\n"
 
     if comment_strategy is CommentStrategy.push_top:
