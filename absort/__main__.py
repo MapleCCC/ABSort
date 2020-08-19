@@ -78,11 +78,21 @@ def transform(old_source: str) -> str:
 
     # FIXME no need to specify `padded=True`, because they are all top-level statements.
 
+    cli_params = click.get_current_context().params
+    comment_strategy = cli_params["comment_strategy"]
+
     new_source = ""
+    comments = ""
     for stmt in new_stmts:
-        new_source += ast_get_leading_comment_source_segment(
-            old_source, stmt, padded=True
-        )
+        comment = ast_get_leading_comment_source_segment(old_source, stmt, padded=True)
+        if comment_strategy == "push-top":
+            comments += comment
+        elif comment_strategy == "attr-follow-decl":
+            new_source += comment
+        elif comment_strategy == "ignore":
+            pass
+        else:
+            raise RuntimeError("Unreachable")
 
         # WARNING: it's surprising that ast.get_source_segment doesn't include source
         # segment of decorator_list.
@@ -93,6 +103,9 @@ def transform(old_source: str) -> str:
         new_source += ast.get_source_segment(old_source, stmt, padded=True)
 
         new_source += "\n\n"
+
+    if comment_strategy == "push-top":
+        new_source = comments + new_source
 
     # Only reserve one trailing newline
     if new_source.endswith("\n\n"):
@@ -138,6 +151,7 @@ def display_diff_with_filename(
 @click.option("--no-fix-main-to-bottom", is_flag=True)
 @click.option("-r", "--reverse", is_flag=True)
 @click.option("-e", "--encoding", default="utf-8")
+@click.option("-c", "--comment-strategy", default="attr-follow-decl")
 # TODO add multi thread support, to accelerate
 # TODO add option "--comment-is-attribute-of-following-declaration"
 # TODO add option "--comment-strategy", possible values are "push-top", "attr-follow-decl", "ignore" (not recommended)
@@ -149,10 +163,17 @@ def main(
     no_fix_main_to_bottom: bool,
     reverse: bool,
     encoding: str,
+    comment_strategy: str,
 ) -> None:
 
     if display_diff and in_place:
         raise ValueError("Can't specify both `--diff` and `--in-place` options")
+
+    if comment_strategy not in ("push-top", "attr-follow-decl", "ignore"):
+        raise ValueError(
+            "--comment-strategy argument has invalid value. "
+            "Possible values are `push-top`, `attr-follow-decl`, and `ignore`."
+        )
 
     colorama.init()
 
