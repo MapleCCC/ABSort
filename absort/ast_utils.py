@@ -76,25 +76,27 @@ def ast_get_leading_comment_and_decorator_list_source_segment(
     return "\n".join(leading_source_lines)
 
 
-# FIXME can't handle multi-line decorator expression
 def ast_get_leading_comment_source_segment(source: str, node: ast.AST) -> str:
-    whitespace_filter = lambda line: len(line.strip()) == 0
-    comment_filter = lambda line: beginswith(line.lstrip(), "#")
-    decorator_filter = lambda line: beginswith(line.lstrip(), "@")
+    # WARNING: ast.AST.lineno and ast.AST.end_lineno are 1-indexed
 
-    # WARNING: ast.AST.lineno is 1-indexed
     above_lines = source.splitlines()[: node.lineno - 1]
 
-    white_criteria = (
-        lambda line: whitespace_filter(line)
-        or comment_filter(line)
-        # It's possible to have comments between decorator_list and function/class
-        # definition
-        or decorator_filter(line)
-    )
-    white_section = reverse(takewhile(white_criteria, above_lines[::-1]))
+    decorator_list_linenos: Set[int] = set()
+    if isinstance(node, Decoratable) and hasattr(node, "decorator_list"):
+        for decorator in node.decorator_list:
+            lineno, end_lineno = decorator.lineno, decorator.end_lineno
+            decorator_list_linenos.update(range(lineno, end_lineno + 1))
 
-    return "\n".join(white_section)
+    leading_comment_lines: Deque[str] = deque()
+    for lineno, line in zip(range(node.lineno - 1, 0, step=-1), above_lines):
+        if len(line.strip()) == 0 or line[0] == "#":
+            leading_comment_lines.appendleft(line)
+        elif lineno in decorator_list_linenos:
+            continue
+        else:
+            break
+
+    return "\n".join(leading_comment_lines)
 
 
 def ast_get_decorator_list_source_segment(source: str, node: ast.AST) -> Optional[str]:
