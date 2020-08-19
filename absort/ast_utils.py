@@ -1,6 +1,7 @@
 import ast
+from collections import deque
 from itertools import takewhile
-from typing import Any, Iterator, Optional, Set
+from typing import Any, Deque, Iterator, Optional, Set
 
 import black
 
@@ -62,10 +63,12 @@ def ast_get_leading_comment_and_decorator_list_source_segment(
             lineno, end_lineno = decorator.lineno, decorator.end_lineno
             decorator_list_linenos.update(range(lineno, end_lineno + 1))
 
-    leading_source_lines = []
-    for lineno, line in enumerate(above_lines, node.lineno - 1):
+    leading_source_lines: Deque[str] = deque()
+    for lineno, line in zip(range(node.lineno-1, 0, step=-1), above_lines):
         if len(line.strip()) == 0 or line[0] == "#" or lineno in decorator_list_linenos:
-            leading_source_lines.append(line)
+            leading_source_lines.appendleft(line)
+        else:
+            break
 
     return "\n".join(leading_source_lines) + "\n"
 
