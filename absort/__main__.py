@@ -13,6 +13,7 @@ from .ast_utils import (
     ast_get_decorator_list_source_segment,
     ast_get_leading_comment_and_decorator_list_source_segment,
     ast_get_leading_comment_source_segment,
+    ast_get_source_segment,
 )
 from .extra_typing import Declaration, DeclarationType
 from .graph import Graph
@@ -134,8 +135,7 @@ def transform(old_source: str) -> str:
         else:
             raise RuntimeError("Unreachable")
 
-        # FIXME no need to specify `padded=True`, because they are all top-level statements.
-        new_source += ast.get_source_segment(old_source, stmt, padded=True) + "\n"
+        new_source += ast_get_source_segment(old_source, stmt) + "\n"
 
     if comment_strategy is CommentStrategy.push_top:
         new_source = comments + new_source

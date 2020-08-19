@@ -13,6 +13,7 @@ __all__ = [
     "ast_get_leading_comment_and_decorator_list_source_segment",
     "ast_get_leading_comment_source_segment",
     "ast_get_decorator_list_source_segment",
+    "ast_get_source_segment",
 ]
 
 
@@ -111,3 +112,9 @@ def ast_get_decorator_list_source_segment(source: str, node: ast.AST) -> str:
         decorator_list_lines.extend(source_lines[lineno - 1 : end_lineno])
 
     return "\n".join(decorator_list_lines)
+
+
+def ast_get_source_segment(source: str, node: ast.AST) -> str:
+    source_lines = source.splitlines()
+    lineno, end_lineno = node.lineno, node.end_lineno
+    return "\n".join(source_lines[lineno - 1 : end_lineno])
