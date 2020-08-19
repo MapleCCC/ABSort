@@ -49,7 +49,7 @@ def get_dependency_of_decl(decl: DeclarationType) -> Set[str]:
 
 def absort_decls(decls: List[DeclarationType]) -> Iterator[DeclarationType]:
     def same_rank_sorter(names: List[str]) -> List[str]:
-        # Currently sort by retaining their original relativeorder, to reduce diff size.
+        # Currently sort by retaining their original relative order, to reduce diff size.
         #
         # Possible alternatives: sort by lexigraphical order of the names, sort by body
         # size, sort by name length, etc.
@@ -205,10 +205,11 @@ def collect_python_files(filepaths: Iterable[Path]) -> Iterator[Path]:
     "--comment-strategy",
     default="attr-follow-decl",
     type=CommentStrategyParamType(),
+    help="Specify how to treat comments. Possible values are `push-top`, "
+    "`attr-follow-decl`, and `ignore` (not recommended). The default value is "
+    "`attr-follow-decl`.",
 )
 # TODO add multi thread support, to accelerate
-# TODO add option "--comment-is-attribute-of-following-declaration"
-# TODO add option "--comment-strategy", possible values are "push-top", "attr-follow-decl", "ignore" (not recommended)
 # TODO add help message to every parameters.
 def main(
     filepaths: Tuple[str],

@@ -1,11 +1,9 @@
 import ast
 from collections import deque
-from itertools import takewhile
 from typing import Any, Deque, Iterator, Optional, Set
 
 import black
 
-from .extra_typing import Decoratable
 from .utils import beginswith, reverse
 
 __all__ = [

@@ -32,6 +32,7 @@
   - Algorithmic optimization
   - Memoirization optimization
   - Rewrite-in-Cython optimization
+  - Multi-thread/process optimization
 - Entries from running `rg TODO` across the whole repo.
 - Entries from running `rg FIXME` across the whole repo.
 - Retain as much original layout as possible to reduce diff size.
@@ -46,6 +47,7 @@
     - use black code style
     - total line count
     - license
+  - add examples to showcase
 - 在 GitHub 设为 public repo
 - Add .isort.cfg
 - Add .pylintrc

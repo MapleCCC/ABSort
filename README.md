@@ -58,7 +58,7 @@ $ absort .
 
 Alternatively, you can pass Python code from `stdin`.
 
-## Algorithm
+## Interanl Algorithm
 
 Currently a naïve topological sort on the dependency graph, with function/class definitions as graph nodes, and their dependencies as graph edges.
 
