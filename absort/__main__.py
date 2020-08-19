@@ -88,8 +88,6 @@ def absort_decls(decls: List[DeclarationType]) -> Iterator[DeclarationType]:
         yield first_true(decls, pred=name_matcher)  # type: ignore
 
 
-# FIXME take special care of shebang and __future__ import. They both require to be on
-# the very first line of the code file.
 def transform(old_source: str) -> str:
     module_tree = ast.parse(old_source)
 
