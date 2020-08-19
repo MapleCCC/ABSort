@@ -67,13 +67,17 @@ def ast_get_leading_comment_source_segment(
     )
     white_section = reverse(takewhile(white_criteria, leading_lines[::-1]))
 
-    comments = list(filter(comment_filter, white_section))
-
     if not padded:
-        comments = list(map(str.lstrip, comments))
+        non_padded_white_section = []
+        for line in white_section:
+            if comment_filter(line):
+                non_padded_white_section.append(line.lstrip())
+            else:
+                non_padded_white_section.append(line)
+        white_section = non_padded_white_section
 
-    if comments:
-        return "\n".join(comments) + "\n"
+    if white_section:
+        return "\n".join(white_section) + "\n"
     else:
         return ""
 
