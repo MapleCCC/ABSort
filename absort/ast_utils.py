@@ -4,7 +4,7 @@ from typing import Any, Iterator, Optional
 
 import black
 
-from .extra_typing import DecoratableType
+from .extra_typing import Decoratable
 from .utils import reverse, beginswith
 
 
@@ -78,9 +78,8 @@ def ast_get_leading_comment_source_segment(
         return ""
 
 
-
 def ast_get_decorator_list_source_segment(
-    source: str, node: DecoratableType, padded: bool = False
+    source: str, node: ast.AST, padded: bool = False
 ) -> Optional[str]:
     """
     Return source segment of the decorator list that decorate a function/class as given
@@ -88,6 +87,9 @@ def ast_get_decorator_list_source_segment(
 
     If some location information is missing, return None.
     """
+
+    if not isinstance(node, Decoratable):
+        return ""
 
     # We need to check existence of the attribute decorator_list, because some
     # ast.FunctionDef node doesn't have decorator_list attribute. This could happen if
@@ -101,7 +103,10 @@ def ast_get_decorator_list_source_segment(
             source, decorator, padded=padded
         )
         if decorator_source_segment is None:
-            return None
+            raise ValueError(
+                "Location info is missing. "
+                "Get source segment of decorator_list failed."
+            )
         pad_length = len(decorator_source_segment) - len(
             decorator_source_segment.lstrip()
         )
