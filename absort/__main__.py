@@ -53,7 +53,8 @@ def absort_decls(decls: List[DeclarationType]) -> Iterator[DeclarationType]:
         sorted_names.remove("main")
         sorted_names.append("main")
 
-    # Only one decl matches the name, we use short-circuit to optimize.
+    # There is always one, and only one, decl that matches the name, we use
+    # short-circuit to optimize.
     for name in sorted_names:
         name_matcher = lambda decl: decl.name == name
         yield first_true(decls, pred=name_matcher)  # type: ignore
@@ -112,7 +113,9 @@ def preliminary_sanity_check(source_code: str) -> None:
         raise ValueError("Name redefinition exists. Not supported yet.")
 
 
-def display_diff_with_filename(old_src: str, new_src: str, filename: str = None) -> None:
+def display_diff_with_filename(
+    old_src: str, new_src: str, filename: str = None
+) -> None:
     old_src_lines = old_src.splitlines(keepends=True)
     new_src_lines = new_src.splitlines(keepends=True)
     fromfile = "old/" + filename if filename else ""
@@ -137,6 +140,8 @@ def display_diff_with_filename(old_src: str, new_src: str, filename: str = None)
 @click.option("-e", "--encoding", default="utf-8")
 # TODO add multi thread support, to accelerate
 # TODO add option "--comment-is-attribute-of-following-declaration"
+# TODO add option "--comment-strategy", possible values are "push-top", "attr-follow-decl", "ignore" (not recommended)
+# TODO add help message to every parameters.
 def main(
     filenames: Tuple[str],
     display_diff: bool,
@@ -147,7 +152,7 @@ def main(
 ) -> None:
 
     if display_diff and in_place:
-        raise RuntimeError("Can't specify both `--diff` and `--in-place` options")
+        raise ValueError("Can't specify both `--diff` and `--in-place` options")
 
     colorama.init()
 

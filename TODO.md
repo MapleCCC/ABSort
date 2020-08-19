@@ -24,6 +24,14 @@
 - Release 1.0.0 version
 - Check whether ast.iter_child_nodes yield ordered results?
 
+## Uncategorized
+
+- Profile to find performance hotspots. Optimize and accelerate the script.
+- Add click parameter help messages.
+- Use self-customized ast.get_source_segment implementation to accelerate.
+  - Algorithmic optimization
+  - Memoirization optimization
+  - Rewrite-in-Cython optimization
 
 ## Changelog
 

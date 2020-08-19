@@ -4,9 +4,37 @@
 
 ## Overview
 
-`isort`, one of the top libraries in Python ecosystem, is aimed at sorting import statements. But what about a tool that sorts function/class definitions? Don't worry, `ABSort` got your back!
+`isort`, one of the most popular libraries in Python ecosystem, is specialized at sorting import statements. Besides import statements, there are other kinds of statements in Python code that can benefit from a sorting process. What about a tool that sorts function/class definitions? Don't worry, `ABSort` got your back!
 
 `ABSort` is a lightweight library and a command line utility to sort Python function/class definitions by their abstraction levels.
+
+## Example
+
+Original code:
+
+```python
+def increment(x):
+    return x + 1
+
+def add_three(x):
+    return add_two(increment(x))
+
+def add_two(x):
+    return increment(increment(x))
+```
+
+After ABSorting:
+
+```python
+def add_three(x):
+    return add_two(increment(x))
+
+def add_two(x):
+    return increment(increment(x))
+
+def increment(x):
+    return x + 1
+```
 
 ## Installation
 
@@ -30,9 +58,13 @@ $ absort .
 
 Alternatively, you can pass Python code from `stdin`.
 
+## Algorithm
+
+Currently a naïve topological sort on the dependency graph, with function/class definitions as graph nodes, and their dependencies as graph edges.
+
 ## Limitations
 
-The script is a static analysis tool. It's impossible to handle some heavily dynamic behaviours, e.g. dynamic manipulation of the globals(), locals().
+The script is a static analysis tool. It's beyond the tool's capability and scope to handle some heavily dynamic behaviours, e.g. dynamic manipulation of the globals(), locals(), etc.
 
 ## License
 
