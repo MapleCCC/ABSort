@@ -60,7 +60,7 @@ def ast_get_leading_comment_and_decorator_list_source_segment(
         lineno, end_lineno = decorator.lineno, decorator.end_lineno
         decorator_list_linenos.update(range(lineno, end_lineno + 1))
 
-    boundary_lineno = node.lineno - 1
+    boundary_lineno = 0  # 0 is a virtual line
     for lineno, line in reverse(zip(range(1, node.lineno - 1), above_lines)):
         if not (
             len(line.strip()) == 0
@@ -70,7 +70,7 @@ def ast_get_leading_comment_and_decorator_list_source_segment(
             boundary_lineno = lineno
             break
 
-    leading_source_lines = above_lines[boundary_lineno - 1 : node.lineno - 1]
+    leading_source_lines = above_lines[boundary_lineno : node.lineno - 1]
 
     return "\n".join(leading_source_lines)
 
