@@ -125,20 +125,20 @@ def transform(old_source: str) -> str:
         )
 
         if comment_strategy is CommentStrategy.push_top:
-            comments += leading_comment_source_segment
-            new_source += decorator_list_source_segment
+            comments += leading_comment_source_segment + "\n"
+            new_source += decorator_list_source_segment + "\n"
         elif comment_strategy is CommentStrategy.attr_follow_decl:
+            # fmt: off
             new_source += ast_get_leading_comment_and_decorator_list_source_segment(
                 old_source, stmt
-            )
+            ) + "\n"
+            # fmt: on
         elif comment_strategy is CommentStrategy.ignore:
-            new_source += decorator_list_source_segment
+            new_source += decorator_list_source_segment + "\n"
         else:
             raise RuntimeError("Unreachable")
 
-        new_source += ast.get_source_segment(old_source, stmt, padded=True)
-
-        new_source += "\n"
+        new_source += ast.get_source_segment(old_source, stmt, padded=True) + "\n"
 
     if comment_strategy is CommentStrategy.push_top:
         new_source = comments + new_source

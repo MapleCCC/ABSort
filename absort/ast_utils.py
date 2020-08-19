@@ -73,7 +73,7 @@ def ast_get_leading_comment_and_decorator_list_source_segment(
 
     leading_source_lines = above_lines[boundary_lineno - 1 : node.lineno - 1]
 
-    return "\n".join(leading_source_lines) + "\n"
+    return "\n".join(leading_source_lines)
 
 
 # FIXME can't handle multi-line decorator expression
@@ -94,10 +94,7 @@ def ast_get_leading_comment_source_segment(source: str, node: ast.AST) -> str:
     )
     white_section = reverse(takewhile(white_criteria, above_lines[::-1]))
 
-    if white_section:
-        return "\n".join(white_section) + "\n"
-    else:
-        return ""
+    return "\n".join(white_section)
 
 
 def ast_get_decorator_list_source_segment(source: str, node: ast.AST) -> Optional[str]:
@@ -122,7 +119,4 @@ def ast_get_decorator_list_source_segment(source: str, node: ast.AST) -> Optiona
         lineno, end_lineno = decorator.lineno, decorator.end_lineno
         decorator_list_lines.extend(source_lines[lineno - 1 : end_lineno])
 
-    if decorator_list_lines:
-        return "\n".join(decorator_list_lines) + "\n"
-    else:
-        return ""
+    return "\n".join(decorator_list_lines)
