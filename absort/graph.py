@@ -157,7 +157,6 @@ class Graph:
     def hierarchy_level_sort(
         self, same_rank_sorter: Callable[[List[Node]], List[Node]] = None
     ) -> Iterator[Node]:
-        assert self.is_acyclic()
         inv_graph = self.get_invert_graph()
         yield from reverse(inv_graph.topological_sort(same_rank_sorter))
 
