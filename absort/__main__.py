@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 
 import ast
+from enum import Enum
 from pathlib import Path
-from typing import Iterator, List, Set, Tuple
+from typing import Any, Iterator, List, Set, Tuple
 
 import click
 import colorama
@@ -16,6 +17,27 @@ from .extra_typing import DeclarationType, Declaration
 from .graph import Graph
 from .utils import colored_unified_diff
 from .visitors import GetUndefinedVariableVisitor
+
+
+class CommentStrategy(Enum):
+    push_top = "push-top"
+    attr_follow_decl = "attr-follow-decl"
+    ignore = "ignore"
+
+
+class CommentStrategyParamType(click.ParamType):
+    name = "comment_strategy"
+
+    def convert(self, value: str, param: Any, ctx: Any) -> CommentStrategy:
+        try:
+            return CommentStrategy(value)
+        except ValueError:
+            self.fail(
+                "--comment-strategy argument has invalid value. "
+                "Possible values are `push-top`, `attr-follow-decl`, and `ignore`.",
+                param,
+                ctx,
+            )
 
 
 def get_dependency_of_decl(decl: DeclarationType) -> Set[str]:
@@ -79,17 +101,17 @@ def transform(old_source: str) -> str:
     # FIXME no need to specify `padded=True`, because they are all top-level statements.
 
     cli_params = click.get_current_context().params
-    comment_strategy = cli_params["comment_strategy"]
+    comment_strategy: CommentStrategy = cli_params["comment_strategy"]
 
     new_source = ""
     comments = ""
     for stmt in new_stmts:
         comment = ast_get_leading_comment_source_segment(old_source, stmt, padded=True)
-        if comment_strategy == "push-top":
+        if comment_strategy == CommentStrategy.push_top:
             comments += comment
-        elif comment_strategy == "attr-follow-decl":
+        elif comment_strategy == CommentStrategy.attr_follow_decl:
             new_source += comment
-        elif comment_strategy == "ignore":
+        elif comment_strategy == CommentStrategy.ignore:
             pass
         else:
             raise RuntimeError("Unreachable")
@@ -104,7 +126,7 @@ def transform(old_source: str) -> str:
 
         new_source += "\n\n"
 
-    if comment_strategy == "push-top":
+    if comment_strategy == CommentStrategy.push_top:
         new_source = comments + new_source
 
     # Only reserve one trailing newline
@@ -151,7 +173,12 @@ def display_diff_with_filename(
 @click.option("--no-fix-main-to-bottom", is_flag=True)
 @click.option("-r", "--reverse", is_flag=True)
 @click.option("-e", "--encoding", default="utf-8")
-@click.option("-c", "--comment-strategy", default="attr-follow-decl")
+@click.option(
+    "-c",
+    "--comment-strategy",
+    default="attr-follow-decl",
+    type=CommentStrategyParamType(),
+)
 # TODO add multi thread support, to accelerate
 # TODO add option "--comment-is-attribute-of-following-declaration"
 # TODO add option "--comment-strategy", possible values are "push-top", "attr-follow-decl", "ignore" (not recommended)
@@ -163,17 +190,11 @@ def main(
     no_fix_main_to_bottom: bool,
     reverse: bool,
     encoding: str,
-    comment_strategy: str,
+    comment_strategy: CommentStrategy,
 ) -> None:
 
     if display_diff and in_place:
         raise ValueError("Can't specify both `--diff` and `--in-place` options")
-
-    if comment_strategy not in ("push-top", "attr-follow-decl", "ignore"):
-        raise ValueError(
-            "--comment-strategy argument has invalid value. "
-            "Possible values are `push-top`, `attr-follow-decl`, and `ignore`."
-        )
 
     colorama.init()
 
