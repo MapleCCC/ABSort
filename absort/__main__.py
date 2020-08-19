@@ -116,20 +116,22 @@ def transform(old_source: str) -> str:
 
         return source_lines
 
+    def transform_stmts(old_stmts: List[ast.stmt]) -> Iterator[ast.stmt]:
+        buffer: List[DeclarationType] = []
+        for stmt in old_stmts:
+            if isinstance(stmt, Declaration):
+                buffer.append(stmt)
+            else:
+                yield from absort_decls(buffer)
+                buffer.clear()
+                yield stmt
+        yield from absort_decls(buffer)
+
     module_tree = ast.parse(old_source)
 
     top_level_stmts = module_tree.body
 
-    new_stmts: List[ast.stmt] = []
-    buffer: List[DeclarationType] = []
-    for stmt in top_level_stmts:
-        if isinstance(stmt, Declaration):
-            buffer.append(stmt)
-        else:
-            new_stmts.extend(absort_decls(buffer))
-            buffer.clear()
-            new_stmts.append(stmt)
-    new_stmts.extend(absort_decls(buffer))
+    new_stmts = transform_stmts(top_level_stmts)
 
     cli_params = click.get_current_context().params
     comment_strategy: CommentStrategy = cli_params["comment_strategy"]
