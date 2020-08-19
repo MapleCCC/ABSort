@@ -55,5 +55,4 @@ def colored_unified_diff(
         elif code == "-":
             yield bright_red(line)
         else:
-            # raise RuntimeError("Unreachable")
-            raise RuntimeError(f"Unexpected case happens: {code}")
+            raise RuntimeError("Unreachable")

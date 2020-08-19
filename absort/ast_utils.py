@@ -88,6 +88,10 @@ def ast_get_decorator_list_source_segment(
 
     If some location information is missing, return None.
     """
+
+    # We need to check existence of the attribute decorator_list, because some
+    # ast.FunctionDef node doesn't have decorator_list attribute. This could happen if
+    # the node is initialized manually instead of initialized from parsing code.
     if not hasattr(node, "decorator_list"):
         return ""
 

@@ -32,7 +32,7 @@ def absort_decls(decls: List[DeclarationType]) -> Iterator[DeclarationType]:
         return sorted(names)
 
     decl_names = [decl.name for decl in decls]
-    if len(decl_names) > len(set(decl_names)):
+    if len(set(decl_names)) < len(decl_names):
         raise ValueError("Name redefinition exists. Not supported yet.")
 
     graph = Graph()
@@ -48,6 +48,7 @@ def absort_decls(decls: List[DeclarationType]) -> Iterator[DeclarationType]:
         sorted_names.remove("main")
         sorted_names.append("main")
 
+    # FIXME Only one decl matches the name, we should use short-circuit to optimize.
     for name in sorted_names:
         yield from filter(lambda decl: decl.name == name, decls)
 
@@ -67,6 +68,8 @@ def transform(old_source: str) -> str:
             buffer.clear()
             new_stmts.append(stmt)
     new_stmts.extend(absort_decls(buffer))
+
+    # FIXME no need to specify `padded=True`, because they are all top-level statements.
 
     new_source = ""
     for stmt in new_stmts:
@@ -113,7 +116,8 @@ def preliminary_sanity_check(source_code: str) -> None:
 @click.option("-d", "--diff", "display_diff", is_flag=True)
 @click.option("-i", "--in-place", is_flag=True)
 @click.option("--no-fix-main-to-bottom", is_flag=True)
-# TODO multi thread
+# TODO add multi thread support, to accelerate
+# TODO add option "--comment-is-attribute-of-following-declaration"
 def main(
     filenames: Tuple[str],
     display_diff: bool,
