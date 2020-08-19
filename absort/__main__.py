@@ -3,7 +3,7 @@
 import ast
 from enum import Enum
 from pathlib import Path
-from typing import Any, Iterator, List, Set, Tuple
+from typing import Any, Iterable, Iterator, List, Set, Tuple
 
 import click
 import colorama
@@ -162,11 +162,28 @@ def display_diff_with_filename(
     print("\n", end="")
 
 
+def collect_python_files(filepaths: Iterable[Path]) -> Iterator[Path]:
+    for filepath in filepaths:
+        if filepath.is_file() and filepath.suffix == ".py":
+            yield filepath
+        elif filepath.is_dir():
+            yield from filepath.rglob("*.py")
+        else:
+            raise NotImplementedError
+
+
 @click.command()
 @click.argument(
-    "filenames",
+    "filepaths",
     nargs=-1,
-    type=click.Path(exists=True, dir_okay=False, readable=True, allow_dash=True),
+    # We don't test writable, because it's possible user just want to see diff, instead
+    # in-place updating the file.
+    #
+    # FIXME what's the semantic to specify allow_dash=True for click.Path when value is a directory?
+    # FIXME what's the semantic to specify readable=True for click.Path when value is a directory?
+    type=click.Path(
+        exists=True, file_okay=True, dir_okay=True, readable=True, allow_dash=True
+    ),
 )
 @click.option("-d", "--diff", "display_diff", is_flag=True)
 @click.option("-i", "--in-place", is_flag=True)
@@ -184,7 +201,7 @@ def display_diff_with_filename(
 # TODO add option "--comment-strategy", possible values are "push-top", "attr-follow-decl", "ignore" (not recommended)
 # TODO add help message to every parameters.
 def main(
-    filenames: Tuple[str],
+    filepaths: Tuple[str],
     display_diff: bool,
     in_place: bool,
     no_fix_main_to_bottom: bool,
@@ -198,8 +215,10 @@ def main(
 
     colorama.init()
 
-    for filename in filenames:
-        old_source = Path(filename).read_text(encoding)
+    files = collect_python_files(map(Path, filepaths))
+
+    for file in files:
+        old_source = file.read_text(encoding)
 
         preliminary_sanity_check(old_source)
 
@@ -208,12 +227,12 @@ def main(
         # TODO add more styled output (e.g. colorized)
 
         if display_diff:
-            display_diff_with_filename(old_source, new_source, filename)
+            display_diff_with_filename(old_source, new_source, file.name)
         elif in_place:
-            Path(filename).write_text(new_source, encoding)
+            file.write_text(new_source, encoding)
         else:
             print("---------------------------------------")
-            print(filename)
+            print(file)
             print("***************************************")
             print(new_source)
             print("***************************************")
