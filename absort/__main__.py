@@ -10,10 +10,10 @@ import colorama
 from more_itertools import first_true
 
 from .ast_utils import (
-    ast_get_leading_comment_source_segment,
     ast_get_decorator_list_source_segment,
+    ast_get_leading_comment_source_segment,
 )
-from .extra_typing import DeclarationType, Declaration
+from .extra_typing import Declaration, DeclarationType
 from .graph import Graph
 from .utils import colored_unified_diff
 from .visitors import GetUndefinedVariableVisitor
@@ -131,6 +131,8 @@ def transform(old_source: str) -> str:
 
         new_source += ast.get_source_segment(old_source, stmt, padded=True)
 
+        # FIXME use a more proper way to retain as much original layout as possible, to
+        # reduce diff size.
         new_source += "\n\n"
 
     if comment_strategy == CommentStrategy.push_top:

@@ -1,5 +1,5 @@
 import difflib
-from typing import Any, List, Iterable, Iterator
+from typing import Any, Iterable, Iterator, List
 
 from colorama import Fore, Style
 

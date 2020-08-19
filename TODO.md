@@ -47,6 +47,8 @@
     - total line count
     - license
 - 在 GitHub 设为 public repo
+- Add .isort.cfg
+- Add .pylintrc
 
 ## Changelog
 
