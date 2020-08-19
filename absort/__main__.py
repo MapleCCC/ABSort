@@ -45,6 +45,10 @@ def absort_decls(decls: List[DeclarationType]) -> Iterator[DeclarationType]:
     sorted_names = list(graph.topological_sort(same_rank_sorter=same_rank_sorter))
 
     cli_params = click.get_current_context().params
+
+    if cli_params["reverse"]:
+        sorted_names.reverse()
+
     if not cli_params["no_fix_main_to_bottom"] and "main" in sorted_names:
         sorted_names.remove("main")
         sorted_names.append("main")
@@ -117,6 +121,7 @@ def preliminary_sanity_check(source_code: str) -> None:
 @click.option("-d", "--diff", "display_diff", is_flag=True)
 @click.option("-i", "--in-place", is_flag=True)
 @click.option("--no-fix-main-to-bottom", is_flag=True)
+@click.option("-r", "--reverse", is_flag=True)
 # TODO add multi thread support, to accelerate
 # TODO add option "--comment-is-attribute-of-following-declaration"
 def main(
@@ -124,6 +129,7 @@ def main(
     display_diff: bool,
     in_place: bool,
     no_fix_main_to_bottom: bool,
+    reverse: bool,
 ) -> None:
 
     if display_diff and in_place:
