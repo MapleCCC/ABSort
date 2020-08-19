@@ -122,4 +122,7 @@ def ast_get_decorator_list_source_segment(source: str, node: ast.AST) -> Optiona
         lineno, end_lineno = decorator.lineno, decorator.end_lineno
         decorator_list_lines.extend(source_lines[lineno - 1 : end_lineno])
 
-    return "\n".join(decorator_list_lines) + "\n"
+    if decorator_list_lines:
+        return "\n".join(decorator_list_lines) + "\n"
+    else:
+        return ""
