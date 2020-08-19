@@ -67,3 +67,4 @@
 - topological sort 的时候去除无关的 graph node，这里很容易导致之后维护的时候出错
 - decl_ids 改成 decl_names
 - 添加 cli option --comment-is-attribute-of-following-declaration
+- add confirmation prompt to the dangerous options, eg. --in-place.

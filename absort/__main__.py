@@ -210,7 +210,6 @@ def collect_python_files(filepaths: Iterable[Path]) -> Iterator[Path]:
 # TODO add option "--comment-is-attribute-of-following-declaration"
 # TODO add option "--comment-strategy", possible values are "push-top", "attr-follow-decl", "ignore" (not recommended)
 # TODO add help message to every parameters.
-# TODO add confirmation prompt to the dangerous options, eg. --in-place.
 def main(
     filepaths: Tuple[str],
     display_diff: bool,
@@ -240,6 +239,9 @@ def main(
         if display_diff:
             display_diff_with_filename(old_source, new_source, file.name)
         elif in_place:
+            click.confirm(
+                f"Are you sure you want to in-place update the file {file}?", abort=True
+            )
             file.write_text(new_source, encoding)
         else:
             print("---------------------------------------")
