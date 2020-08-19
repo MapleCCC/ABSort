@@ -90,6 +90,32 @@ def absort_decls(decls: List[DeclarationType]) -> Iterator[DeclarationType]:
 
 
 def transform(old_source: str) -> str:
+    def get_related_source_lines(source: str, node: ast.AST) -> str:
+        leading_comment_source_lines = ast_get_leading_comment_source_lines(
+            source, node
+        )
+        decorator_list_source_lines = ast_get_decorator_list_source_lines(source, node)
+
+        source_lines = ""
+
+        if comment_strategy is CommentStrategy.push_top:
+            comments += leading_comment_source_lines + "\n"  # type: ignore
+            source_lines += decorator_list_source_lines + "\n"
+        elif comment_strategy is CommentStrategy.attr_follow_decl:
+            # fmt: off
+            source_lines += ast_get_leading_comment_and_decorator_list_source_lines(
+                source, node
+            ) + "\n"
+            # fmt: on
+        elif comment_strategy is CommentStrategy.ignore:
+            source_lines += decorator_list_source_lines + "\n"
+        else:
+            raise RuntimeError("Unreachable")
+
+        source_lines += ast_get_source_lines(source, node) + "\n"
+
+        return source_lines
+
     module_tree = ast.parse(old_source)
 
     top_level_stmts = module_tree.body
@@ -111,31 +137,8 @@ def transform(old_source: str) -> str:
     new_source = ""
     comments = ""
     for stmt in new_stmts:
-        # WARNING: it's surprising that ast.get_source_segment doesn't include source
-        # segment of decorator_list.
-
-        leading_comment_source_lines = ast_get_leading_comment_source_lines(
-            old_source, stmt
-        )
-        decorator_list_source_lines = ast_get_decorator_list_source_lines(
-            old_source, stmt
-        )
-
-        if comment_strategy is CommentStrategy.push_top:
-            comments += leading_comment_source_lines + "\n"
-            new_source += decorator_list_source_lines + "\n"
-        elif comment_strategy is CommentStrategy.attr_follow_decl:
-            # fmt: off
-            new_source += ast_get_leading_comment_and_decorator_list_source_lines(
-                old_source, stmt
-            ) + "\n"
-            # fmt: on
-        elif comment_strategy is CommentStrategy.ignore:
-            new_source += decorator_list_source_lines + "\n"
-        else:
-            raise RuntimeError("Unreachable")
-
-        new_source += ast_get_source_lines(old_source, stmt) + "\n"
+        source_lines = get_related_source_lines(old_source, stmt)
+        new_source += source_lines + "\n"
 
     if comment_strategy is CommentStrategy.push_top:
         new_source = comments + new_source
