@@ -10,10 +10,10 @@ import colorama
 from more_itertools import first_true
 
 from .ast_utils import (
-    ast_get_decorator_list_source_segment,
-    ast_get_leading_comment_and_decorator_list_source_segment,
-    ast_get_leading_comment_source_segment,
-    ast_get_source_segment,
+    ast_get_decorator_list_source_lines,
+    ast_get_leading_comment_and_decorator_list_source_lines,
+    ast_get_leading_comment_source_lines,
+    ast_get_source_lines,
 )
 from .extra_typing import Declaration, DeclarationType
 from .graph import Graph
@@ -114,28 +114,28 @@ def transform(old_source: str) -> str:
         # WARNING: it's surprising that ast.get_source_segment doesn't include source
         # segment of decorator_list.
 
-        leading_comment_source_segment = ast_get_leading_comment_source_segment(
+        leading_comment_source_lines = ast_get_leading_comment_source_lines(
             old_source, stmt
         )
-        decorator_list_source_segment = ast_get_decorator_list_source_segment(
+        decorator_list_source_lines = ast_get_decorator_list_source_lines(
             old_source, stmt
         )
 
         if comment_strategy is CommentStrategy.push_top:
-            comments += leading_comment_source_segment + "\n"
-            new_source += decorator_list_source_segment + "\n"
+            comments += leading_comment_source_lines + "\n"
+            new_source += decorator_list_source_lines + "\n"
         elif comment_strategy is CommentStrategy.attr_follow_decl:
             # fmt: off
-            new_source += ast_get_leading_comment_and_decorator_list_source_segment(
+            new_source += ast_get_leading_comment_and_decorator_list_source_lines(
                 old_source, stmt
             ) + "\n"
             # fmt: on
         elif comment_strategy is CommentStrategy.ignore:
-            new_source += decorator_list_source_segment + "\n"
+            new_source += decorator_list_source_lines + "\n"
         else:
             raise RuntimeError("Unreachable")
 
-        new_source += ast_get_source_segment(old_source, stmt) + "\n"
+        new_source += ast_get_source_lines(old_source, stmt) + "\n"
 
     if comment_strategy is CommentStrategy.push_top:
         new_source = comments + new_source

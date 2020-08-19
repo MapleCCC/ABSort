@@ -10,10 +10,10 @@ __all__ = [
     "ast_pretty_dump",
     "ast_ordered_walk",
     "ast_remove_location_info",
-    "ast_get_leading_comment_and_decorator_list_source_segment",
-    "ast_get_leading_comment_source_segment",
-    "ast_get_decorator_list_source_segment",
-    "ast_get_source_segment",
+    "ast_get_leading_comment_and_decorator_list_source_lines",
+    "ast_get_leading_comment_source_lines",
+    "ast_get_decorator_list_source_lines",
+    "ast_get_source_lines",
 ]
 
 
@@ -49,7 +49,7 @@ def ast_remove_location_info(node: ast.AST) -> None:
 
 
 # TODO use memoization technique to optimzie performance.
-def ast_get_leading_comment_and_decorator_list_source_segment(
+def ast_get_leading_comment_and_decorator_list_source_lines(
     source: str, node: ast.AST
 ) -> str:
     # WARNING: ast.AST.lineno and ast.AST.end_lineno are 1-indexed
@@ -76,7 +76,7 @@ def ast_get_leading_comment_and_decorator_list_source_segment(
     return "\n".join(leading_source_lines)
 
 
-def ast_get_leading_comment_source_segment(source: str, node: ast.AST) -> str:
+def ast_get_leading_comment_source_lines(source: str, node: ast.AST) -> str:
     # WARNING: ast.AST.lineno and ast.AST.end_lineno are 1-indexed
 
     above_lines = source.splitlines()[: node.lineno - 1]
@@ -98,9 +98,9 @@ def ast_get_leading_comment_source_segment(source: str, node: ast.AST) -> str:
     return "\n".join(leading_comment_lines)
 
 
-def ast_get_decorator_list_source_segment(source: str, node: ast.AST) -> str:
+def ast_get_decorator_list_source_lines(source: str, node: ast.AST) -> str:
     """
-    Return source segment of the decorator list that decorate a function/class as given
+    Return source lines of the decorator list that decorate a function/class as given
     by the node argument.
     """
 
@@ -114,7 +114,7 @@ def ast_get_decorator_list_source_segment(source: str, node: ast.AST) -> str:
     return "\n".join(decorator_list_lines)
 
 
-def ast_get_source_segment(source: str, node: ast.AST) -> str:
+def ast_get_source_lines(source: str, node: ast.AST) -> str:
     source_lines = source.splitlines()
     lineno, end_lineno = node.lineno, node.end_lineno
     return "\n".join(source_lines[lineno - 1 : end_lineno])
