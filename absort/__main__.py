@@ -51,7 +51,8 @@ def absort_decls(decls: List[DeclarationType]) -> Iterator[DeclarationType]:
 
     # Only one decl matches the name, we use short-circuit to optimize.
     for name in sorted_names:
-        yield first_true(decls, pred=lambda decl: decl.name == name)  # type: ignore
+        name_matcher = lambda decl: decl.name == name
+        yield first_true(decls, pred=name_matcher)  # type: ignore
 
 
 def transform(old_source: str) -> str:
