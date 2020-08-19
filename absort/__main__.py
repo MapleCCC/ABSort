@@ -112,6 +112,18 @@ def preliminary_sanity_check(source_code: str) -> None:
         raise ValueError("Name redefinition exists. Not supported yet.")
 
 
+def display_diff_with_filename(old_src: str, new_src: str, filename: str = None) -> None:
+    old_src_lines = old_src.splitlines(keepends=True)
+    new_src_lines = new_src.splitlines(keepends=True)
+    fromfile = "old/" + filename if filename else ""
+    tofile = "new/" + filename if filename else ""
+    diff_view_lines = colored_unified_diff(
+        old_src_lines, new_src_lines, fromfile, tofile
+    )
+    print("".join(diff_view_lines), end="")
+    print("\n", end="")
+
+
 @click.command()
 @click.argument(
     "filenames",
@@ -149,15 +161,7 @@ def main(
         # TODO add more styled output (e.g. colorized)
 
         if display_diff:
-            old_src_lines = old_source.splitlines(keepends=True)
-            new_src_lines = new_source.splitlines(keepends=True)
-            fromfile = "old/" + filename
-            tofile = "new/" + filename
-            diff_view_lines = colored_unified_diff(
-                old_src_lines, new_src_lines, fromfile, tofile
-            )
-            print("".join(diff_view_lines), end="")
-            print("\n", end="")
+            display_diff_with_filename(old_source, new_source, filename)
         elif in_place:
             Path(filename).write_text(new_source, encoding)
         else:
