@@ -124,14 +124,14 @@ def transform(old_source: str) -> str:
             old_source, stmt, padded=True
         )
 
-        if comment_strategy == CommentStrategy.push_top:
+        if comment_strategy is CommentStrategy.push_top:
             comments += leading_comment_source_segment
             new_source += decorator_list_source_segment
-        elif comment_strategy == CommentStrategy.attr_follow_decl:
+        elif comment_strategy is CommentStrategy.attr_follow_decl:
             new_source += ast_get_leading_comment_and_decorator_list_source_segment(
                 old_source, stmt, padded=True
             )
-        elif comment_strategy == CommentStrategy.ignore:
+        elif comment_strategy is CommentStrategy.ignore:
             new_source += decorator_list_source_segment
         else:
             raise RuntimeError("Unreachable")
@@ -140,7 +140,7 @@ def transform(old_source: str) -> str:
 
         new_source += "\n"
 
-    if comment_strategy == CommentStrategy.push_top:
+    if comment_strategy is CommentStrategy.push_top:
         new_source = comments + new_source
 
     return new_source
