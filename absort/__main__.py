@@ -51,15 +51,16 @@ def get_dependency_of_decl(decl: DeclarationType) -> Set[str]:
 # hierarchy relation.
 def absort_decls(decls: List[DeclarationType]) -> Iterator[DeclarationType]:
     def same_rank_sorter(names: List[str]) -> List[str]:
-        # Currently sort by lexigraphical order.
+        # Currently sort by retaining their original relativeorder, to reduce diff size.
         #
-        # Possible alternatives: sort by body size, sort by name length, etc.
-        #
-        # It's also an option to retain their original order, to reduce diff size.
+        # Possible alternatives: sort by lexigraphical order of the names, sort by body
+        # size, sort by name length, etc.
         #
         # TODO More advanced option is to utilize power of machine learning to put two
         # visually/semantically similar function/class definitions near each other.
-        return sorted(names)
+
+        decl_name_inverse_index = {name: idx for idx, name in enumerate(decl_names)}
+        return sorted(names, key=lambda name: decl_name_inverse_index[name])
 
     decl_names = [decl.name for decl in decls]
     if len(set(decl_names)) < len(decl_names):
