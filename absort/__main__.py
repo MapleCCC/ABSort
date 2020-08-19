@@ -99,7 +99,8 @@ def transform(old_source: str) -> str:
         source_lines = ""
 
         if comment_strategy is CommentStrategy.push_top:
-            comments += leading_comment_source_lines + "\n"  # type: ignore
+            nonlocal comments  # type: ignore
+            comments += leading_comment_source_lines + "\n"
             source_lines += decorator_list_source_lines + "\n"
         elif comment_strategy is CommentStrategy.attr_follow_decl:
             # fmt: off
