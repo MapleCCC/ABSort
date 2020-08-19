@@ -128,9 +128,20 @@ def transform(old_source: str) -> str:
                 yield stmt
         yield from absort_decls(buffer)
 
+    def preliminary_sanity_check(top_level_stmts: List[ast.stmt]) -> None:
+        # TODO add more sanity checks
+
+        decls = [stmt for stmt in top_level_stmts if isinstance(stmt, Declaration)]
+        decl_names = [decl.name for decl in decls]
+
+        if len(set(decl_names)) < len(decl_names):
+            raise ValueError("Name redefinition exists. Not supported yet.")
+
     module_tree = ast.parse(old_source)
 
     top_level_stmts = module_tree.body
+
+    preliminary_sanity_check(top_level_stmts)
 
     new_stmts = transform_stmts(top_level_stmts)
 
@@ -147,18 +158,6 @@ def transform(old_source: str) -> str:
         new_source = comments + new_source
 
     return new_source
-
-
-def preliminary_sanity_check(source_code: str) -> None:
-    # TODO add more sanity checks
-
-    module_tree = ast.parse(source_code)
-    top_level_stmts = module_tree.body
-    decls = [stmt for stmt in top_level_stmts if isinstance(stmt, Declaration)]
-    decl_names = [decl.name for decl in decls]
-
-    if len(set(decl_names)) < len(decl_names):
-        raise ValueError("Name redefinition exists. Not supported yet.")
 
 
 def display_diff_with_filename(
@@ -235,8 +234,6 @@ def main(
 
     for file in files:
         old_source = file.read_text(encoding)
-
-        preliminary_sanity_check(old_source)
 
         new_source = transform(old_source)
 
