@@ -63,14 +63,15 @@ def ast_get_leading_comment_and_decorator_list_source_segment(
             lineno, end_lineno = decorator.lineno, decorator.end_lineno
             decorator_list_linenos.update(range(lineno, end_lineno + 1))
 
-    leading_source_lines: Deque[str] = deque()
-    for lineno, line in zip(range(node.lineno-1, 0, step=-1), above_lines):
-        if len(line.strip()) == 0 or line[0] == "#" or lineno in decorator_list_linenos:
-            leading_source_lines.appendleft(line)
-        else:
+    boundary_lineno = node.lineno - 1
+    for lineno, line in zip(range(node.lineno - 1, 0, step=-1), above_lines):
+        if not (
+            len(line.strip()) == 0 or line[0] == "#" or lineno in decorator_list_linenos
+        ):
+            boundary_lineno = lineno
             break
 
-    return "\n".join(leading_source_lines) + "\n"
+    return source[boundary_lineno - 1 : node.lineno - 1]
 
 
 # FIXME can't handle multi-line decorator expression
