@@ -58,13 +58,12 @@ def ast_get_leading_comment_and_decorator_list_source_segment(
     above_lines = source.splitlines()[: node.lineno - 1]
 
     decorator_list_linenos: Set[int] = set()
-    if isinstance(node, Decoratable) and hasattr(node, "decorator_list"):
-        for decorator in node.decorator_list:
-            lineno, end_lineno = decorator.lineno, decorator.end_lineno
-            decorator_list_linenos.update(range(lineno, end_lineno + 1))
+    for decorator in getattr(node, "decorator_list", []):
+        lineno, end_lineno = decorator.lineno, decorator.end_lineno
+        decorator_list_linenos.update(range(lineno, end_lineno + 1))
 
     boundary_lineno = node.lineno - 1
-    for lineno, line in zip(range(node.lineno - 1, 0, step=-1), above_lines[::-1]):
+    for lineno, line in reverse(zip(range(1, node.lineno - 1), above_lines)):
         if not (
             len(line.strip()) == 0
             or beginswith(line.lstrip(), "#")
@@ -84,13 +83,12 @@ def ast_get_leading_comment_source_segment(source: str, node: ast.AST) -> str:
     above_lines = source.splitlines()[: node.lineno - 1]
 
     decorator_list_linenos: Set[int] = set()
-    if isinstance(node, Decoratable) and hasattr(node, "decorator_list"):
-        for decorator in node.decorator_list:
-            lineno, end_lineno = decorator.lineno, decorator.end_lineno
-            decorator_list_linenos.update(range(lineno, end_lineno + 1))
+    for decorator in getattr(node, "decorator_list", []):
+        lineno, end_lineno = decorator.lineno, decorator.end_lineno
+        decorator_list_linenos.update(range(lineno, end_lineno + 1))
 
     leading_comment_lines: Deque[str] = deque()
-    for lineno, line in zip(range(node.lineno - 1, 0, step=-1), above_lines[::-1]):
+    for lineno, line in reverse(zip(range(1, node.lineno - 1), above_lines)):
         if len(line.strip()) == 0 or beginswith(line.lstrip(), "#"):
             leading_comment_lines.appendleft(line)
         elif lineno in decorator_list_linenos:
@@ -107,19 +105,10 @@ def ast_get_decorator_list_source_segment(source: str, node: ast.AST) -> Optiona
     by the node argument.
     """
 
-    if not isinstance(node, Decoratable):
-        return ""
-
-    # We need to check existence of the attribute decorator_list, because some
-    # ast.FunctionDef node doesn't have decorator_list attribute. This could happen if
-    # the node is initialized manually instead of initialized from parsing code.
-    if not hasattr(node, "decorator_list"):
-        return ""
-
     source_lines = source.splitlines()
 
     decorator_list_lines = []
-    for decorator in node.decorator_list:
+    for decorator in getattr(node, "decorator_list", []):
         lineno, end_lineno = decorator.lineno, decorator.end_lineno
         decorator_list_lines.extend(source_lines[lineno - 1 : end_lineno])
 
