@@ -122,6 +122,7 @@ def preliminary_sanity_check(source_code: str) -> None:
 @click.option("-i", "--in-place", is_flag=True)
 @click.option("--no-fix-main-to-bottom", is_flag=True)
 @click.option("-r", "--reverse", is_flag=True)
+@click.option("-e", "--encoding", default="utf-8")
 # TODO add multi thread support, to accelerate
 # TODO add option "--comment-is-attribute-of-following-declaration"
 def main(
@@ -130,6 +131,7 @@ def main(
     in_place: bool,
     no_fix_main_to_bottom: bool,
     reverse: bool,
+    encoding: str,
 ) -> None:
 
     if display_diff and in_place:
@@ -138,7 +140,7 @@ def main(
     colorama.init()
 
     for filename in filenames:
-        old_source = Path(filename).read_text(encoding="utf-8")
+        old_source = Path(filename).read_text(encoding)
 
         preliminary_sanity_check(old_source)
 
@@ -157,7 +159,7 @@ def main(
             print("".join(diff_view_lines), end="")
             print("\n", end="")
         elif in_place:
-            Path(filename).write_text(new_source, encoding="utf-8")
+            Path(filename).write_text(new_source, encoding)
         else:
             print("---------------------------------------")
             print(filename)
