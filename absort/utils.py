@@ -6,8 +6,10 @@ from colorama import Fore, Style
 __all__ = ["reverse", "beginswith", "colored_unified_diff"]
 
 
-def reverse(iterable: Iterable) -> List:
-    return list(iterable)[::-1]
+def reverse(iterable: Iterable) -> Iterable:
+    l = list(iterable)
+    for i in range(len(l)):
+        yield l[~i]
 
 
 def beginswith(s: str, prefix: str) -> bool:
