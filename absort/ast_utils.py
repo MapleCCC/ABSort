@@ -64,9 +64,11 @@ def ast_get_leading_comment_and_decorator_list_source_segment(
             decorator_list_linenos.update(range(lineno, end_lineno + 1))
 
     boundary_lineno = node.lineno - 1
-    for lineno, line in zip(range(node.lineno - 1, 0, step=-1), above_lines):
+    for lineno, line in zip(range(node.lineno - 1, 0, step=-1), above_lines[::-1]):
         if not (
-            len(line.strip()) == 0 or line[0] == "#" or lineno in decorator_list_linenos
+            len(line.strip()) == 0
+            or beginswith(line.lstrip(), "#")
+            or lineno in decorator_list_linenos
         ):
             boundary_lineno = lineno
             break
@@ -88,8 +90,8 @@ def ast_get_leading_comment_source_segment(source: str, node: ast.AST) -> str:
             decorator_list_linenos.update(range(lineno, end_lineno + 1))
 
     leading_comment_lines: Deque[str] = deque()
-    for lineno, line in zip(range(node.lineno - 1, 0, step=-1), above_lines):
-        if len(line.strip()) == 0 or line[0] == "#":
+    for lineno, line in zip(range(node.lineno - 1, 0, step=-1), above_lines[::-1]):
+        if len(line.strip()) == 0 or beginswith(line.lstrip(), "#"):
             leading_comment_lines.appendleft(line)
         elif lineno in decorator_list_linenos:
             continue
