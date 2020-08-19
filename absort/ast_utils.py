@@ -71,7 +71,9 @@ def ast_get_leading_comment_and_decorator_list_source_segment(
             boundary_lineno = lineno
             break
 
-    return source[boundary_lineno - 1 : node.lineno - 1]
+    leading_source_lines = above_lines[boundary_lineno - 1 : node.lineno - 1]
+
+    return "\n".join(leading_source_lines) + "\n"
 
 
 # FIXME can't handle multi-line decorator expression
