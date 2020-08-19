@@ -46,10 +46,17 @@ def get_dependency_of_decl(decl: DeclarationType) -> Set[str]:
     return visitor.visit(temp_module)
 
 
+# FIXME topological sort on dependency graph is not a proper algorithm to sort by
+# abstraction levels. A much more proper way to do it is to sort by level in the
+# hierarchy relation.
 def absort_decls(decls: List[DeclarationType]) -> Iterator[DeclarationType]:
     def same_rank_sorter(names: List[str]) -> List[str]:
         # Currently sort by lexigraphical order.
+        #
         # Possible alternatives: sort by body size, sort by name length, etc.
+        #
+        # It's also an option to retain their original order, to reduce diff size.
+        #
         # TODO More advanced option is to utilize power of machine learning to put two
         # visually/semantically similar function/class definitions near each other.
         return sorted(names)
@@ -82,6 +89,8 @@ def absort_decls(decls: List[DeclarationType]) -> Iterator[DeclarationType]:
         yield first_true(decls, pred=name_matcher)  # type: ignore
 
 
+# FIXME take special care of shebang and __future__ import. They both require to be on
+# the very first line of the code file.
 def transform(old_source: str) -> str:
     module_tree = ast.parse(old_source)
 
@@ -200,6 +209,7 @@ def collect_python_files(filepaths: Iterable[Path]) -> Iterator[Path]:
 # TODO add option "--comment-is-attribute-of-following-declaration"
 # TODO add option "--comment-strategy", possible values are "push-top", "attr-follow-decl", "ignore" (not recommended)
 # TODO add help message to every parameters.
+# TODO add confirmation prompt to the dangerous options, eg. --in-place.
 def main(
     filepaths: Tuple[str],
     display_diff: bool,
