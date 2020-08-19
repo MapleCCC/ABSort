@@ -46,9 +46,6 @@ def get_dependency_of_decl(decl: DeclarationType) -> Set[str]:
     return visitor.visit(temp_module)
 
 
-# FIXME topological sort on dependency graph is not a proper algorithm to sort by
-# abstraction levels. A much more proper way to do it is to sort by level in the
-# hierarchy relation.
 def absort_decls(decls: List[DeclarationType]) -> Iterator[DeclarationType]:
     def same_rank_sorter(names: List[str]) -> List[str]:
         # Currently sort by retaining their original relativeorder, to reduce diff size.
@@ -72,7 +69,7 @@ def absort_decls(decls: List[DeclarationType]) -> Iterator[DeclarationType]:
         for dep in deps:
             if dep in decl_names:
                 graph.add_edge(decl.name, dep)
-    sorted_names = list(graph.topological_sort(same_rank_sorter=same_rank_sorter))
+    sorted_names = list(graph.hierarchy_level_sort(same_rank_sorter=same_rank_sorter))
 
     cli_params = click.get_current_context().params
 
