@@ -9,7 +9,8 @@ format:
 	black .
 
 prof:
-	kernprof -lv absort.py sample.py
+	# kernprof -lv absort/__main__.py sample.py
+	kernprof -lv absort/__main__.py --quiet "D:\Program Files\Python38\Lib\site-packages\isort\main.py"
 
 type-check:
 	mypy .
