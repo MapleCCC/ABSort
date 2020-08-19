@@ -11,6 +11,7 @@ from more_itertools import first_true
 
 from .ast_utils import (
     ast_get_decorator_list_source_segment,
+    ast_get_leading_comment_and_decorator_list_source_segment,
     ast_get_leading_comment_source_segment,
 )
 from .extra_typing import Declaration, DeclarationType
@@ -113,34 +114,34 @@ def transform(old_source: str) -> str:
     new_source = ""
     comments = ""
     for stmt in new_stmts:
-        comment = ast_get_leading_comment_source_segment(old_source, stmt, padded=True)
-        if comment_strategy == CommentStrategy.push_top:
-            comments += comment
-        elif comment_strategy == CommentStrategy.attr_follow_decl:
-            new_source += comment
-        elif comment_strategy == CommentStrategy.ignore:
-            pass
-        else:
-            raise RuntimeError("Unreachable")
-
         # WARNING: it's surprising that ast.get_source_segment doesn't include source
         # segment of decorator_list.
-        new_source += ast_get_decorator_list_source_segment(
+
+        leading_comment_source_segment = ast_get_leading_comment_source_segment(
+            old_source, stmt, padded=True
+        )
+        decorator_list_source_segment = ast_get_decorator_list_source_segment(
             old_source, stmt, padded=True
         )
 
+        if comment_strategy == CommentStrategy.push_top:
+            comments += leading_comment_source_segment
+            new_source += decorator_list_source_segment
+        elif comment_strategy == CommentStrategy.attr_follow_decl:
+            new_source += ast_get_leading_comment_and_decorator_list_source_segment(
+                old_source, stmt, padded=True
+            )
+        elif comment_strategy == CommentStrategy.ignore:
+            new_source += decorator_list_source_segment
+        else:
+            raise RuntimeError("Unreachable")
+
         new_source += ast.get_source_segment(old_source, stmt, padded=True)
 
-        # FIXME use a more proper way to retain as much original layout as possible, to
-        # reduce diff size.
-        new_source += "\n\n"
+        new_source += "\n"
 
     if comment_strategy == CommentStrategy.push_top:
         new_source = comments + new_source
-
-    # Only reserve one trailing newline
-    if new_source.endswith("\n\n"):
-        new_source = new_source[:-1]
 
     return new_source
 

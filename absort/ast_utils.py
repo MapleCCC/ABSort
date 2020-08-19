@@ -1,6 +1,6 @@
 import ast
 from itertools import takewhile
-from typing import Any, Iterator, Optional
+from typing import Any, Iterator, Optional, Set
 
 import black
 
@@ -11,6 +11,7 @@ __all__ = [
     "ast_pretty_dump",
     "ast_ordered_walk",
     "ast_remove_location_info",
+    "ast_get_leading_comment_and_decorator_list_source_segment",
     "ast_get_leading_comment_source_segment",
     "ast_get_decorator_list_source_segment",
 ]
@@ -45,6 +46,28 @@ def ast_remove_location_info(node: ast.AST) -> None:
         for attr in location_info_attrs:
             if hasattr(node, attr):
                 delattr(node, attr)
+
+
+# TODO use memoization technique to optimzie performance.
+def ast_get_leading_comment_and_decorator_list_source_segment(
+    source: str, node: ast.AST, padded: bool = False
+) -> str:
+    # WARNING: ast.AST.lineno and ast.AST.end_lineno are 1-indexed
+
+    above_lines = source.splitlines()[: node.lineno - 1]
+
+    decorator_list_linenos: Set[int] = set()
+    if isinstance(node, Decoratable) and hasattr(node, "decorator_list"):
+        for decorator in node.decorator_list:
+            lineno, end_lineno = decorator.lineno, decorator.end_lineno
+            decorator_list_linenos.update(range(lineno, end_lineno + 1))
+
+    leading_source_lines = []
+    for lineno, line in enumerate(above_lines, node.lineno - 1):
+        if len(line.strip()) == 0 or line[0] == "#" or lineno in decorator_list_linenos:
+            leading_source_lines.append(line)
+
+    return "\n".join(leading_source_lines) + "\n"
 
 
 # FIXME can't handle multi-line decorator expression
