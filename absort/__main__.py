@@ -6,6 +6,7 @@ from typing import Iterator, List, Set, Tuple
 
 import click
 import colorama
+from more_itertools import first_true
 
 from .ast_utils import (
     ast_get_leading_comment_source_segment,
@@ -48,9 +49,9 @@ def absort_decls(decls: List[DeclarationType]) -> Iterator[DeclarationType]:
         sorted_names.remove("main")
         sorted_names.append("main")
 
-    # FIXME Only one decl matches the name, we should use short-circuit to optimize.
+    # Only one decl matches the name, we use short-circuit to optimize.
     for name in sorted_names:
-        yield from filter(lambda decl: decl.name == name, decls)
+        yield first_true(decls, pred=lambda decl: decl.name == name)  # type: ignore
 
 
 def transform(old_source: str) -> str:
