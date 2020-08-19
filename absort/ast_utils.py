@@ -115,8 +115,6 @@ def ast_get_decorator_list_source_segment(
     """
     Return source segment of the decorator list that decorate a function/class as given
     by the node argument.
-
-    If some location information is missing, raise ValueError.
     """
 
     if not isinstance(node, Decoratable):
@@ -128,23 +126,11 @@ def ast_get_decorator_list_source_segment(
     if not hasattr(node, "decorator_list"):
         return ""
 
-    decorator_list_source_segment = ""
+    source_lines = source.splitlines()
+
+    decorator_list_lines = []
     for decorator in node.decorator_list:
-        decorator_source_segment = ast.get_source_segment(
-            source, decorator, padded=padded
-        )
-        if decorator_source_segment is None:
-            raise ValueError(
-                "Location info is missing. "
-                "Get source segment of decorator_list failed."
-            )
-        pad_length = len(decorator_source_segment) - len(
-            decorator_source_segment.lstrip()
-        )
-        decorator_source_segment = (
-            decorator_source_segment[:pad_length]
-            + "@"
-            + decorator_source_segment[pad_length:]
-        )
-        decorator_list_source_segment += decorator_source_segment + "\n"
-    return decorator_list_source_segment
+        lineno, end_lineno = decorator.lineno, decorator.end_lineno
+        decorator_list_lines.extend(source_lines[lineno - 1 : end_lineno])
+
+    return "\n".join(decorator_list_lines) + "\n"
