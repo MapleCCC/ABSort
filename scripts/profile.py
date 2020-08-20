@@ -1,23 +1,40 @@
 #!/usr/bin/env python3
 
-import re
+import ast
 import subprocess
 from pathlib import Path
 from shutil import copy2
 from tempfile import TemporaryDirectory
 
+import astor
+
 ISORT_MAIN_FILEPATH = "D:/Program Files/Python38/Lib/site-packages/isort/main.py"
 
 
-# FIXME it's possible for current implementation to accidentally transform the relative
-# import that is not actually relative import. For example, a relative import embedded
-# in a string literal. The only robust and correct way to avoid such problem is to
-# construct syntax tree using lexical analysis and syntax analysis.
 def transform_relative_imports(p: Path) -> None:
+    class RelativeImportTransformer(ast.NodeTransformer):
+        def visit_ImportFrom(self, node: ast.ImportFrom) -> ast.ImportFrom:
+            if node.level is None:
+                return node
+
+            if node.level > 0:
+                node.level -= 1
+            elif node.level == 0:
+                pass
+            else:
+                raise RuntimeError("Unreachable")
+
+            return node
+
     old_content = p.read_text(encoding="utf-8")
-    pattern = r"from \.(?P<module>\w*) import (?P<names>.*)"
-    repl = r"from \g<module> import \g<names>"
-    new_content = re.sub(pattern, repl, old_content)
+
+    tree = ast.parse(old_content)
+
+    new_tree = RelativeImportTransformer().visit(tree)
+    new_tree = ast.fix_missing_locations(new_tree)
+
+    new_content = astor.to_source(new_tree)
+
     p.write_text(new_content, encoding="utf-8")
 
 
