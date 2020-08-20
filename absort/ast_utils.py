@@ -17,6 +17,13 @@ __all__ = [
 ]
 
 
+# Note: the name `profile` will be injected by line-profiler at run-time
+try:
+    profile  # type: ignore
+except NameError:
+    profile = lambda x: x
+
+
 def ast_pretty_dump(node: ast.AST, *args: Any, **kwargs: Any) -> str:
     """ Use black formatting library to prettify the dumped AST """
 
@@ -49,6 +56,7 @@ def ast_remove_location_info(node: ast.AST) -> None:
 
 
 # TODO use memoization technique to optimzie performance.
+@profile  # type: ignore
 def ast_get_leading_comment_and_decorator_list_source_lines(
     source: str, node: ast.AST
 ) -> str:
@@ -76,6 +84,7 @@ def ast_get_leading_comment_and_decorator_list_source_lines(
     return "\n".join(leading_source_lines)
 
 
+@profile  # type: ignore
 def ast_get_leading_comment_source_lines(source: str, node: ast.AST) -> str:
     # WARNING: ast.AST.lineno and ast.AST.end_lineno are 1-indexed
 
@@ -98,6 +107,7 @@ def ast_get_leading_comment_source_lines(source: str, node: ast.AST) -> str:
     return "\n".join(leading_comment_lines)
 
 
+@profile  # type: ignore
 def ast_get_decorator_list_source_lines(source: str, node: ast.AST) -> str:
     """
     Return source lines of the decorator list that decorate a function/class as given
@@ -116,6 +126,7 @@ def ast_get_decorator_list_source_lines(source: str, node: ast.AST) -> str:
     return "\n".join(decorator_list_lines)
 
 
+@profile  # type: ignore
 def ast_get_source_lines(source: str, node: ast.AST) -> str:
     # WARNING: ast.AST.lineno and ast.AST.end_lineno are 1-indexed
 

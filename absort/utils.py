@@ -1,9 +1,21 @@
 import difflib
-from typing import Any, Iterable, Iterator, List
+import inspect
+from typing import Any, Iterable, Iterator, List, TypeVar
 
 from colorama import Fore, Style
 
-__all__ = ["reverse", "beginswith", "colored_unified_diff"]
+__all__ = [
+    "reverse",
+    "beginswith",
+    "colored_unified_diff",
+    "add_profile_decorator_to_methods",
+]
+
+# Note: the name `profile` will be injected by line-profiler at run-time
+try:
+    profile  # type: ignore
+except NameError:
+    profile = lambda x: x
 
 
 def reverse(iterable: Iterable) -> Iterable:
@@ -56,3 +68,15 @@ def colored_unified_diff(
             yield bright_red(line)
         else:
             raise RuntimeError("Unreachable")
+
+
+T = TypeVar("T")
+
+
+def add_profile_decorator_to_methods(cls: T) -> T:
+    methods = inspect.getmembers(cls, predicate=inspect.isfunction)
+    for name, method in methods:
+        # if name == "visit" or re.fullmatch(r"visit_\w+", name):
+        #     setattr(cls, name, profile(method))
+        setattr(cls, name, profile(method))  # type: ignore
+    return cls

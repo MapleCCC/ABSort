@@ -2,7 +2,16 @@ import ast
 from enum import Enum, auto
 from typing import Iterable, List, Sequence, Set, Union
 
+from .utils import add_profile_decorator_to_methods
+
 __all__ = ["GetUndefinedVariableVisitor"]
+
+
+# Note: the name `profile` will be injected by line-profiler at run-time
+try:
+    profile  # type: ignore
+except NameError:
+    profile = lambda x: x
 
 
 def get_funcdef_arg_names(
@@ -46,6 +55,7 @@ class ScopeContext(Enum):
 # TODO add runtime type checking. @runtime_type_check
 # TODO fill in docstring to elaborate on details.
 # TODO @assert_symtab_stack_depth
+@add_profile_decorator_to_methods
 class GetUndefinedVariableVisitor(ast.NodeVisitor):
     """
 

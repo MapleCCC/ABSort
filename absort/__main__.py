@@ -21,6 +21,13 @@ from .utils import colored_unified_diff
 from .visitors import GetUndefinedVariableVisitor
 
 
+# Note: the name `profile` will be injected by line-profiler at run-time
+try:
+    profile  # type: ignore
+except NameError:
+    profile = lambda x: x
+
+
 # Alternative name: DuplicateNames
 class NameRedefinition(Exception):
     pass
@@ -53,6 +60,7 @@ def get_dependency_of_decl(decl: DeclarationType) -> Set[str]:
     return visitor.visit(temp_module)
 
 
+@profile  # type: ignore
 def absort_decls(decls: List[DeclarationType]) -> Iterator[DeclarationType]:
     def same_rank_sorter(names: List[str]) -> List[str]:
         # Currently sort by retaining their original relative order, to reduce diff size.
@@ -98,7 +106,9 @@ def absort_decls(decls: List[DeclarationType]) -> Iterator[DeclarationType]:
         yield first_true(decls, pred=name_matcher)  # type: ignore
 
 
+@profile  # type: ignore
 def transform(old_source: str) -> str:
+    @profile  # type: ignore
     def get_related_source_lines(source: str, node: ast.AST) -> str:
         leading_comment_source_lines = ast_get_leading_comment_source_lines(
             source, node
@@ -126,6 +136,7 @@ def transform(old_source: str) -> str:
 
         return source_lines
 
+    @profile  # type: ignore
     def transform_stmts(old_stmts: List[ast.stmt]) -> Iterator[ast.stmt]:
         buffer: List[DeclarationType] = []
         for stmt in old_stmts:
@@ -230,6 +241,7 @@ def collect_python_files(filepaths: Iterable[Path]) -> Iterator[Path]:
 # TODO add help message to every parameters.
 # TODO add command line option --yes to bypass all confirmation prompts
 # TODO add description as argument to click.command()
+@profile  # type: ignore
 def main(
     filepaths: Tuple[str],
     display_diff: bool,
