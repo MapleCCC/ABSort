@@ -1,6 +1,7 @@
 import ast
+import functools
 from enum import Enum, auto
-from typing import Iterable, List, Sequence, Set, Union
+from typing import List, Sequence, Set, Tuple, Union
 
 from .utils import add_profile_decorator_to_methods
 
@@ -104,6 +105,17 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
         else:
             return symbol_table_lookup(name)
 
+    @functools.lru_cache(maxsize=None)
+    def _collect_visible_declarations(self, nodes: Tuple[ast.AST, ...]) -> Set[str]:
+        visible_decls = set()
+        for node in nodes:
+            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+                visible_decls.add(node.name)
+            else:
+                children = tuple(ast.iter_child_nodes(node))
+                visible_decls.update(self._collect_visible_declarations(children))
+        return visible_decls
+
     def _visit_new_scope(
         self,
         nodes: Sequence[ast.AST],
@@ -116,20 +128,7 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
         if inject_names:
             self._symbol_table_stack[-1].update(inject_names)
 
-        def collect_visible_declarations(nodes: Iterable[ast.AST]) -> Set[str]:
-            visible_decls = set()
-            for node in nodes:
-                if isinstance(
-                    node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)
-                ):
-                    visible_decls.add(node.name)
-                else:
-                    visible_decls.update(
-                        collect_visible_declarations(ast.iter_child_nodes(node))
-                    )
-            return visible_decls
-
-        visible_decls = collect_visible_declarations(nodes)
+        visible_decls = self._collect_visible_declarations(tuple(nodes))
         self._declaration_name_table_stack.append(visible_decls)
 
         for node in nodes:
