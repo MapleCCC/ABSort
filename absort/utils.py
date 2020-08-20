@@ -12,7 +12,7 @@ __all__ = [
     "reverse",
     "beginswith",
     "colored_unified_diff",
-    "add_profile_decorator_to_methods",
+    "add_profile_decorator_to_class_methods",
     "cached_splitlines",
     "silent_context",
 ]
@@ -79,7 +79,7 @@ def colored_unified_diff(
 T = TypeVar("T")
 
 
-def add_profile_decorator_to_methods(cls: T) -> T:
+def add_profile_decorator_to_class_methods(cls: T) -> T:
     methods = inspect.getmembers(cls, predicate=inspect.isfunction)
     for name, method in methods:
         # if name == "visit" or re.fullmatch(r"visit_\w+", name):
