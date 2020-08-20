@@ -129,7 +129,12 @@ def transform(old_source: str) -> str:
             comments += leading_comment_source_lines
             source_lines += decorator_list_source_lines
         elif comment_strategy is CommentStrategy.attr_follow_decl:
-            source_lines += leading_comment_and_decorator_list_source_lines
+            if leading_comment_and_decorator_list_source_lines:
+                source_lines += leading_comment_and_decorator_list_source_lines
+            else:
+                # This line is a heuristic. It's visually bad to have no blank lines
+                # between two declarations. So we explicitly add one.
+                source_lines += "\n"
         elif comment_strategy is CommentStrategy.ignore:
             source_lines += decorator_list_source_lines
         else:
