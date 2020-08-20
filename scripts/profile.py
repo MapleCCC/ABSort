@@ -4,6 +4,7 @@ import ast
 import subprocess
 from pathlib import Path
 from shutil import copy2
+from subprocess import CalledProcessError
 from tempfile import TemporaryDirectory
 
 import astor
@@ -65,14 +66,18 @@ def main() -> None:
             ],
             encoding="utf-8",
             # WARNING: don't specify capture_output if stderr or stdout is specified
-            stdout=subprocess.PIPE,
-            # Combine stdout and stderr into one stream
-            stderr=subprocess.STDOUT,
+            capture_output=True,
         )
-        completed_proc.check_returncode()
-        output = completed_proc.stdout
-        Path("line-profiler-output.txt").write_text(output, encoding="utf-8")
-        print("Profile result data is written to line-profiler-output.txt")
+        stdout = completed_proc.stdout
+        stderr = completed_proc.stderr
+        try:
+            completed_proc.check_returncode()
+        except CalledProcessError:
+            print("Profile failed.")
+            print(stderr)
+        else:
+            Path("line-profiler-output.txt").write_text(stdout, encoding="utf-8")
+            print("Profile result data is written to line-profiler-output.txt")
 
 
 if __name__ == "__main__":
