@@ -177,10 +177,11 @@ def display_diff_with_filename(
 def collect_python_files(filepaths: Iterable[Path]) -> Iterator[Path]:
     for filepath in filepaths:
         if filepath.is_file():
-            if filepath.suffix == ".py":
-                yield filepath
-            else:
-                print(f"{filepath} is not Python file. Skipped.")
+            # We don't test file suffix, because it's possible user explicitly enters an
+            # input file that contains Python code but doesn't have `.py` extension.
+            # If it doesn't contain Python code, a SyntaxError will be raised from other
+            # part of the code and handled by exception handling routines anyway.
+            yield filepath
         elif filepath.is_dir():
             yield from filepath.rglob("*.py")
         else:
