@@ -268,20 +268,22 @@ def main(
         try:
             old_source = file.read_text(encoding)
         except UnicodeDecodeError:
-            raise RuntimeError(f"{file} has unknown encoding.")
+            print(f"{file} has unknown encoding.")
+            continue
 
         try:
             new_source = transform(old_source)
         except SyntaxError as exc:
             # if re.fullmatch(r"Missing parentheses in call to 'print'. Did you mean print(.*)\?", exc.msg):
             #     pass
-            raise RuntimeError(f"{file} has erroneous syntax: {exc.msg}")
+            print(f"{file} has erroneous syntax: {exc.msg}")
+            continue
         except NameRedefinition:
-            raise RuntimeError(
-                f"{file} contains duplicate name redefinitions. Not supported yet."
-            )
+            print(f"{file} contains duplicate name redefinitions. Not supported yet.")
+            continue
         except CircularDependencyError:
-            raise RuntimeError(f"{file} contains circular dependency. Not supported yet.")
+            print(f"{file} contains circular dependency. Not supported yet.")
+            continue
 
         # TODO add more styled output (e.g. colorized)
 

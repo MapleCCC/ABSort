@@ -58,7 +58,6 @@
 - Add .pylintrc
 - remember timestamp to ignore unmodified files
 - Collect statistics of failure cases. And print summary digest at the end of execution to show user.
-- As a command line tool that deals with files, we should proceed on failure. Not fail fast and early.
 - Use intelligent detect file encoding, instead of hardcoding UTF-8. Take inspiration from the autopep8 cli tool.
 
 ## Changelog
@@ -80,3 +79,4 @@
 - 添加 cli option --comment-is-attribute-of-following-declaration
 - add confirmation prompt to the dangerous options, eg. --in-place.
 - Add .isort.cfg
+- As a command line tool that deals with files, we should proceed on failure. Not fail fast and early.
