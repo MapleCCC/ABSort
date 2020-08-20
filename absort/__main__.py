@@ -176,8 +176,11 @@ def display_diff_with_filename(
 
 def collect_python_files(filepaths: Iterable[Path]) -> Iterator[Path]:
     for filepath in filepaths:
-        if filepath.is_file() and filepath.suffix == ".py":
-            yield filepath
+        if filepath.is_file():
+            if filepath.suffix == ".py":
+                yield filepath
+            else:
+                print(f"{filepath} is not Python file. Skipped.")
         elif filepath.is_dir():
             yield from filepath.rglob("*.py")
         else:
