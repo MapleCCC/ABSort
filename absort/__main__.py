@@ -16,7 +16,7 @@ from .ast_utils import (
     ast_get_source_lines,
 )
 from .extra_typing import Declaration, DeclarationType
-from .graph import Graph
+from .graph import CircularDependencyError, Graph
 from .utils import colored_unified_diff
 from .visitors import GetUndefinedVariableVisitor
 
@@ -265,9 +265,23 @@ def main(
     files = collect_python_files(map(Path, filepaths))
 
     for file in files:
-        old_source = file.read_text(encoding)
+        try:
+            old_source = file.read_text(encoding)
+        except UnicodeDecodeError:
+            raise RuntimeError(f"{file} has unknown encoding.")
 
-        new_source = transform(old_source)
+        try:
+            new_source = transform(old_source)
+        except SyntaxError as exc:
+            # if re.fullmatch(r"Missing parentheses in call to 'print'. Did you mean print(.*)\?", exc.msg):
+            #     pass
+            raise RuntimeError(f"{file} has erroneous syntax: {exc.msg}")
+        except NameRedefinition:
+            raise RuntimeError(
+                f"{file} contains duplicate name redefinitions. Not supported yet."
+            )
+        except CircularDependencyError:
+            raise RuntimeError(f"{file} contains circular dependency. Not supported yet.")
 
         # TODO add more styled output (e.g. colorized)
 
