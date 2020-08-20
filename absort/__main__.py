@@ -176,7 +176,7 @@ def transform(old_source: str) -> str:
     comments = ""
     for stmt in new_stmts:
         source_lines = get_related_source_lines(old_source, stmt)
-        new_source += source_lines + "\n"
+        new_source += source_lines
 
     if comment_strategy is CommentStrategy.push_top:
         new_source = comments + new_source
