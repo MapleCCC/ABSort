@@ -62,6 +62,10 @@ def absort_decls(decls: List[DeclarationType]) -> Iterator[DeclarationType]:
         #
         # TODO More advanced option is to utilize power of machine learning to put two
         # visually/semantically similar function/class definitions near each other.
+        #
+        # Code similarity can be implemented in:
+        # 1. easy and naive way: source code string similarity. eg. shortest edit distance algorithm.
+        # 2. sophisticated way: syntax tree similarity.
 
         decl_name_inverse_index = {name: idx for idx, name in enumerate(decl_names)}
         return sorted(names, key=lambda name: decl_name_inverse_index[name])
@@ -197,7 +201,7 @@ def collect_python_files(filepaths: Iterable[Path]) -> Iterator[Path]:
 @click.argument(
     "filepaths",
     nargs=-1,
-    # We don't test writable, because it's possible user just want to see diff, instead
+    # We don't test writable, because it's possible user just want to see diff, instead of
     # in-place updating the file.
     #
     # FIXME what's the semantic to specify allow_dash=True for click.Path when value is a directory?
@@ -224,6 +228,8 @@ def collect_python_files(filepaths: Iterable[Path]) -> Iterator[Path]:
 @click.option("-v", "--verbose", is_flag=True)
 # TODO add multi thread support, to accelerate
 # TODO add help message to every parameters.
+# TODO add command line option --yes to bypass all confirmation prompts
+# TODO add description as argument to click.command()
 def main(
     filepaths: Tuple[str],
     display_diff: bool,

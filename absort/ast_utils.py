@@ -104,6 +104,8 @@ def ast_get_decorator_list_source_lines(source: str, node: ast.AST) -> str:
     by the node argument.
     """
 
+    # WARNING: ast.AST.lineno and ast.AST.end_lineno are 1-indexed
+
     source_lines = source.splitlines()
 
     decorator_list_lines = []
@@ -115,6 +117,8 @@ def ast_get_decorator_list_source_lines(source: str, node: ast.AST) -> str:
 
 
 def ast_get_source_lines(source: str, node: ast.AST) -> str:
+    # WARNING: ast.AST.lineno and ast.AST.end_lineno are 1-indexed
+
     source_lines = source.splitlines()
     lineno, end_lineno = node.lineno, node.end_lineno
     return "\n".join(source_lines[lineno - 1 : end_lineno])

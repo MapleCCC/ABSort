@@ -400,12 +400,16 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
         for name in node.names:
             # FIXME we need to narrow down the lookup scope to the scopes that are
             # allowed by the `nonlocal` keyword, as per the Python language grammar.
+            #
+            # FIXME exclude global scope when searching for existing binding
             if self._symbol_lookup(name):
                 self._symbol_table_stack[-1].add(name)
             else:
                 # there is no corresponding name in outter scopes
                 self._undefined_vars.add(name)
 
+    # FIXME current implementation is buggy, can't distinguish store-ctx nonlocal var and
+    # load-ctx nonlocal var.
     def visit_Name(self, node: ast.Name) -> None:
         if isinstance(node.ctx, ast.Store):
             if not self._symbol_lookup(node.id):

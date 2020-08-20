@@ -27,6 +27,12 @@
 ## Uncategorized
 
 - Profile to find performance hotspots. Optimize and accelerate the script.
+  - Algorithmic optimization
+  - Memoirization optimization
+  - Rewrite-in-Cython optimization
+  - Multi-thread/process optimization
+  - Rewrite-in-Generator-Style optimization
+  - Caculate and Save for next time optimization
 - Add click parameter help messages.
 - Use self-customized ast.get_source_segment implementation to accelerate.
   - Algorithmic optimization
@@ -51,6 +57,9 @@
 - 在 GitHub 设为 public repo
 - Add .pylintrc
 - remember timestamp to ignore unmodified files
+- Collect statistics of failure cases. And print summary digest at the end of execution to show user.
+- As a command line tool that deals with files, we should proceed on failure. Not fail fast and early.
+- Use intelligent detect file encoding, instead of hardcoding UTF-8. Take inspiration from the autopep8 cli tool.
 
 ## Changelog
 
