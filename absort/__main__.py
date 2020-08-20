@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import ast
+import contextlib
 from concurrent.futures import ThreadPoolExecutor
 from enum import Enum
 from pathlib import Path
@@ -277,7 +278,11 @@ def main(
     if quiet and verbose:
         raise ValueError("Can't specify both `--quiet` and `--verbose` options")
 
-    with silent_context(), colorama_text():
+    verboseness_context = contextlib.nullcontext
+    if quiet:
+        verboseness_context = silent_context  # type: ignore
+
+    with verboseness_context(), colorama_text():
 
         files = collect_python_files(map(Path, filepaths))
 
