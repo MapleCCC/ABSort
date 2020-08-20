@@ -118,25 +118,24 @@ def transform(old_source: str) -> str:
             source, node
         )
         decorator_list_source_lines = ast_get_decorator_list_source_lines(source, node)
+        leading_comment_and_decorator_list_source_lines = ast_get_leading_comment_and_decorator_list_source_lines(
+            source, node
+        )
 
         source_lines = ""
 
         if comment_strategy is CommentStrategy.push_top:
             nonlocal comments  # type: ignore
-            comments += leading_comment_source_lines + "\n"
-            source_lines += decorator_list_source_lines + "\n"
+            comments += leading_comment_source_lines
+            source_lines += decorator_list_source_lines
         elif comment_strategy is CommentStrategy.attr_follow_decl:
-            # fmt: off
-            source_lines += ast_get_leading_comment_and_decorator_list_source_lines(
-                source, node
-            ) + "\n"
-            # fmt: on
+            source_lines += leading_comment_and_decorator_list_source_lines
         elif comment_strategy is CommentStrategy.ignore:
-            source_lines += decorator_list_source_lines + "\n"
+            source_lines += decorator_list_source_lines
         else:
             raise RuntimeError("Unreachable")
 
-        source_lines += ast_get_source_lines(source, node) + "\n"
+        source_lines += ast_get_source_lines(source, node)
 
         return source_lines
 

@@ -80,7 +80,10 @@ def ast_get_leading_comment_and_decorator_list_source_lines(
 
     leading_source_lines = above_lines[boundary_lineno : node.lineno - 1]
 
-    return "\n".join(leading_source_lines)
+    if leading_source_lines:
+        return "\n".join(leading_source_lines) + "\n"
+    else:
+        return ""
 
 
 @profile  # type: ignore
@@ -103,7 +106,10 @@ def ast_get_leading_comment_source_lines(source: str, node: ast.AST) -> str:
         else:
             break
 
-    return "\n".join(leading_comment_lines)
+    if leading_comment_lines:
+        return "\n".join(leading_comment_lines) + "\n"
+    else:
+        return ""
 
 
 @profile  # type: ignore
@@ -122,13 +128,22 @@ def ast_get_decorator_list_source_lines(source: str, node: ast.AST) -> str:
         lineno, end_lineno = decorator.lineno, decorator.end_lineno
         decorator_list_lines.extend(source_lines[lineno - 1 : end_lineno])
 
-    return "\n".join(decorator_list_lines)
+    if decorator_list_lines:
+        return "\n".join(decorator_list_lines) + "\n"
+    else:
+        return ""
 
 
 @profile  # type: ignore
 def ast_get_source_lines(source: str, node: ast.AST) -> str:
     # WARNING: ast.AST.lineno and ast.AST.end_lineno are 1-indexed
 
-    source_lines = cached_splitlines(source)
+    whole_source_lines = cached_splitlines(source)
+
     lineno, end_lineno = node.lineno, node.end_lineno
-    return "\n".join(source_lines[lineno - 1 : end_lineno])
+    source_lines = whole_source_lines[lineno - 1 : end_lineno]
+
+    if source_lines:
+        return "\n".join(source_lines) + "\n"
+    else:
+        return ""
