@@ -242,7 +242,10 @@ def main(
         if display_diff:
             if quiet:
                 continue
-            display_diff_with_filename(old_source, new_source, file.name)
+            # WARNING: Path.name is different from Path.__str__()
+            # Path.name is "A string representing the final path component, excluding the drive and root, if any"
+            # Path.__str__ is "The string representation of a path is the raw filesystem path itself (in native form, e.g. with backslashes under Windows), which you can pass to any function taking a file path as a string"
+            display_diff_with_filename(old_source, new_source, str(file))
         elif in_place:
             click.confirm(
                 f"Are you sure you want to in-place update the file {file}?", abort=True
