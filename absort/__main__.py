@@ -144,12 +144,6 @@ def transform(old_source: str) -> str:
 
         source_lines += ast_get_source_lines(source, node)
 
-        nonlocal is_first_stmt  # type: ignore
-        if is_first_stmt:
-            # This line is a heuristic. It's visually bad to have blank lines at the
-            # start of the document. So we explicitly remove them.
-            source_lines = source_lines.lstrip()
-
         return source_lines
 
     @profile  # type: ignore
@@ -186,14 +180,16 @@ def transform(old_source: str) -> str:
 
     new_source = ""
     comments = ""
-    is_first_stmt = True
     for stmt in new_stmts:
         source_lines = get_related_source_lines(old_source, stmt)
         new_source += source_lines
-        is_first_stmt = False
 
     if comment_strategy is CommentStrategy.push_top:
         new_source = comments + new_source
+
+    # This line is a heuristic. It's visually bad to have blank lines at the
+    # start of the document. So we explicitly remove them.
+    new_source = new_source.lstrip()
 
     return new_source
 
