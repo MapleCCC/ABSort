@@ -221,6 +221,7 @@ def collect_python_files(filepaths: Iterable[Path]) -> Iterator[Path]:
     "`attr-follow-decl`.",
 )
 @click.option("-q", "--quiet", is_flag=True)
+@click.option("-v", "--verbose", is_flag=True)
 # TODO add multi thread support, to accelerate
 # TODO add help message to every parameters.
 def main(
@@ -232,10 +233,14 @@ def main(
     encoding: str,
     comment_strategy: CommentStrategy,
     quiet: bool,
+    verbose: bool,
 ) -> None:
 
     if display_diff and in_place:
         raise ValueError("Can't specify both `--diff` and `--in-place` options")
+
+    if quiet and verbose:
+        raise ValueError("Can't specify both `--quiet` and `--verbose` options")
 
     colorama.init()
 
@@ -269,6 +274,9 @@ def main(
             print(new_source)
             print("***************************************")
             print("\n", end="")
+
+        if verbose:
+            print(f"Processed {file}")
 
 
 if __name__ == "__main__":
