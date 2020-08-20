@@ -62,8 +62,6 @@ def main() -> None:
                 "--line-by-line",
                 "--view",
                 "--builtin",
-                "--outfile",
-                PROFILE_RESULT_OUTPUT_FILE,
                 str(entry_script),
                 "--quiet",
                 ISORT_MAIN_FILEPATH,
@@ -80,6 +78,7 @@ def main() -> None:
             print("Profile failed.")
             print(stderr)
         else:
+            Path(PROFILE_RESULT_OUTPUT_FILE).write_text(stdout, encoding="utf-8")
             print("Profile result data is written to line-profiler-output.txt")
 
 
