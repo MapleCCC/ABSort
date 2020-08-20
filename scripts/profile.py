@@ -9,6 +9,7 @@ from tempfile import TemporaryDirectory
 import astor
 
 ISORT_MAIN_FILEPATH = "D:/Program Files/Python38/Lib/site-packages/isort/main.py"
+ENTRY_SCRIPT_NAME = "__main__.py"
 
 
 def transform_relative_imports(p: Path) -> None:
@@ -47,17 +48,28 @@ def main() -> None:
             copy2(f, target)
             transform_relative_imports(target)
 
-        entry_script = tempdir / "__main__.py"
+        entry_script = tempdir / ENTRY_SCRIPT_NAME
 
         completed_proc = subprocess.run(
-            ["kernprof", "-l", "-v", str(entry_script), "--quiet", ISORT_MAIN_FILEPATH],
+            [
+                "time",
+                "kernprof",
+                "-l",
+                "-v",
+                str(entry_script),
+                "--quiet",
+                ISORT_MAIN_FILEPATH,
+            ],
             encoding="utf-8",
             # WARNING: don't specify capture_output if stderr or stdout is specified
+            stdout=subprocess.PIPE,
             # Combine stdout and stderr into one stream
             stderr=subprocess.STDOUT,
         )
         completed_proc.check_returncode()
-        print(completed_proc.stdout)
+        output = completed_proc.stdout
+        Path("line-profiler-output.txt").write_text(output, encoding="utf-8")
+        print("Profile result data is written to line-profiler-output.txt")
 
 
 if __name__ == "__main__":
