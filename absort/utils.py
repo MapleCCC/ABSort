@@ -1,6 +1,9 @@
+import contextlib
 import difflib
 import functools
 import inspect
+import os
+import sys
 from typing import Any, Iterable, Iterator, List, TypeVar
 
 from colorama import Fore, Style
@@ -11,6 +14,7 @@ __all__ = [
     "colored_unified_diff",
     "add_profile_decorator_to_methods",
     "cached_splitlines",
+    "silent_context",
 ]
 
 # Note: the name `profile` will be injected by line-profiler at run-time
@@ -87,3 +91,14 @@ def add_profile_decorator_to_methods(cls: T) -> T:
 @functools.lru_cache
 def cached_splitlines(s: str) -> List[str]:
     return s.splitlines()
+
+
+@contextlib.contextmanager
+def silent_context() -> Iterator:
+    original_stdout = sys.stdout
+    sys.stdout = open(os.devnull, "a")
+    # sys.stderr = open(os.devnull, "a")
+    try:
+        yield
+    finally:
+        sys.stdout = original_stdout

@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 
 import ast
-import os
-import sys
 from enum import Enum
 from pathlib import Path
 from typing import Any, Iterable, Iterator, List, Set, Tuple
@@ -19,7 +17,7 @@ from .ast_utils import (
 )
 from .extra_typing import Declaration, DeclarationType
 from .graph import CircularDependencyError, Graph
-from .utils import colored_unified_diff
+from .utils import colored_unified_diff, silent_context
 from .visitors import GetUndefinedVariableVisitor
 
 
@@ -276,56 +274,58 @@ def main(
     if quiet and verbose:
         raise ValueError("Can't specify both `--quiet` and `--verbose` options")
 
-    if quiet:
-        sys.stdout = open(os.devnull, "a")
+    with silent_context():
 
-    colorama.init()
+        colorama.init()
 
-    files = collect_python_files(map(Path, filepaths))
+        files = collect_python_files(map(Path, filepaths))
 
-    for file in files:
-        try:
-            old_source = file.read_text(encoding)
-        except UnicodeDecodeError:
-            print(f"{file} has unknown encoding.")
-            continue
+        for file in files:
+            try:
+                old_source = file.read_text(encoding)
+            except UnicodeDecodeError:
+                print(f"{file} has unknown encoding.")
+                continue
 
-        try:
-            new_source = transform(old_source)
-        except SyntaxError as exc:
-            # if re.fullmatch(r"Missing parentheses in call to 'print'. Did you mean print(.*)\?", exc.msg):
-            #     pass
-            print(f"{file} has erroneous syntax: {exc.msg}")
-            continue
-        except NameRedefinition:
-            print(f"{file} contains duplicate name redefinitions. Not supported yet.")
-            continue
-        except CircularDependencyError:
-            print(f"{file} contains circular dependency. Not supported yet.")
-            continue
+            try:
+                new_source = transform(old_source)
+            except SyntaxError as exc:
+                # if re.fullmatch(r"Missing parentheses in call to 'print'. Did you mean print(.*)\?", exc.msg):
+                #     pass
+                print(f"{file} has erroneous syntax: {exc.msg}")
+                continue
+            except NameRedefinition:
+                print(
+                    f"{file} contains duplicate name redefinitions. Not supported yet."
+                )
+                continue
+            except CircularDependencyError:
+                print(f"{file} contains circular dependency. Not supported yet.")
+                continue
 
-        # TODO add more styled output (e.g. colorized)
+            # TODO add more styled output (e.g. colorized)
 
-        if display_diff:
-            # WARNING: Path.name is different from Path.__str__()
-            # Path.name is "A string representing the final path component, excluding the drive and root, if any"
-            # Path.__str__ is "The string representation of a path is the raw filesystem path itself (in native form, e.g. with backslashes under Windows), which you can pass to any function taking a file path as a string"
-            display_diff_with_filename(old_source, new_source, str(file))
-        elif in_place:
-            click.confirm(
-                f"Are you sure you want to in-place update the file {file}?", abort=True
-            )
-            file.write_text(new_source, encoding)
-        else:
-            print("---------------------------------------")
-            print(file)
-            print("***************************************")
-            print(new_source)
-            print("***************************************")
-            print("\n", end="")
+            if display_diff:
+                # WARNING: Path.name is different from Path.__str__()
+                # Path.name is "A string representing the final path component, excluding the drive and root, if any"
+                # Path.__str__ is "The string representation of a path is the raw filesystem path itself (in native form, e.g. with backslashes under Windows), which you can pass to any function taking a file path as a string"
+                display_diff_with_filename(old_source, new_source, str(file))
+            elif in_place:
+                click.confirm(
+                    f"Are you sure you want to in-place update the file {file}?",
+                    abort=True,
+                )
+                file.write_text(new_source, encoding)
+            else:
+                print("---------------------------------------")
+                print(file)
+                print("***************************************")
+                print(new_source)
+                print("***************************************")
+                print("\n", end="")
 
-        if verbose:
-            print(f"Processed {file}")
+            if verbose:
+                print(f"Processed {file}")
 
 
 if __name__ == "__main__":
