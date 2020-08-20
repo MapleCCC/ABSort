@@ -4,7 +4,7 @@ from typing import Any, Deque, Iterator, Set
 
 import black
 
-from .utils import beginswith, reverse
+from .utils import beginswith, cached_splitlines, reverse
 
 __all__ = [
     "ast_pretty_dump",
@@ -55,14 +55,13 @@ def ast_remove_location_info(node: ast.AST) -> None:
                 delattr(node, attr)
 
 
-# TODO use memoization technique to optimzie performance.
 @profile  # type: ignore
 def ast_get_leading_comment_and_decorator_list_source_lines(
     source: str, node: ast.AST
 ) -> str:
     # WARNING: ast.AST.lineno and ast.AST.end_lineno are 1-indexed
 
-    above_lines = source.splitlines()[: node.lineno - 1]
+    above_lines = cached_splitlines(source)[: node.lineno - 1]
 
     decorator_list_linenos: Set[int] = set()
     for decorator in getattr(node, "decorator_list", []):
@@ -88,7 +87,7 @@ def ast_get_leading_comment_and_decorator_list_source_lines(
 def ast_get_leading_comment_source_lines(source: str, node: ast.AST) -> str:
     # WARNING: ast.AST.lineno and ast.AST.end_lineno are 1-indexed
 
-    above_lines = source.splitlines()[: node.lineno - 1]
+    above_lines = cached_splitlines(source)[: node.lineno - 1]
 
     decorator_list_linenos: Set[int] = set()
     for decorator in getattr(node, "decorator_list", []):
@@ -116,7 +115,7 @@ def ast_get_decorator_list_source_lines(source: str, node: ast.AST) -> str:
 
     # WARNING: ast.AST.lineno and ast.AST.end_lineno are 1-indexed
 
-    source_lines = source.splitlines()
+    source_lines = cached_splitlines(source)
 
     decorator_list_lines = []
     for decorator in getattr(node, "decorator_list", []):
@@ -130,6 +129,6 @@ def ast_get_decorator_list_source_lines(source: str, node: ast.AST) -> str:
 def ast_get_source_lines(source: str, node: ast.AST) -> str:
     # WARNING: ast.AST.lineno and ast.AST.end_lineno are 1-indexed
 
-    source_lines = source.splitlines()
+    source_lines = cached_splitlines(source)
     lineno, end_lineno = node.lineno, node.end_lineno
     return "\n".join(source_lines[lineno - 1 : end_lineno])

@@ -1,4 +1,5 @@
 import difflib
+import functools
 import inspect
 from typing import Any, Iterable, Iterator, List, TypeVar
 
@@ -9,6 +10,7 @@ __all__ = [
     "beginswith",
     "colored_unified_diff",
     "add_profile_decorator_to_methods",
+    "cached_splitlines",
 ]
 
 # Note: the name `profile` will be injected by line-profiler at run-time
@@ -80,3 +82,8 @@ def add_profile_decorator_to_methods(cls: T) -> T:
         #     setattr(cls, name, profile(method))
         setattr(cls, name, profile(method))  # type: ignore
     return cls
+
+
+@functools.lru_cache
+def cached_splitlines(s: str) -> List[str]:
+    return s.splitlines()
