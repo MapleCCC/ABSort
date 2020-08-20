@@ -278,7 +278,6 @@ def main(
 
     if quiet:
         sys.stdout = open(os.devnull, "a")
-        sys.stderr = open(os.devnull, "a")
 
     colorama.init()
 
