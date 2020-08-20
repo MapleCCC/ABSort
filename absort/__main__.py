@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 
 import ast
+import os
+import sys
 from enum import Enum
 from pathlib import Path
 from typing import Any, Iterable, Iterator, List, Set, Tuple
@@ -260,6 +262,10 @@ def main(
     if quiet and verbose:
         raise ValueError("Can't specify both `--quiet` and `--verbose` options")
 
+    if quiet:
+        sys.stdout = open(os.devnull, "a")
+        sys.stderr = open(os.devnull, "a")
+
     colorama.init()
 
     files = collect_python_files(map(Path, filepaths))
@@ -288,8 +294,6 @@ def main(
         # TODO add more styled output (e.g. colorized)
 
         if display_diff:
-            if quiet:
-                continue
             # WARNING: Path.name is different from Path.__str__()
             # Path.name is "A string representing the final path component, excluding the drive and root, if any"
             # Path.__str__ is "The string representation of a path is the raw filesystem path itself (in native form, e.g. with backslashes under Windows), which you can pass to any function taking a file path as a string"
@@ -300,8 +304,6 @@ def main(
             )
             file.write_text(new_source, encoding)
         else:
-            if quiet:
-                continue
             print("---------------------------------------")
             print(file)
             print("***************************************")
