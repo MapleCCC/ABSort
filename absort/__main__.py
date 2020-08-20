@@ -21,6 +21,11 @@ from .utils import colored_unified_diff
 from .visitors import GetUndefinedVariableVisitor
 
 
+# Alternative name: DuplicateNames
+class NameRedefinition(Exception):
+    pass
+
+
 class CommentStrategy(Enum):
     push_top = "push-top"
     attr_follow_decl = "attr-follow-decl"
@@ -63,7 +68,7 @@ def absort_decls(decls: List[DeclarationType]) -> Iterator[DeclarationType]:
 
     decl_names = [decl.name for decl in decls]
     if len(set(decl_names)) < len(decl_names):
-        raise ValueError("Name redefinition exists. Not supported yet.")
+        raise NameRedefinition("Name redefinition exists. Not supported yet.")
 
     graph = Graph()
     for decl in decls:
@@ -135,7 +140,7 @@ def transform(old_source: str) -> str:
         decl_names = [decl.name for decl in decls]
 
         if len(set(decl_names)) < len(decl_names):
-            raise ValueError("Name redefinition exists. Not supported yet.")
+            raise NameRedefinition("Name redefinition exists. Not supported yet.")
 
     module_tree = ast.parse(old_source)
 
