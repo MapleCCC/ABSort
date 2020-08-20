@@ -90,6 +90,8 @@ def absort_decls(decls: List[DeclarationType]) -> Iterator[DeclarationType]:
         for dep in deps:
             if dep in decl_names:
                 graph.add_edge(decl.name, dep)
+        # Below line is necessary for adding node with zero out-degree to the graph.
+        graph.add_node(decl.name)
     sorted_names = list(graph.hierarchy_level_sort(same_rank_sorter=same_rank_sorter))
 
     cli_params = click.get_current_context().params
