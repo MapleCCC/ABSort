@@ -11,6 +11,7 @@ import astor
 
 ISORT_MAIN_FILEPATH = "D:/Program Files/Python38/Lib/site-packages/isort/main.py"
 ENTRY_SCRIPT_NAME = "__main__.py"
+PROFILE_RESULT_OUTPUT_FILE = "line-profiler-output.txt"
 
 
 def transform_relative_imports(p: Path) -> None:
@@ -58,8 +59,11 @@ def main() -> None:
             [
                 "time",
                 "kernprof",
-                "-l",
-                "-v",
+                "--line-by-line",
+                "--view",
+                "--builtin",
+                "--outfile",
+                PROFILE_RESULT_OUTPUT_FILE,
                 str(entry_script),
                 "--quiet",
                 ISORT_MAIN_FILEPATH,
@@ -76,7 +80,6 @@ def main() -> None:
             print("Profile failed.")
             print(stderr)
         else:
-            Path("line-profiler-output.txt").write_text(stdout, encoding="utf-8")
             print("Profile result data is written to line-profiler-output.txt")
 
 
