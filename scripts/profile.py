@@ -29,7 +29,10 @@ def transform_relative_imports(p: Path) -> None:
 
     old_content = p.read_text(encoding="utf-8")
 
-    tree = ast.parse(old_content)
+    try:
+        tree = ast.parse(old_content)
+    except SyntaxError as exc:
+        raise ValueError(f"{p} has erroneous syntax: {exc.msg}")
 
     new_tree = RelativeImportTransformer().visit(tree)
     new_tree = ast.fix_missing_locations(new_tree)
