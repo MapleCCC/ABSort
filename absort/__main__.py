@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Any, Iterable, Iterator, List, Set, Tuple
 
 import click
-import colorama
+from colorama import colorama_text
 from more_itertools import first_true
 
 from .ast_utils import (
@@ -274,9 +274,7 @@ def main(
     if quiet and verbose:
         raise ValueError("Can't specify both `--quiet` and `--verbose` options")
 
-    with silent_context():
-
-        colorama.init()
+    with silent_context(), colorama_text():
 
         files = collect_python_files(map(Path, filepaths))
 
