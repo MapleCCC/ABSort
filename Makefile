@@ -10,7 +10,7 @@ format:
 
 prof:
 	# kernprof -lv absort/__main__.py sample.py
-	kernprof -lv absort/__main__.py --quiet "D:\Program Files\Python38\Lib\site-packages\isort\main.py"
+	scripts/profile.py
 
 type-check:
 	mypy .
