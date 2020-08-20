@@ -3,6 +3,9 @@ MAKEFLAGS += .silent
 all:
 	python -m absort sample.py
 
+stress-test:
+	time absort --quiet "D:/Program Files/Python38/Lib/site-packages"
+
 format:
 	autopep8 --in-place --recursive --aggressive --aggressive --select E501 --max-line-length 88 .
 	isort .
@@ -29,4 +32,4 @@ todo:
 clean:
 	rm -rf __pycache__/
 
-.PHONY: all format prof type-check lint unused-imports todo clean
+.PHONY: all stress-test format prof type-check lint unused-imports todo clean
