@@ -240,7 +240,8 @@ def main(
         # TODO add more styled output (e.g. colorized)
 
         if display_diff:
-            if quiet: return
+            if quiet:
+                continue
             display_diff_with_filename(old_source, new_source, file.name)
         elif in_place:
             click.confirm(
@@ -248,7 +249,8 @@ def main(
             )
             file.write_text(new_source, encoding)
         else:
-            if quiet: return
+            if quiet:
+                continue
             print("---------------------------------------")
             print(file)
             print("***************************************")
