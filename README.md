@@ -82,9 +82,7 @@ Alternatively, you can pass Python code from `stdin`.
 
 ## Interanl Algorithm
 
-The sorting algorithm is currently a hierarchy level sort on the dependency graph, with function/class definitions as graph nodes, and their dependencies as graph edges.
-
-Hierarchy level sort is a reverse topological sort on the inverted version of the dependency graph.
+The sorting algorithm is currently a topological sort on the dependency graph, with function/class definitions as graph nodes, and their dependencies as graph edges.
 
 ## Limitations
 

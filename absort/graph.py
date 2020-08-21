@@ -146,20 +146,6 @@ class Graph:
     def __repr__(self) -> str:
         return self.__str__()
 
-    def is_acyclic(self) -> bool:
-        try:
-            self.topological_sort()
-        except CircularDependencyError:
-            return False
-        else:
-            return True
-
-    def hierarchy_level_sort(
-        self, same_rank_sorter: Callable[[List[Node]], List[Node]] = None
-    ) -> Iterator[Node]:
-        inv_graph = self.get_invert_graph()
-        yield from reverse(inv_graph.topological_sort(same_rank_sorter))
-
 
 # TODO: move to unit test of Graph class
 if __name__ == "__main__":
@@ -175,4 +161,3 @@ if __name__ == "__main__":
     print(list(g.bfs("0")))
     print(list(g.dfs("0")))
     print(list(g.topological_sort()))
-    print(list(g.hierarchy_level_sort()))

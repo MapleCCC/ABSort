@@ -62,7 +62,6 @@
 - Use multi-thread to accelerate when there are large amounts of input files waiting to be processed.
 - Fix the bug of starnge result after absorting isort.main module.
 - Fix the bug: Adding heurstic blank lines at the front should be only applicable to declarations.
-- Remove hierarchy level sort related.
 
 ## Changelog
 
@@ -89,3 +88,4 @@
   - Memoirization optimization
   - Rewrite-in-Cython optimization
   - Multi-thread/process optimization
+- Remove hierarchy level sort related.
