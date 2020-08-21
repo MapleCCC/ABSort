@@ -62,8 +62,11 @@ def get_dependency_of_decl(decl: DeclarationType) -> Set[str]:
     return visitor.visit(temp_module)
 
 
+@click.pass_context
 @profile  # type: ignore
-def absort_decls(decls: List[DeclarationType]) -> Iterator[DeclarationType]:
+def absort_decls(
+    ctx: click.Context, decls: List[DeclarationType]
+) -> Iterator[DeclarationType]:
     def same_rank_sorter(names: List[str]) -> List[str]:
         # Currently sort by retaining their original relative order, to reduce diff size.
         #
@@ -96,12 +99,14 @@ def absort_decls(decls: List[DeclarationType]) -> Iterator[DeclarationType]:
 
     sorted_names = list(graph.topological_sort(same_rank_sorter=same_rank_sorter))
 
-    cli_params = click.get_current_context().params
+    reverse: bool = ctx.params["reverse"]
 
-    if cli_params["reverse"]:
+    if reverse:
         sorted_names.reverse()
 
-    if not cli_params["no_fix_main_to_bottom"] and "main" in sorted_names:
+    no_fix_main_to_bottom: bool = ctx.params["no_fix_main_to_bottom"]
+
+    if not no_fix_main_to_bottom and "main" in sorted_names:
         sorted_names.remove("main")
         sorted_names.append("main")
 
@@ -113,7 +118,8 @@ def absort_decls(decls: List[DeclarationType]) -> Iterator[DeclarationType]:
 
 
 @profile  # type: ignore
-def transform(old_source: str) -> str:
+@click.pass_context
+def transform(ctx: click.Context, old_source: str) -> str:
     @profile  # type: ignore
     def get_related_source_lines(source: str, node: ast.AST) -> str:
         leading_comment_source_lines = ast_get_leading_comment_source_lines(
@@ -177,8 +183,7 @@ def transform(old_source: str) -> str:
 
     new_stmts = transform_stmts(top_level_stmts)
 
-    cli_params = click.get_current_context().params
-    comment_strategy: CommentStrategy = cli_params["comment_strategy"]
+    comment_strategy: CommentStrategy = ctx.params["comment_strategy"]
 
     new_source = ""
     comments = ""
@@ -224,6 +229,57 @@ def collect_python_files(filepaths: Iterable[Path]) -> Iterator[Path]:
             raise NotImplementedError
 
 
+@click.pass_context
+def absort_file(ctx: click.Context, file: Path) -> None:
+    encoding = ctx.params["encoding"]
+    display_diff = ctx.params["display_diff"]
+    in_place = ctx.params["in_place"]
+    verbose = ctx.params["verbose"]
+
+    try:
+        old_source = file.read_text(encoding)
+    except UnicodeDecodeError:
+        print(f"{file} has unknown encoding.")
+        return
+
+    try:
+        new_source = transform(old_source)
+    except SyntaxError as exc:
+        # if re.fullmatch(r"Missing parentheses in call to 'print'. Did you mean print(.*)\?", exc.msg):
+        #     pass
+        print(f"{file} has erroneous syntax: {exc.msg}")
+        return
+    except NameRedefinition:
+        print(f"{file} contains duplicate name redefinitions. Not supported yet.")
+        return
+    except CircularDependencyError:
+        print(f"{file} contains circular dependency. Not supported yet.")
+        return
+
+    # TODO add more styled output (e.g. colorized)
+
+    if display_diff:
+        # WARNING: Path.name is different from Path.__str__()
+        # Path.name is "A string representing the final path component, excluding the drive and root, if any"
+        # Path.__str__ is "The string representation of a path is the raw filesystem path itself (in native form, e.g. with backslashes under Windows), which you can pass to any function taking a file path as a string"
+        display_diff_with_filename(old_source, new_source, str(file))
+    elif in_place:
+        click.confirm(
+            f"Are you sure you want to in-place update the file {file}?", abort=True,
+        )
+        file.write_text(new_source, encoding)
+    else:
+        print("---------------------------------------")
+        print(file)
+        print("***************************************")
+        print(new_source)
+        print("***************************************")
+        print("\n", end="")
+
+    if verbose:
+        print(f"Processed {file}")
+
+
 @click.command()
 @click.argument(
     "filepaths",
@@ -253,12 +309,14 @@ def collect_python_files(filepaths: Iterable[Path]) -> Iterator[Path]:
 )
 @click.option("-q", "--quiet", is_flag=True)
 @click.option("-v", "--verbose", is_flag=True)
+@click.pass_context
 # TODO add multi thread support, to accelerate
 # TODO add help message to every parameters.
 # TODO add command line option --yes to bypass all confirmation prompts
 # TODO add description as argument to click.command()
 @profile  # type: ignore
 def main(
+    ctx: click.Context,
     filepaths: Tuple[str],
     display_diff: bool,
     in_place: bool,
@@ -285,51 +343,7 @@ def main(
         files = collect_python_files(map(Path, filepaths))
 
         for file in files:
-            try:
-                old_source = file.read_text(encoding)
-            except UnicodeDecodeError:
-                print(f"{file} has unknown encoding.")
-                continue
-
-            try:
-                new_source = transform(old_source)
-            except SyntaxError as exc:
-                # if re.fullmatch(r"Missing parentheses in call to 'print'. Did you mean print(.*)\?", exc.msg):
-                #     pass
-                print(f"{file} has erroneous syntax: {exc.msg}")
-                continue
-            except NameRedefinition:
-                print(
-                    f"{file} contains duplicate name redefinitions. Not supported yet."
-                )
-                continue
-            except CircularDependencyError:
-                print(f"{file} contains circular dependency. Not supported yet.")
-                continue
-
-            # TODO add more styled output (e.g. colorized)
-
-            if display_diff:
-                # WARNING: Path.name is different from Path.__str__()
-                # Path.name is "A string representing the final path component, excluding the drive and root, if any"
-                # Path.__str__ is "The string representation of a path is the raw filesystem path itself (in native form, e.g. with backslashes under Windows), which you can pass to any function taking a file path as a string"
-                display_diff_with_filename(old_source, new_source, str(file))
-            elif in_place:
-                click.confirm(
-                    f"Are you sure you want to in-place update the file {file}?",
-                    abort=True,
-                )
-                file.write_text(new_source, encoding)
-            else:
-                print("---------------------------------------")
-                print(file)
-                print("***************************************")
-                print(new_source)
-                print("***************************************")
-                print("\n", end="")
-
-            if verbose:
-                print(f"Processed {file}")
+            absort_file(file)
 
 
 if __name__ == "__main__":
