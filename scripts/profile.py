@@ -10,6 +10,7 @@ from tempfile import TemporaryDirectory
 import astor
 
 ISORT_MAIN_FILEPATH = "D:/Program Files/Python38/Lib/site-packages/isort/main.py"
+ISORT_CODE_DIR = "D:/Program Files/Python38/Lib/site-packages/isort"
 ENTRY_SCRIPT_NAME = "__main__.py"
 PROFILE_RESULT_OUTPUT_FILE = "line-profiler-output.txt"
 
@@ -75,6 +76,8 @@ def main() -> None:
             copy2(f, target)
             preprocess(target)
 
+        print("Preprocessing is completed")
+
         entry_script = tempdir / ENTRY_SCRIPT_NAME
 
         completed_proc = subprocess.run(
@@ -86,7 +89,7 @@ def main() -> None:
                 "--builtin",
                 str(entry_script),
                 "--quiet",
-                ISORT_MAIN_FILEPATH,
+                ISORT_CODE_DIR,
             ],
             encoding="utf-8",
             # WARNING: don't specify capture_output if stderr or stdout is specified
