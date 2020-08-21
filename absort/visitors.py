@@ -1,6 +1,6 @@
 import ast
 from enum import Enum, auto
-from typing import List, Sequence, Set, Union
+from typing import Iterator, List, Sequence, Set, Union
 
 from .utils import add_profile_decorator_to_class_methods, lru_cache_with_key
 
@@ -53,15 +53,13 @@ class ScopeContext(Enum):
 
 
 @lru_cache_with_key(key=lambda nodes: tuple(map(id, nodes)), maxsize=None)
-def collect_visible_declarations(nodes: List[ast.AST]) -> Set[str]:
-    visible_decls = set()
+def collect_visible_declarations(nodes: List[ast.AST]) -> Iterator[str]:
     for node in nodes:
         if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
-            visible_decls.add(node.name)
+            yield node.name
         else:
             children = list(ast.iter_child_nodes(node))
-            visible_decls.update(collect_visible_declarations(children))
-    return visible_decls
+            yield from collect_visible_declarations(children)
 
 
 # TODO order by their appearance in https://docs.python.org/3/library/ast.html#abstract-grammar
@@ -129,8 +127,9 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
         if inject_names:
             self._symbol_table_stack[-1].update(inject_names)
 
+        self._declaration_name_table_stack.append(set())
         visible_decls = collect_visible_declarations(nodes)
-        self._declaration_name_table_stack.append(visible_decls)
+        self._declaration_name_table_stack[-1].update(visible_decls)
 
         # TODO try to use multi-thread here to optimize performance
         for node in nodes:
