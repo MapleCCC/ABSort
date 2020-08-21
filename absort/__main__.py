@@ -127,6 +127,8 @@ def transform(old_source: str) -> str:
         source_lines = ""
 
         if comment_strategy is CommentStrategy.push_top:
+            # FIXME nonlocal usage makes the code hard to reason about. Try to eliminiate
+            # use of nonlocal as possible.
             nonlocal comments  # type: ignore
             comments += leading_comment_source_lines
             source_lines += decorator_list_source_lines

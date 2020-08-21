@@ -83,7 +83,7 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
 
     __slots__ = (
         "_undefined_vars",
-        "_scope_stack",
+        "_scope_context_stack",
         "_symbol_table_stack",
         "_declaration_name_table_stack",
     )
@@ -132,6 +132,7 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
         visible_decls = collect_visible_declarations(nodes)
         self._declaration_name_table_stack.append(visible_decls)
 
+        # TODO try to use multi-thread here to optimize performance
         for node in nodes:
             self.visit(node)
 

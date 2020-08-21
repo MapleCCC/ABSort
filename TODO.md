@@ -12,6 +12,10 @@
 - Add docstring to module, function, method, etc. Elaborate on what they really do.
 - Deploy poetry.
 - Deploy pre-commit.
+  - Generate README TOC
+  - Concatenate TODO.md to README.md
+  - Reformat
+  - Lint
 
 ## Low Priority
 
@@ -34,11 +38,6 @@
   - Rewrite-in-Generator-Style optimization
   - Caculate and Save for next time optimization
 - Add click parameter help messages.
-- Use self-customized ast.get_source_segment implementation to accelerate.
-  - Algorithmic optimization
-  - Memoirization optimization
-  - Rewrite-in-Cython optimization
-  - Multi-thread/process optimization
 - Entries from running `rg TODO` across the whole repo.
 - Entries from running `rg FIXME` across the whole repo.
 - Retain as much original layout as possible to reduce diff size.
@@ -56,9 +55,14 @@
   - add examples to showcase
 - 在 GitHub 设为 public repo
 - Add .pylintrc
-- remember timestamp to ignore unmodified files
+- Remember timestamp to ignore unmodified files
 - Collect statistics of failure cases. And print summary digest at the end of execution to show user.
 - Use intelligent detect file encoding, instead of hardcoding UTF-8. Take inspiration from the autopep8 cli tool.
+- Release 1.0.0rc1 release candidate version.
+- Use multi-thread to accelerate when there are large amounts of input files waiting to be processed.
+- Fix the bug of starnge result after absorting isort.main module.
+- Fix the bug: Adding heurstic blank lines at the front should be only applicable to declarations.
+- Remove hierarchy level sort related.
 
 ## Changelog
 
@@ -80,3 +84,8 @@
 - add confirmation prompt to the dangerous options, eg. --in-place.
 - Add .isort.cfg
 - As a command line tool that deals with files, we should proceed on failure. Not fail fast and early.
+- Use self-customized ast.get_source_segment implementation to accelerate.
+  - Algorithmic optimization
+  - Memoirization optimization
+  - Rewrite-in-Cython optimization
+  - Multi-thread/process optimization

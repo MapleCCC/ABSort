@@ -177,9 +177,9 @@ def lru_cache_with_key(
                 lru.update(arg_key, result)
                 return result
 
-        wrapper.__lru__ = lru
-        wrapper.cache_info = lambda: CacheInfo(hit, miss, maxsize, lru.size)
-        wrapper.clear_cache = lru.clear
+        wrapper.__lru__ = lru  # type: ignore
+        wrapper.cache_info = lambda: CacheInfo(hit, miss, maxsize, lru.size)  # type: ignore
+        wrapper.clear_cache = lru.clear  # type: ignore
 
         return wrapper
 

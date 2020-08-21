@@ -12,6 +12,8 @@
 <!-- [![GitHub commits since latest release (by SemVer)](https://img.shields.io/github/commits-since/MapleCCC/absort/latest?sort=semver)](https://github.com/MapleCCC/absort/compare/v1.0.0...master) -->
 <!-- TODO which diff method should we use? two dots or three dots? -->
 
+<!-- Add TOC here -->
+
 ## Overview
 
 `isort`, one of the most popular libraries in Python ecosystem, is specialized at sorting import statements. Besides import statements, there are other kinds of statements in Python code that can benefit from a sorting process. What about a tool that sorts function/class definitions? Don't worry, `ABSort` got your back!
@@ -87,6 +89,21 @@ Hierarchy level sort is a reverse topological sort on the inverted version of th
 ## Limitations
 
 The script is a static analysis tool. It's beyond the tool's capability and scope to handle some heavily dynamic behaviours, e.g. dynamic manipulation of the globals(), locals(), etc.
+
+## Development
+
+```bash
+$ git clone https://github.com/MapleCCC/ABSort.git
+$ cd ABSort
+
+# Optionally create a virtual environment for isolation purpose
+$ python -m virtualenv .venv
+$ source .venv/Scripts/activate
+
+$ python -m pip install -r requirements.txt
+$ python -m pip install -r requirements-dev.txt
+$ python -m pip install -e .  # Mind the dot
+```
 
 ## License
 
