@@ -3,7 +3,6 @@ import functools
 from enum import Enum, auto
 from typing import List, Sequence, Set, Tuple, Union
 
-from .utils import add_profile_decorator_to_class_methods
 
 __all__ = ["GetUndefinedVariableVisitor"]
 
@@ -56,7 +55,6 @@ class ScopeContext(Enum):
 # TODO add runtime type checking. @runtime_type_check
 # TODO fill in docstring to elaborate on details.
 # TODO @assert_symtab_stack_depth
-@add_profile_decorator_to_class_methods
 class GetUndefinedVariableVisitor(ast.NodeVisitor):
     """
 

@@ -44,6 +44,33 @@ def transform_relative_imports(p: Path) -> None:
     p.write_text(new_content, encoding="utf-8")
 
 
+def add_profile_decorator_to_class_methods(p: Path) -> None:
+    class ClassMethodTransformer(ast.NodeTransformer):
+        def visit_ClassDef(self, node: ast.ClassDef) -> ast.ClassDef:
+            def add_profile_decorator(node: ast.stmt) -> ast.stmt:
+                if isinstance(node, ast.FunctionDef):
+                    node.decorator_list.append(ast.Name("profile", ast.Load()))
+                return node
+
+            node = self.generic_visit(node)  # type: ignore
+            node.body = list(map(add_profile_decorator, node.body))
+            return node
+
+    old_content = p.read_text(encoding="utf-8")
+
+    try:
+        tree = ast.parse(old_content)
+    except SyntaxError as exc:
+        raise ValueError(f"{p} has erroneous syntax: {exc.msg}")
+
+    new_tree = ClassMethodTransformer().visit(tree)
+    new_tree = ast.fix_missing_locations(new_tree)
+
+    new_content = astor.to_source(new_tree)
+
+    p.write_text(new_content, encoding="utf-8")
+
+
 def main() -> None:
     with TemporaryDirectory() as d:
         tempdir = Path(d)
@@ -52,6 +79,9 @@ def main() -> None:
             target = tempdir / f.name
             copy2(f, target)
             transform_relative_imports(target)
+
+            if f.name == "visitors.py":
+                add_profile_decorator_to_class_methods(target)
 
         entry_script = tempdir / ENTRY_SCRIPT_NAME
 
