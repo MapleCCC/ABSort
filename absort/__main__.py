@@ -342,8 +342,8 @@ def main(
 
         files = collect_python_files(map(Path, filepaths))
 
-        for file in files:
-            absort_file(file)
+        with ThreadPoolExecutor() as executor:
+            list(executor.map(absort_file, files))
 
 
 if __name__ == "__main__":
