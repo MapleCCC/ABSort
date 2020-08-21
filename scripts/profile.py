@@ -80,9 +80,6 @@ def main() -> None:
             copy2(f, target)
             transform_relative_imports(target)
 
-            if f.name == "visitors.py":
-                add_profile_decorator_to_class_methods(target)
-
         entry_script = tempdir / ENTRY_SCRIPT_NAME
 
         completed_proc = subprocess.run(
