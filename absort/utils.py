@@ -115,6 +115,7 @@ def silent_context() -> Iterator:
         sys.stdout = original_stdout
 
 
+@add_profile_decorator_to_class_methods
 class LRU:
     def __init__(self, maxsize: Optional[int] = 128) -> None:
         if maxsize is None:
@@ -164,6 +165,7 @@ def lru_cache_with_key(
         hit = miss = 0
 
         @functools.wraps(fn)
+        @profile  # type: ignore
         def wrapper(*args: Any, **kwargs: Any) -> Any:
             arg_key = key(*args, **kwargs)
             if arg_key in lru:

@@ -53,6 +53,7 @@ class ScopeContext(Enum):
 
 
 @lru_cache_with_key(key=lambda nodes: tuple(map(id, nodes)), maxsize=None)
+@profile  # type: ignore
 def collect_visible_declarations(nodes: List[ast.AST]) -> Iterator[str]:
     for node in nodes:
         if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
