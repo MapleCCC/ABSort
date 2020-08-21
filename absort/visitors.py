@@ -74,7 +74,6 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
     """
 
     def __init__(self) -> None:
-        super().__init__()
         self._undefined_vars: Set[str] = set()
         self._scope_context_stack: List[ScopeContext] = []
         self._symbol_table_stack: List[Set[str]] = []
