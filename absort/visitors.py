@@ -2,7 +2,6 @@ import ast
 from enum import Enum, auto
 from typing import Iterator, List, Sequence, Set, Union
 
-from .ast_utils import cached_ast_iter_child_nodes
 from .utils import add_profile_decorator_to_class_methods, lru_cache_with_key
 
 
@@ -60,7 +59,7 @@ def collect_visible_declarations(nodes: List[ast.AST]) -> Iterator[str]:
         if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
             yield node.name
         else:
-            children = cached_ast_iter_child_nodes(node)
+            children = ast.iter_child_nodes(node)
             yield from collect_visible_declarations(children)
 
 

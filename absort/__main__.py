@@ -16,12 +16,11 @@ from .ast_utils import (
     ast_get_leading_comment_and_decorator_list_source_lines,
     ast_get_leading_comment_source_lines,
     ast_get_source_lines,
-    cached_ast_iter_child_nodes,
 )
 from .extra_typing import Declaration, DeclarationType
 from .graph import CircularDependencyError, Graph
 from .utils import colored_unified_diff, silent_context
-from .visitors import GetUndefinedVariableVisitor, collect_visible_declarations
+from .visitors import GetUndefinedVariableVisitor
 
 
 # Note: the name `profile` will be injected by line-profiler at run-time
@@ -60,16 +59,7 @@ class CommentStrategyParamType(click.ParamType):
 def get_dependency_of_decl(decl: DeclarationType) -> Set[str]:
     temp_module = ast.Module(body=[decl])
     visitor = GetUndefinedVariableVisitor()
-    ret = visitor.visit(temp_module)
-    print(
-        "collect_visible_declaration's cache_info: ",
-        collect_visible_declarations.cache_info(),
-    )
-    print(
-        "cached_ast_iter_child_nodes's cache_info: ",
-        cached_ast_iter_child_nodes.cache_info(),
-    )
-    return ret
+    return visitor.visit(temp_module)
 
 
 @profile  # type: ignore
