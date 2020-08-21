@@ -109,6 +109,7 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
         for scope_ctx in self._scope_context_stack:
             if scope_ctx in (ScopeContext.Function, ScopeContext.Class):
                 within_decl_context = True
+                break
 
         if within_decl_context:
             return symbol_table_lookup(name) or declaration_name_table_lookup(name)

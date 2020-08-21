@@ -60,8 +60,12 @@
 - Use intelligent detect file encoding, instead of hardcoding UTF-8. Take inspiration from the autopep8 cli tool.
 - Release 1.0.0rc1 release candidate version.
 - Use multi-thread to accelerate when there are large amounts of input files waiting to be processed.
+  - Take inspiration from black tool's source code
+  - File IO is the most expensive and most suitable for multi-thread.
 - Fix the bug of starnge result after absorting isort.main module.
 - Fix the bug: Adding heurstic blank lines at the front should be only applicable to declarations.
+- GetUndefinedVariableVisitor __slots__ doesn't seem to work?
+- It's syntactically correct to have two functions depending on each other. Circle in dependency graph should not be error.
 
 ## Changelog
 

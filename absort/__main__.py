@@ -67,7 +67,7 @@ def absort_decls(decls: List[DeclarationType]) -> Iterator[DeclarationType]:
     def same_rank_sorter(names: List[str]) -> List[str]:
         # Currently sort by retaining their original relative order, to reduce diff size.
         #
-        # Possible alternatives: sort by lexigraphical order of the names, sort by body
+        # Possible alternatives: sort by lexicographical order of the names, sort by body
         # size, sort by name length, etc.
         #
         # TODO More advanced option is to utilize power of machine learning to put two
