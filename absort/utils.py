@@ -1,9 +1,21 @@
 import contextlib
 import difflib
 import functools
+import math
 import os
 import sys
-from typing import Any, Iterable, Iterator, List, TypeVar
+from collections import deque, namedtuple
+from typing import (
+    Any,
+    Callable,
+    Deque,
+    Dict,
+    Iterable,
+    Iterator,
+    List,
+    Optional,
+    TypeVar,
+)
 
 from colorama import Fore, Style
 
@@ -14,6 +26,7 @@ __all__ = [
     "add_profile_decorator_to_class_methods",
     "cached_splitlines",
     "silent_context",
+    "lru_cache_with_key",
 ]
 
 # Note: the name `profile` will be injected by line-profiler at run-time
@@ -100,3 +113,74 @@ def silent_context() -> Iterator:
         yield
     finally:
         sys.stdout = original_stdout
+
+
+class LRU:
+    def __init__(self, maxsize: Optional[int] = 128) -> None:
+        if maxsize is None:
+            maxsize = math.inf  # type: ignore
+        if maxsize <= 0:
+            raise ValueError("maxsize should be positive integer")
+        self._maxsize = maxsize
+        self._storage: Dict = dict()
+        self._recency: Deque = deque()
+
+    __slots__ = ("_maxsize", "_storage", "_recency")
+
+    @property
+    def size(self) -> int:
+        return len(self._recency)
+
+    def update(self, key: Any, value: Any) -> None:
+        if key in self._storage:
+            self._recency.remove(key)
+        self._recency.append(key)
+        self._storage[key] = value
+
+        if len(self._recency) > self._maxsize:
+            to_evict = self._recency.popleft()
+            del self._storage[to_evict]
+
+    def __contains__(self, key: Any) -> bool:
+        return key in self._storage
+
+    def __getitem__(self, key: Any) -> Any:
+        try:
+            return self._storage[key]
+        except KeyError:
+            raise KeyError(f"Key {key} is not in LRU")
+
+    def clear(self) -> None:
+        self._storage.clear()
+        self._recency.clear()
+
+
+def lru_cache_with_key(
+    key: Callable, maxsize: Optional[int] = 128
+) -> Callable[[Callable], Callable]:
+    def lru_cache(fn: Callable) -> Callable:
+        lru = LRU(maxsize=maxsize)
+        CacheInfo = namedtuple("CacheInfo", ["hit", "miss", "maxsize", "currsize"])
+        hit = miss = 0
+
+        @functools.wraps(fn)
+        def wrapper(*args: Any, **kwargs: Any) -> Any:
+            arg_key = key(*args, **kwargs)
+            if arg_key in lru:
+                nonlocal hit
+                hit += 1
+                return lru[arg_key]
+            else:
+                nonlocal miss
+                miss += 1
+                result = fn(*args, **kwargs)
+                lru.update(arg_key, result)
+                return result
+
+        wrapper.__lru__ = lru
+        wrapper.cache_info = lambda: CacheInfo(hit, miss, maxsize, lru.size)
+        wrapper.clear_cache = lru.clear
+
+        return wrapper
+
+    return lru_cache
