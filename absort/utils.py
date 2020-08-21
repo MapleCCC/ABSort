@@ -1,9 +1,7 @@
 import contextlib
 import difflib
 import functools
-import inspect
 import os
-import re
 import sys
 from typing import Any, Iterable, Iterator, List, TypeVar
 
@@ -81,13 +79,10 @@ T = TypeVar("T")
 
 
 def add_profile_decorator_to_class_methods(cls: T) -> T:
-    # Note: we use `callable`, instead of `isfunction`, as predicate, because this is a
-    # workaround to also include class methods that are decorated by `functools.lru_cache`
-    methods = inspect.getmembers(cls, predicate=callable)
-    for name, method in methods:
-        if re.fullmatch(r"__\w+__", name):
-            continue
-        setattr(cls, name, profile(method))  # type: ignore
+    """
+    A dummy function. The actual function body will be injected by profile.py script at
+    runtime.
+    """
     return cls
 
 

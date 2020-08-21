@@ -14,21 +14,41 @@ ENTRY_SCRIPT_NAME = "__main__.py"
 PROFILE_RESULT_OUTPUT_FILE = "line-profiler-output.txt"
 
 
-def transform_relative_imports(p: Path) -> None:
-    class RelativeImportTransformer(ast.NodeTransformer):
-        def visit_ImportFrom(self, node: ast.ImportFrom) -> ast.ImportFrom:
-            if node.level is None:
-                return node
-
-            if node.level > 0:
-                node.level -= 1
-            elif node.level == 0:
-                pass
-            else:
-                raise RuntimeError("Unreachable")
-
+class RelativeImportTransformer(ast.NodeTransformer):
+    def visit_ImportFrom(self, node: ast.ImportFrom) -> ast.ImportFrom:
+        if node.level is None:
             return node
 
+        if node.level > 0:
+            node.level -= 1
+        elif node.level == 0:
+            pass
+        else:
+            raise RuntimeError("Unreachable")
+
+        return node
+
+
+class AddProfileDecoratorToClassMethodTransformer(ast.NodeTransformer):
+    def visit_ClassDef(self, node: ast.ClassDef) -> ast.ClassDef:
+        def add_profile_decorator(node: ast.stmt) -> ast.stmt:
+            if isinstance(node, ast.FunctionDef):
+                node.decorator_list.append(ast.Name("profile", ast.Load()))
+            return node
+
+        node = self.generic_visit(node)  # type: ignore
+
+        criteria = (
+            lambda decorator: isinstance(decorator, ast.Name)
+            and decorator.id == "add_profile_decorator_to_class_methods"
+        )
+        if any(map(criteria, node.decorator_list)):
+            node.body = list(map(add_profile_decorator, node.body))
+
+        return node
+
+
+def preprocess(p: Path) -> None:
     old_content = p.read_text(encoding="utf-8")
 
     try:
@@ -37,33 +57,8 @@ def transform_relative_imports(p: Path) -> None:
         raise ValueError(f"{p} has erroneous syntax: {exc.msg}")
 
     new_tree = RelativeImportTransformer().visit(tree)
-    new_tree = ast.fix_missing_locations(new_tree)
+    new_tree = AddProfileDecoratorToClassMethodTransformer().visit(tree)
 
-    new_content = astor.to_source(new_tree)
-
-    p.write_text(new_content, encoding="utf-8")
-
-
-def add_profile_decorator_to_class_methods(p: Path) -> None:
-    class ClassMethodTransformer(ast.NodeTransformer):
-        def visit_ClassDef(self, node: ast.ClassDef) -> ast.ClassDef:
-            def add_profile_decorator(node: ast.stmt) -> ast.stmt:
-                if isinstance(node, ast.FunctionDef):
-                    node.decorator_list.append(ast.Name("profile", ast.Load()))
-                return node
-
-            node = self.generic_visit(node)  # type: ignore
-            node.body = list(map(add_profile_decorator, node.body))
-            return node
-
-    old_content = p.read_text(encoding="utf-8")
-
-    try:
-        tree = ast.parse(old_content)
-    except SyntaxError as exc:
-        raise ValueError(f"{p} has erroneous syntax: {exc.msg}")
-
-    new_tree = ClassMethodTransformer().visit(tree)
     new_tree = ast.fix_missing_locations(new_tree)
 
     new_content = astor.to_source(new_tree)
@@ -78,7 +73,7 @@ def main() -> None:
         for f in Path("absort").rglob("*.py"):
             target = tempdir / f.name
             copy2(f, target)
-            transform_relative_imports(target)
+            preprocess(target)
 
         entry_script = tempdir / ENTRY_SCRIPT_NAME
 
