@@ -1,10 +1,10 @@
 import ast
 from collections import deque
-from typing import Any, Deque, Iterator, Set
+from typing import Any, Deque, Iterator, List, Set
 
 import black
 
-from .utils import beginswith, cached_splitlines, reverse
+from .utils import beginswith, cached_splitlines, reverse, lru_cache_with_key
 
 __all__ = [
     "ast_pretty_dump",
@@ -14,6 +14,7 @@ __all__ = [
     "ast_get_leading_comment_source_lines",
     "ast_get_decorator_list_source_lines",
     "ast_get_source_lines",
+    "cached_ast_iter_child_nodes",
 ]
 
 
@@ -147,3 +148,8 @@ def ast_get_source_lines(source: str, node: ast.AST) -> str:
         return "\n".join(source_lines) + "\n"
     else:
         return ""
+
+
+@lru_cache_with_key(key=id, maxsize=None)
+def cached_ast_iter_child_nodes(node: ast.AST) -> List[ast.AST]:
+    return list(ast.iter_child_nodes(node))
