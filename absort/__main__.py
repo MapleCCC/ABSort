@@ -21,7 +21,7 @@ from .ast_utils import (
 )
 from .extra_typing import Declaration, DeclarationType
 from .graph import CircularDependencyError, Graph
-from .utils import colored_unified_diff, silent_context
+from .utils import colored_unified_diff, silent_context, detect_encoding
 from .visitors import GetUndefinedVariableVisitor
 
 
@@ -348,8 +348,14 @@ def main(
             try:
                 return file.read_text(encoding)
             except UnicodeDecodeError:
-                print(f"{file} has unknown encoding.")
-                return Fail  # type: ignore
+                print(f"{file} is not decodable by {encoding}")
+                print(f"Try to automatically detect file encoding......")
+                detected_encoding = detect_encoding(str(file))
+                try:
+                    return file.read_text(detected_encoding)
+                except UnicodeDecodeError:
+                    print(f"{file} has unknown encoding.")
+                    return Fail  # type: ignore
 
         old_sources = list(executor.map(read_source, files))
 

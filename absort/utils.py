@@ -1,15 +1,18 @@
 import contextlib
 import difflib
 import functools
+import io
 import math
 import os
 import sys
+import tokenize
 from collections import deque, namedtuple
 from typing import (
     Any,
     Callable,
     Deque,
     Dict,
+    IO,
     Iterable,
     Iterator,
     List,
@@ -27,6 +30,7 @@ __all__ = [
     "cached_splitlines",
     "silent_context",
     "lru_cache_with_key",
+    "detect_encoding",
 ]
 
 # Note: the name `profile` will be injected by line-profiler at run-time
@@ -186,3 +190,31 @@ def lru_cache_with_key(
         return wrapper
 
     return lru_cache
+
+
+# The source code of open_with_encoding() is taken from autopep8 (https://github.com/hhatto/autopep8)
+def open_with_encoding(
+    filename: str, mode: str = "r", encoding: str = None, limit_byte_check: int = -1
+) -> IO:
+    """Return opened file with a specific encoding."""
+    if not encoding:
+        encoding = detect_encoding(filename, limit_byte_check=limit_byte_check)
+
+    return io.open(
+        filename, mode=mode, encoding=encoding, newline=""
+    )  # Preserve line endings
+
+
+# The source code of detect_encoding() is taken from autopep8 (https://github.com/hhatto/autopep8)
+def detect_encoding(filename: str, limit_byte_check: int = -1) -> str:
+    """Return file encoding."""
+    try:
+        with open(filename, "rb") as input_file:
+            encoding = tokenize.detect_encoding(input_file.readline)[0]
+
+        with open_with_encoding(filename, encoding=encoding) as test_file:
+            test_file.read(limit_byte_check)
+
+        return encoding
+    except (LookupError, SyntaxError, UnicodeDecodeError):
+        return "latin-1"
