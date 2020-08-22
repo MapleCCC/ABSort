@@ -66,7 +66,6 @@
 - Fix the bug of starnge result after absorting isort.main module.
 - Fix the bug: Adding heurstic blank lines at the front should be only applicable to declarations.
 - GetUndefinedVariableVisitor __slots__ doesn't seem to work?
-- It's syntactically correct to have two functions depending on each other. Circle in dependency graph should not be error.
 - What's the elegant way to pass bunch of cli parameters around functions?
   - Take inspiration from black tool's source code.
   - Take inspiration from autopep8 tool's source code.
@@ -100,3 +99,4 @@
   - Rewrite-in-Cython optimization
   - Multi-thread/process optimization
 - Remove hierarchy level sort related.
+- It's syntactically correct to have two functions depending on each other. Circle in dependency graph should not be error.

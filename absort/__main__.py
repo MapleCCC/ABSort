@@ -109,7 +109,9 @@ def absort_decls(decls: List[DeclarationType]) -> Iterator[DeclarationType]:
             # Below line is necessary for adding node with zero out-degree to the graph.
             graph.add_node(decl.name)
 
-    sorted_names = list(graph.topological_sort(same_rank_sorter=same_rank_sorter))
+    sorted_names = list(
+        graph.relaxed_topological_sort(same_rank_sorter=same_rank_sorter)
+    )
 
     if args.reverse:
         sorted_names.reverse()

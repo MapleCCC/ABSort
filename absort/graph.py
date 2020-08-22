@@ -139,6 +139,41 @@ class Graph:
         while srcs := remove_sources(_graph):
             yield from same_rank_sorter(list(srcs))
 
+    def relaxed_topological_sort(
+        self, same_rank_sorter: Callable[[List[Node]], List[Node]] = None
+    ) -> Iterator[Node]:
+        """
+        A more relaxed topological sort. When there are no more source node left, treat
+        all leftover nodes as the same rank.
+        """
+
+        def find_sources(graph: Graph) -> Set[Node]:
+            adjlist = graph._adjacency_list
+            sources = set(adjlist.keys())
+            for children in adjlist.values():
+                sources -= children
+            if not sources and adjlist:
+                # Detected circular dependency
+                # When there are no more source node left, treat all leftover nodes as
+                # the same rank.
+                return set(adjlist.keys())
+            return sources
+
+        def remove_sources(graph: Graph) -> Set[Node]:
+            srcs = find_sources(graph)
+            for src in srcs:
+                del graph._adjacency_list[src]
+            for node in graph._adjacency_list:
+                graph._adjacency_list[node] -= srcs
+            return srcs
+
+        if same_rank_sorter is None:
+            same_rank_sorter = lambda x: x
+
+        _graph = self.copy()
+        while srcs := remove_sources(_graph):
+            yield from same_rank_sorter(list(srcs))
+
     def __str__(self) -> str:
         return "Graph({})".format(dict(self._adjacency_list))
 
