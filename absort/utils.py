@@ -25,6 +25,10 @@ from colorama import Fore, Style
 __all__ = [
     "reverse",
     "beginswith",
+    "bright_red",
+    "bright_green",
+    "bright_blue",
+    "bright_yellow",
     "colored_unified_diff",
     "add_profile_decorator_to_class_methods",
     "cached_splitlines",
@@ -73,6 +77,13 @@ def bright_blue(s: str) -> str:
     Augment a string, so that when printed to console, the string is displayed in bright blue color.
     """
     return Style.BRIGHT + Fore.BLUE + s + Style.RESET_ALL  # type: ignore
+
+
+def bright_yellow(s: str) -> str:
+    """
+    Augment a string, so that when printed to console, the string is displayed in bright yellow color.
+    """
+    return Style.BRIGHT + Fore.YELLOW + s + Style.RESET_ALL  # type: ignore
 
 
 def colored_unified_diff(

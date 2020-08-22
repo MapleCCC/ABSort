@@ -21,7 +21,13 @@ from .ast_utils import (
 )
 from .extra_typing import Declaration, DeclarationType
 from .graph import Graph
-from .utils import apply, colored_unified_diff, detect_encoding, silent_context
+from .utils import (
+    apply,
+    bright_yellow,
+    colored_unified_diff,
+    detect_encoding,
+    silent_context,
+)
 from .visitors import GetUndefinedVariableVisitor
 
 
@@ -395,6 +401,7 @@ def main(
             # TODO add more styled output (e.g. colorized)
 
             if display_diff:
+                digest["unmodified"] += 1
                 # WARNING: Path.name is different from Path.__str__()
                 # Path.name is "A string representing the final path component, excluding the drive and root, if any"
                 # Path.__str__ is "The string representation of a path is the raw filesystem path itself (in native form, e.g. with backslashes under Windows), which you can pass to any function taking a file path as a string"
@@ -405,18 +412,23 @@ def main(
                     continue
                 executor.submit(write_source, file, new_source)
             else:
-                print("---------------------------------------")
+                digest["unmodified"] += 1
+                divider = bright_yellow("-" * 79)
+                print(divider)
                 print(file)
-                print("***************************************")
+                print(divider)
                 print(new_source)
-                print("***************************************")
+                print(divider)
                 print("\n", end="")
 
-    print(
-        f"{digest['modified']} files modified, "
-        f"{digest['unmodified']} files unmodified, "
-        f"{digest['failed']} files failed."
-    )
+    summary = []
+    if digest["modified"]:
+        summary.append(f"{digest['modified']} files modified")
+    if digest["unmodified"]:
+        summary.append(f"{digest['unmodified']} files unmodified")
+    if digest["failed"]:
+        summary.append(f"{digest['failed']} files failed")
+    print(", ".join(summary) + ".")
 
 
 if __name__ == "__main__":
