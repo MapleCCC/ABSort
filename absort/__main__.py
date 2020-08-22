@@ -5,7 +5,8 @@ import contextlib
 from concurrent.futures import ThreadPoolExecutor
 from enum import Enum
 from pathlib import Path
-from typing import Any, Iterable, Iterator, List, Set, Tuple
+from types import SimpleNamespace
+from typing import Any, ContextManager, Iterable, Iterator, List, Set, Tuple
 
 import click
 from colorama import colorama_text
@@ -88,7 +89,16 @@ def absort_decls(
 
     graph = Graph()
 
-    with ThreadPoolExecutor() as executor:
+    thread_pool_context_manager: ContextManager
+    if len(decls) < 3:
+        dummy_executor = SimpleNamespace(map=map)
+        thread_pool_context_manager = contextlib.nullcontext(
+            enter_result=dummy_executor
+        )
+    else:
+        thread_pool_context_manager = ThreadPoolExecutor()
+
+    with thread_pool_context_manager as executor:
         for decl, deps in zip(decls, executor.map(get_dependency_of_decl, decls)):
             for dep in deps:
                 if dep in decl_names:
