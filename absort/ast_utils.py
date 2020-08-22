@@ -2,8 +2,6 @@ import ast
 from collections import deque
 from typing import Any, Deque, Iterator, List, Set
 
-import black
-
 from .utils import beginswith, cached_splitlines, reverse, lru_cache_with_key
 
 __all__ = [
@@ -30,7 +28,15 @@ def ast_pretty_dump(node: ast.AST, *args: Any, **kwargs: Any) -> str:
 
     dumped = ast.dump(node, *args, **kwargs)
     try:
+        # fmt: off
+        import black
         prettied = black.format_str(dumped, mode=black.FileMode())
+        # fmt: on
+    except ImportError:
+        raise RuntimeError(
+            "Black is required to use ast_pretty_dump(). "
+            "Try `python pip install -U black` to install."
+        )
     except AttributeError:
         raise RuntimeError("black version incompatible")
     return prettied
