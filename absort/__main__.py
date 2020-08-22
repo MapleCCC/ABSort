@@ -32,7 +32,7 @@ except NameError:
 
 
 # A global variable to store CLI arguments.
-args: SimpleNamespace
+args = SimpleNamespace()
 
 
 # Alternative name: DuplicateNames
@@ -310,12 +310,14 @@ def absort_file(file: Path) -> None:
 )
 @click.option("-q", "--quiet", is_flag=True)
 @click.option("-v", "--verbose", is_flag=True)
+@click.pass_context
 # TODO add multi thread support, to accelerate
 # TODO add help message to every parameters.
 # TODO add command line option --yes to bypass all confirmation prompts
 # TODO add description as argument to click.command()
 @profile  # type: ignore
 def main(
+    ctx: click.Context,
     filepaths: Tuple[str],
     display_diff: bool,
     in_place: bool,
@@ -335,16 +337,8 @@ def main(
 
     # A global variable to store CLI arguments.
     global args
-    args = SimpleNamespace(
-        display_diff=display_diff,
-        in_place=in_place,
-        no_fix_main_to_bottom=no_fix_main_to_bottom,
-        reverse=reverse,
-        encoding=encoding,
-        comment_strategy=comment_strategy,
-        quiet=quiet,
-        verbose=verbose,
-    )
+    for param_name, param_value in ctx.params.items():
+        setattr(args, param_name, param_value)
 
     verboseness_context = contextlib.nullcontext
     if quiet:
