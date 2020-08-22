@@ -62,10 +62,9 @@ def get_dependency_of_decl(decl: DeclarationType) -> Set[str]:
     return visitor.visit(temp_module)
 
 
-@click.pass_context
 @profile  # type: ignore
 def absort_decls(
-    ctx: click.Context, decls: List[DeclarationType]
+    decls: List[DeclarationType], reverse: bool, no_fix_main_to_bottom: bool
 ) -> Iterator[DeclarationType]:
     def same_rank_sorter(names: List[str]) -> List[str]:
         # Currently sort by retaining their original relative order, to reduce diff size.
@@ -99,12 +98,8 @@ def absort_decls(
 
     sorted_names = list(graph.topological_sort(same_rank_sorter=same_rank_sorter))
 
-    reverse: bool = ctx.params["reverse"]
-
     if reverse:
         sorted_names.reverse()
-
-    no_fix_main_to_bottom: bool = ctx.params["no_fix_main_to_bottom"]
 
     if not no_fix_main_to_bottom and "main" in sorted_names:
         sorted_names.remove("main")
@@ -118,8 +113,12 @@ def absort_decls(
 
 
 @profile  # type: ignore
-@click.pass_context
-def transform(ctx: click.Context, old_source: str) -> str:
+def transform(
+    old_source: str,
+    comment_strategy: CommentStrategy,
+    reverse: bool,
+    no_fix_main_to_bottom: bool,
+) -> str:
     @profile  # type: ignore
     def get_related_source_lines(source: str, node: ast.AST) -> str:
         leading_comment_source_lines = ast_get_leading_comment_source_lines(
@@ -161,10 +160,10 @@ def transform(ctx: click.Context, old_source: str) -> str:
             if isinstance(stmt, Declaration):
                 buffer.append(stmt)
             else:
-                yield from absort_decls(buffer)
+                yield from absort_decls(buffer, reverse, no_fix_main_to_bottom)
                 buffer.clear()
                 yield stmt
-        yield from absort_decls(buffer)
+        yield from absort_decls(buffer, reverse, no_fix_main_to_bottom)
 
     def preliminary_sanity_check(top_level_stmts: List[ast.stmt]) -> None:
         # TODO add more sanity checks
@@ -182,8 +181,6 @@ def transform(ctx: click.Context, old_source: str) -> str:
     preliminary_sanity_check(top_level_stmts)
 
     new_stmts = transform_stmts(top_level_stmts)
-
-    comment_strategy: CommentStrategy = ctx.params["comment_strategy"]
 
     new_source = ""
     comments = ""
@@ -229,13 +226,16 @@ def collect_python_files(filepaths: Iterable[Path]) -> Iterator[Path]:
             raise NotImplementedError
 
 
-@click.pass_context
-def absort_file(ctx: click.Context, file: Path) -> None:
-    encoding = ctx.params["encoding"]
-    display_diff = ctx.params["display_diff"]
-    in_place = ctx.params["in_place"]
-    verbose = ctx.params["verbose"]
-
+def absort_file(
+    file: Path,
+    display_diff: bool,
+    in_place: bool,
+    encoding: str,
+    verbose: str,
+    comment_strategy: CommentStrategy,
+    reverse: bool,
+    no_fix_main_to_bottom: bool,
+) -> None:
     try:
         old_source = file.read_text(encoding)
     except UnicodeDecodeError:
@@ -243,7 +243,9 @@ def absort_file(ctx: click.Context, file: Path) -> None:
         return
 
     try:
-        new_source = transform(old_source)
+        new_source = transform(
+            old_source, comment_strategy, reverse, no_fix_main_to_bottom
+        )
     except SyntaxError as exc:
         # if re.fullmatch(r"Missing parentheses in call to 'print'. Did you mean print(.*)\?", exc.msg):
         #     pass
@@ -309,14 +311,12 @@ def absort_file(ctx: click.Context, file: Path) -> None:
 )
 @click.option("-q", "--quiet", is_flag=True)
 @click.option("-v", "--verbose", is_flag=True)
-@click.pass_context
 # TODO add multi thread support, to accelerate
 # TODO add help message to every parameters.
 # TODO add command line option --yes to bypass all confirmation prompts
 # TODO add description as argument to click.command()
 @profile  # type: ignore
 def main(
-    ctx: click.Context,
     filepaths: Tuple[str],
     display_diff: bool,
     in_place: bool,
@@ -343,7 +343,18 @@ def main(
         files = collect_python_files(map(Path, filepaths))
 
         with ThreadPoolExecutor() as executor:
-            list(executor.map(absort_file, files))
+            for file in files:
+                executor.submit(
+                    absort_file,
+                    file,
+                    display_diff,
+                    in_place,
+                    encoding,
+                    verbose,
+                    comment_strategy,
+                    reverse,
+                    no_fix_main_to_bottom,
+                )
 
 
 if __name__ == "__main__":
