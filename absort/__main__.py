@@ -163,17 +163,33 @@ def transform(old_source: str) -> str:
 
         return source_lines
 
-    @profile  # type: ignore
-    def transform_stmts(old_stmts: List[ast.stmt]) -> Iterator[ast.stmt]:
+    # TODO alternative implementation trick is to have two sentinel ast.stmt nodes as
+    # dummy head and dummy tail of the list of ast.stmt nodes. This could greatly
+    # simplify the code because many corner cases are eliminated.
+    def find_continguous_decls(
+        stmts: List[ast.stmt],
+    ) -> Iterator[Tuple[int, int, List[DeclarationType]]]:
+        # WARNING: lineno and end_lineno are 1-indexed
+
         buffer: List[DeclarationType] = []
-        for stmt in old_stmts:
+        last_nondecl_stmt: ast.stmt = ast.stmt()
+        last_nondecl_stmt.end_lineno = 0
+        lineno: int = 0
+        end_lineno: int = 0
+        for stmt in stmts:
             if isinstance(stmt, Declaration):
+                lineno = last_nondecl_stmt.end_lineno + 1
+                assert stmt.end_lineno is not None
+                end_lineno = stmt.end_lineno
                 buffer.append(stmt)
             else:
-                yield from absort_decls(buffer)
-                buffer.clear()
-                yield stmt
-        yield from absort_decls(buffer)
+                if buffer:
+                    yield lineno, end_lineno, buffer
+                    buffer.clear()
+                last_nondecl_stmt = stmt
+        if buffer:
+            yield lineno, end_lineno, buffer
+            # buffer.clear()
 
     def preliminary_sanity_check(top_level_stmts: List[ast.stmt]) -> None:
         # TODO add more sanity checks
@@ -190,15 +206,20 @@ def transform(old_source: str) -> str:
 
     preliminary_sanity_check(top_level_stmts)
 
-    new_stmts = transform_stmts(top_level_stmts)
+    blocks = find_continguous_decls(top_level_stmts)
 
     comment_strategy = args.comment_strategy
 
-    new_source = ""
+    new_source_lines = old_source.splitlines()
+
     comments = ""
-    for stmt in new_stmts:
-        source_lines = get_related_source_lines(old_source, stmt)
-        new_source += source_lines
+
+    for lineno, end_lineno, decls in blocks:
+        sorted_decls = absort_decls(decls)
+        new_source_lines[lineno - 1 : end_lineno] = "".join(
+            get_related_source_lines(old_source, decl) for decl in sorted_decls
+        ).splitlines()
+    new_source = "\n".join(new_source_lines) + "\n"
 
     if comment_strategy is CommentStrategy.push_top:
         new_source = comments + new_source

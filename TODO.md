@@ -41,7 +41,6 @@
 - Entries from running `rg TODO` across the whole repo.
 - Entries from running `rg FIXME` across the whole repo.
 - Retain as much original layout as possible to reduce diff size.
-- 只 transform contiguous block of declarations 不要动其他部分的源码. This is also beneficial to reducing diff size, and optimize performance.
 - stackoverflow 关于 Python 测试列表中是否有重复元素的多种 code snippets 写法
 - 应用到 isort 的代码中去，再运行一波，看看有没有问题
 - 尝试使用 PyPy 来运行，看看会不会加速很大幅度
@@ -63,7 +62,6 @@
   - Take inspiration from black tool's source code
   - Take inspiration from autopep8 tool's source code
   - File IO is the most expensive and most suitable for multi-thread.
-- Fix the bug: Adding heurstic blank lines at the front should be only applicable to declarations.
 - GetUndefinedVariableVisitor __slots__ doesn't seem to work?
 - What's the elegant way to pass bunch of cli parameters around functions?
   - Take inspiration from black tool's source code.
@@ -103,3 +101,5 @@
 - Remove hierarchy level sort related.
 - It's syntactically correct to have two functions depending on each other. Circle in dependency graph should not be error.
 - Fix the bug of starnge result after absorting isort.main module.
+- 只 transform contiguous block of declarations 不要动其他部分的源码. This is also beneficial to reducing diff size, and optimize performance.
+- Fix the bug: Adding heurstic blank lines at the front should be only applicable to declarations.
