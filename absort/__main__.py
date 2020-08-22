@@ -327,7 +327,7 @@ def main(
     files = list(collect_python_files(map(Path, filepaths)))
     print(f"Found {len(files)} files")
 
-    digest = Counter.fromkeys(("modified", "unmodified", "failed"))
+    digest: Counter = Counter(modified=0, unmodified=0, failed=0)
 
     verboseness_context = contextlib.nullcontext
     if quiet:
