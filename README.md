@@ -74,9 +74,56 @@ $ absort <python files | direcotries>
 # Sort all files under current directory and all subdirectories
 $ absort .
 # This is equivalent to `absort **/*.py`
-```
 
-<!-- TODO insert click library `--help` message -->
+$ absort --help
+"""
+Usage: absort [OPTIONS] <files or directories to search for Python files>
+
+
+
+Options:
+  -d, --diff                      Specify whether to display diff view between
+                                  original source code and processed source
+                                  code.
+
+  -i, --in-place                  Specify whether to modify file in-place.
+                                  This is a dangerous option. Use to your own
+                                  risk. A confirmation prompt shows up to give
+                                  you second chance to think over.
+
+  --no-fix-main-to-bottom         Specify that main function doesn't need to
+                                  be fixed to the bottom-most. The default
+                                  behavior of the program is to fix the main
+                                  function to the bottom-most, unless the
+                                  `--no-fix-main-to-bottom` option is set.
+
+  -r, --reverse                   Reverse the sort order. The default order is
+                                  that the higher the abstraction level the
+                                  topper it locates.
+
+  -e, --encoding TEXT             The encoding scheme used to read and write
+                                  Python files  [default: utf-8]
+
+  -c, --comment-strategy COMMENT_STRATEGY
+                                  Specify how to treat comments. Possible
+                                  values are `push-top`, `attr-follow-decl`,
+                                  and `ignore` (not recommended). The default
+                                  value is `attr-follow-decl`. `push-top`
+                                  specifies that all comments are pushed to
+                                  top. `attr-follow-decl` specifies that
+                                  comments are treated as attribute of the
+                                  following declaration. `ignore` specifies
+                                  that comments are ignored and removed.
+                                  [default: attr-follow-decl]
+
+  -q, --quiet                     Suppress all output except the error
+                                  channel.
+
+  -v, --verbose                   Increase verboseness.
+  --version                       Show the version and exit.
+  --help                          Show this message and exit.
+"""
+```
 
 Alternatively, you can pass Python code from `stdin`.
 

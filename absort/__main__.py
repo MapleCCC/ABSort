@@ -13,6 +13,7 @@ import click
 from colorama import colorama_text
 from more_itertools import first_true
 
+from .__init__ import __version__
 from .ast_utils import (
     ast_get_decorator_list_source_lines,
     ast_get_leading_comment_and_decorator_list_source_lines,
@@ -270,10 +271,13 @@ def collect_python_files(filepaths: Iterable[Path]) -> Iterator[Path]:
             raise NotImplementedError
 
 
+# TODO add -h option
+# TODO add -V as short option of --version
 @click.command()
 @click.argument(
     "filepaths",
     nargs=-1,
+    metavar="<files or directories to search for Python files>",
     # We don't test writable, because it's possible user just want to see diff, instead of
     # in-place updating the file.
     #
@@ -284,22 +288,58 @@ def collect_python_files(filepaths: Iterable[Path]) -> Iterator[Path]:
         exists=True, file_okay=True, dir_okay=True, readable=True, allow_dash=True
     ),
 )
-@click.option("-d", "--diff", "display_diff", is_flag=True)
-@click.option("-i", "--in-place", is_flag=True)
-@click.option("--no-fix-main-to-bottom", is_flag=True)
-@click.option("-r", "--reverse", is_flag=True)
-@click.option("-e", "--encoding", default="utf-8")
+@click.option(
+    "-d",
+    "--diff",
+    "display_diff",
+    is_flag=True,
+    help="Specify whether to display diff view between original source code and processed source code.",
+)
+@click.option(
+    "-i",
+    "--in-place",
+    is_flag=True,
+    help="Specify whether to modify file in-place. This is a dangerous option. Use to "
+    "your own risk. A confirmation prompt shows up to give you second chance to think over.",
+)
+@click.option(
+    "--no-fix-main-to-bottom",
+    is_flag=True,
+    help="Specify that main function doesn't need to be fixed to the bottom-most. "
+    "The default behavior of the program is to fix the main function to the bottom-most, "
+    "unless the `--no-fix-main-to-bottom` option is set.",
+)
+@click.option(
+    "-r",
+    "--reverse",
+    is_flag=True,
+    help="Reverse the sort order. The default order is that the higher the abstraction "
+    "level the topper it locates.",
+)
+@click.option(
+    "-e",
+    "--encoding",
+    default="utf-8",
+    show_default=True,
+    help="The encoding scheme used to read and write Python files",
+)
 @click.option(
     "-c",
     "--comment-strategy",
     default="attr-follow-decl",
+    show_default=True,
     type=CommentStrategyParamType(),
     help="Specify how to treat comments. Possible values are `push-top`, "
     "`attr-follow-decl`, and `ignore` (not recommended). The default value is "
-    "`attr-follow-decl`.",
+    "`attr-follow-decl`. `push-top` specifies that all comments are pushed to top. "
+    "`attr-follow-decl` specifies that comments are treated as attribute of the following "
+    "declaration. `ignore` specifies that comments are ignored and removed.",
 )
-@click.option("-q", "--quiet", is_flag=True)
-@click.option("-v", "--verbose", is_flag=True)
+@click.option(
+    "-q", "--quiet", is_flag=True, help="Suppress all output except the error channel."
+)
+@click.option("-v", "--verbose", is_flag=True, help="Increase verboseness.")
+@click.version_option(__version__)
 @click.pass_context
 # TODO add multi thread support, to accelerate
 # TODO add help message to every parameters.
