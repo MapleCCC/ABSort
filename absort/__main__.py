@@ -36,6 +36,9 @@ except NameError:
 args = SimpleNamespace()
 
 
+# A singleton object to signal failure
+Fail = object()
+
 # Alternative name: DuplicateNames
 class NameRedefinition(Exception):
     pass
@@ -334,15 +337,38 @@ def main(
 
         print(f"Found {len(files)} files")
 
-        # TODO add handling of decode error
-        old_sources = list(
-            executor.map(methodcaller("read_text", encoding), files)
-        )
+        def read_source(file: Path) -> str:
+            try:
+                return file.read_text(encoding)
+            except UnicodeDecodeError:
+                print(f"{file} has unknown encoding.")
+                return Fail  # type: ignore
 
-        # TODO add handling of errors transpiring within transform process
-        new_sources = executor.map(transform, old_sources)
+        old_sources = list(executor.map(read_source, files))
+
+        def transform_source(old_source: str) -> str:
+            if old_source is Fail:
+                return Fail  # type: ignore
+
+            try:
+                return transform(old_source)
+            except SyntaxError as exc:
+                # if re.fullmatch(r"Missing parentheses in call to 'print'. Did you mean print(.*)\?", exc.msg):
+                #     pass
+                print(f"{file} has erroneous syntax: {exc.msg}")
+                return Fail  # type: ignore
+            except NameRedefinition:
+                print(
+                    f"{file} contains duplicate name redefinitions. Not supported yet."
+                )
+                return Fail  # type: ignore
+
+        new_sources = executor.map(transform_source, old_sources)
 
         for file, old_source, new_source in zip(files, old_sources, new_sources):
+            if new_source is Fail:
+                continue
+
             # TODO add more styled output (e.g. colorized)
 
             if display_diff:
