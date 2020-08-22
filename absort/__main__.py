@@ -301,6 +301,7 @@ def absort_file(
     #
     # FIXME what's the semantic to specify allow_dash=True for click.Path when value is a directory?
     # FIXME what's the semantic to specify readable=True for click.Path when value is a directory?
+    # TODO use callback to transform filepaths from Tuple[str] to Tuple[Path]
     type=click.Path(
         exists=True, file_okay=True, dir_okay=True, readable=True, allow_dash=True
     ),
@@ -350,8 +351,12 @@ def main(
 
     with verboseness_context(), colorama_text():
 
+        # TODO if amount of files is not big, use single thread to avoid overhead of
+        # multi-thread.
+
         files = collect_python_files(map(Path, filepaths))
 
+        # FIXME race condition on printing to console
         with ThreadPoolExecutor() as executor:
             for file in files:
                 executor.submit(

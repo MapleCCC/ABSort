@@ -137,6 +137,9 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
         visible_decls = collect_visible_declarations(nodes)
         self._declaration_name_table_stack[-1].update(visible_decls)
 
+        # No need to use executor.map, we can just use executor.submit for task that
+        # doesn't have return value
+        # FIXME No! you can't use multi-thread here! Because there is race conditon on class vars!
         process_pool_executor.map(self.visit, nodes)
 
         self._declaration_name_table_stack.pop()

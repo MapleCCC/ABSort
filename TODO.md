@@ -32,7 +32,7 @@
 
 - Profile to find performance hotspots. Optimize and accelerate the script.
   - Algorithmic optimization
-  - Memoirization optimization
+  - Memoization optimization
   - Rewrite-in-Cython optimization
   - Multi-thread/process optimization
   - Rewrite-in-Generator-Style optimization
@@ -61,11 +61,18 @@
 - Release 1.0.0rc1 release candidate version.
 - Use multi-thread to accelerate when there are large amounts of input files waiting to be processed.
   - Take inspiration from black tool's source code
+  - Take inspiration from autopep8 tool's source code
   - File IO is the most expensive and most suitable for multi-thread.
 - Fix the bug of starnge result after absorting isort.main module.
 - Fix the bug: Adding heurstic blank lines at the front should be only applicable to declarations.
 - GetUndefinedVariableVisitor __slots__ doesn't seem to work?
 - It's syntactically correct to have two functions depending on each other. Circle in dependency graph should not be error.
+- What's the elegant way to pass bunch of cli parameters around functions?
+  - Take inspiration from black tool's source code.
+  - Take inspiration from autopep8 tool's source code.
+  - It might be a good idea and elegant way to use global object to pass command line arguments around.
+- Should we use ThreadPoolExecutor or ProcessPoolExecutor? Test which one yields better performance.
+- Why does ProcessPoolExecutor perform so much worse than ThreadPoolExecutor? Why?
 
 ## Changelog
 
@@ -89,7 +96,7 @@
 - As a command line tool that deals with files, we should proceed on failure. Not fail fast and early.
 - Use self-customized ast.get_source_segment implementation to accelerate.
   - Algorithmic optimization
-  - Memoirization optimization
+  - Memoization optimization
   - Rewrite-in-Cython optimization
   - Multi-thread/process optimization
 - Remove hierarchy level sort related.

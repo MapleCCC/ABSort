@@ -98,7 +98,9 @@ $ cd ABSort
 $ python -m virtualenv .venv
 $ source .venv/Scripts/activate
 
+# Install build prerequisites
 $ python -m pip install -r requirements.txt
+# Install development prerequisites
 $ python -m pip install -r requirements-dev.txt
 $ python -m pip install -e .  # Mind the dot
 ```
