@@ -4,7 +4,6 @@ import ast
 import contextlib
 from concurrent.futures import ThreadPoolExecutor
 from enum import Enum
-from operator import methodcaller
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any, ContextManager, Iterable, Iterator, List, Set, Tuple
@@ -365,6 +364,11 @@ def main(
 
         new_sources = executor.map(transform_source, old_sources)
 
+        def write_source(file: Path, new_source: str) -> None:
+            file.write_text(new_source, encoding)
+            if verbose:
+                print(f"Processed {file}")
+
         for file, old_source, new_source in zip(files, old_sources, new_sources):
             if new_source is Fail:
                 continue
@@ -381,9 +385,7 @@ def main(
                     f"Are you sure you want to in-place update the file {file}?",
                     abort=True,
                 )
-                executor.submit(
-                    methodcaller("write_text", encoding=encoding), new_source
-                )
+                executor.submit(write_source, file, new_source)
             else:
                 print("---------------------------------------")
                 print(file)
@@ -392,8 +394,6 @@ def main(
                 print("***************************************")
                 print("\n", end="")
 
-            if verbose:
-                print(f"Processed {file}")
 
     # TODO add summary digest about how many files are modified, unmodified, skipped, failed, etc.
 
