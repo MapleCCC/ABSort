@@ -1,6 +1,4 @@
 import ast
-import atexit
-from concurrent.futures import ProcessPoolExecutor
 from enum import Enum, auto
 from typing import Iterator, List, Sequence, Set, Union
 
@@ -9,9 +7,6 @@ from .utils import add_profile_decorator_to_class_methods, lru_cache_with_key
 
 __all__ = ["GetUndefinedVariableVisitor"]
 
-
-process_pool_executor = ProcessPoolExecutor()
-atexit.register(process_pool_executor.shutdown)
 
 # Note: the name `profile` will be injected by line-profiler at run-time
 try:
@@ -137,10 +132,8 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
         visible_decls = collect_visible_declarations(nodes)
         self._declaration_name_table_stack[-1].update(visible_decls)
 
-        # No need to use executor.map, we can just use executor.submit for task that
-        # doesn't have return value
-        # FIXME No! you can't use multi-thread here! Because there is race conditon on class vars!
-        process_pool_executor.map(self.visit, nodes)
+        for node in nodes:
+            self.visit(node)
 
         self._declaration_name_table_stack.pop()
         self._symbol_table_stack.pop()
