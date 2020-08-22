@@ -63,7 +63,6 @@
   - Take inspiration from black tool's source code
   - Take inspiration from autopep8 tool's source code
   - File IO is the most expensive and most suitable for multi-thread.
-- Fix the bug of starnge result after absorting isort.main module.
 - Fix the bug: Adding heurstic blank lines at the front should be only applicable to declarations.
 - GetUndefinedVariableVisitor __slots__ doesn't seem to work?
 - What's the elegant way to pass bunch of cli parameters around functions?
@@ -100,3 +99,4 @@
   - Multi-thread/process optimization
 - Remove hierarchy level sort related.
 - It's syntactically correct to have two functions depending on each other. Circle in dependency graph should not be error.
+- Fix the bug of starnge result after absorting isort.main module.

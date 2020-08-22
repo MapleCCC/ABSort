@@ -76,7 +76,7 @@ def ast_get_leading_comment_and_decorator_list_source_lines(
         decorator_list_linenos.update(range(lineno, end_lineno + 1))
 
     boundary_lineno = 0  # 0 is a virtual line
-    for lineno, line in reverse(zip(range(1, node.lineno - 1), above_lines)):
+    for lineno, line in reverse(zip(range(1, node.lineno), above_lines)):
         if not (
             len(line.strip()) == 0
             or beginswith(line.lstrip(), "#")
@@ -105,7 +105,7 @@ def ast_get_leading_comment_source_lines(source: str, node: ast.AST) -> str:
         decorator_list_linenos.update(range(lineno, end_lineno + 1))
 
     leading_comment_lines: Deque[str] = deque()
-    for lineno, line in reverse(zip(range(1, node.lineno - 1), above_lines)):
+    for lineno, line in reverse(zip(range(1, node.lineno), above_lines)):
         if len(line.strip()) == 0 or beginswith(line.lstrip(), "#"):
             leading_comment_lines.appendleft(line)
         elif lineno in decorator_list_linenos:
