@@ -2,7 +2,7 @@ import ast
 from collections import deque
 from typing import Any, Deque, Iterator, List, Set
 
-from .utils import beginswith, cached_splitlines, reverse, lru_cache_with_key
+from .utils import beginswith, cached_splitlines, lru_cache_with_key, reverse
 
 __all__ = [
     "ast_pretty_dump",
@@ -38,7 +38,8 @@ def ast_pretty_dump(node: ast.AST, *args: Any, **kwargs: Any) -> str:
             "Try `python pip install -U black` to install."
         )
     except AttributeError:
-        # FIXME remove version incompatible check after black publishes the first stable version.
+        # FIXME remove version incompatible check after black publishes the first
+        # stable version.
         raise RuntimeError("black version incompatible")
     return prettied
 

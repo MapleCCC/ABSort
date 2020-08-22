@@ -20,8 +20,8 @@ from .ast_utils import (
     ast_get_source_lines,
 )
 from .extra_typing import Declaration, DeclarationType
-from .graph import CircularDependencyError, Graph
-from .utils import colored_unified_diff, silent_context, detect_encoding
+from .graph import Graph
+from .utils import colored_unified_diff, detect_encoding, silent_context
 from .visitors import GetUndefinedVariableVisitor
 
 

@@ -8,11 +8,11 @@ import sys
 import tokenize
 from collections import deque, namedtuple
 from typing import (
+    IO,
     Any,
     Callable,
     Deque,
     Dict,
-    IO,
     Iterable,
     Iterator,
     List,

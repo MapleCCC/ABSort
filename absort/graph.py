@@ -6,7 +6,6 @@ from __future__ import annotations
 from collections import defaultdict, deque
 from typing import Any, Callable, Dict, Iterator, List, Optional, Set, Tuple
 
-from .utils import reverse
 
 # Thin semantic type abstraction
 Node = Any
