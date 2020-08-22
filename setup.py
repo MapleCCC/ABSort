@@ -12,7 +12,7 @@ setuptools.setup(
     description="A command line utility to sort function/class definitions by abstraction levels",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/MapleCCC/absort",
+    url="https://github.com/MapleCCC/ABSort",
     version=__version__,
     packages=setuptools.find_packages(),
     license="MIT",
