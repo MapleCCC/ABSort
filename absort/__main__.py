@@ -323,18 +323,23 @@ def main(
     for param_name, param_value in ctx.params.items():
         setattr(args, param_name, param_value)
 
+    files = list(collect_python_files(map(Path, filepaths)))
+    print(f"Found {len(files)} files")
+
     verboseness_context = contextlib.nullcontext
     if quiet:
         verboseness_context = silent_context  # type: ignore
 
-    with verboseness_context(), colorama_text(), ThreadPoolExecutor() as executor:
+    thread_pool_context_manager: ContextManager
+    if len(files) <= 3:
+        dummy_executor = SimpleNamespace(map=map)
+        thread_pool_context_manager = contextlib.nullcontext(
+            enter_result=dummy_executor
+        )
+    else:
+        thread_pool_context_manager = ThreadPoolExecutor()
 
-        # TODO if amount of files is not big, use single thread to avoid overhead of
-        # multi-thread.
-
-        files = list(collect_python_files(map(Path, filepaths)))
-
-        print(f"Found {len(files)} files")
+    with verboseness_context(), colorama_text(), thread_pool_context_manager as executor:
 
         def read_source(file: Path) -> str:
             try:
@@ -365,6 +370,9 @@ def main(
         new_sources = executor.map(transform_source, old_sources)
 
         def write_source(file: Path, new_source: str) -> None:
+            click.confirm(
+                f"Are you sure you want to in-place update the file {file}?", abort=True
+            )
             file.write_text(new_source, encoding)
             if verbose:
                 print(f"Processed {file}")
@@ -381,10 +389,6 @@ def main(
                 # Path.__str__ is "The string representation of a path is the raw filesystem path itself (in native form, e.g. with backslashes under Windows), which you can pass to any function taking a file path as a string"
                 display_diff_with_filename(old_source, new_source, str(file))
             elif in_place:
-                click.confirm(
-                    f"Are you sure you want to in-place update the file {file}?",
-                    abort=True,
-                )
                 executor.submit(write_source, file, new_source)
             else:
                 print("---------------------------------------")
