@@ -3,6 +3,9 @@ MAKEFLAGS += .silent
 all:
 	python -m absort sample.py
 
+test:
+	pytest tests.
+
 stress-test:
 	time absort --quiet "D:/Program Files/Python38/Lib/site-packages"
 
@@ -32,4 +35,4 @@ todo:
 clean:
 	rm -rf __pycache__/
 
-.PHONY: all stress-test format prof type-check lint unused-imports todo clean
+.PHONY: all test stress-test format prof type-check lint unused-imports todo clean

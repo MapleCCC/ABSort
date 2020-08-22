@@ -105,6 +105,15 @@ $ python -m pip install -r requirements-dev.txt
 $ python -m pip install -e .  # Mind the dot
 ```
 
+## Test
+
+```bash
+# Install test prerequisites
+$ python -m pip install -r requirements-test.txt
+
+$ make test
+```
+
 ## License
 
 [MIT](/LICENSE)
