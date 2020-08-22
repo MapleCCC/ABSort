@@ -355,7 +355,9 @@ def main(
                     f"Are you sure you want to in-place update the file {file}?",
                     abort=True,
                 )
-                file.write_text(new_source, args.encoding)
+                executor.submit(
+                    methodcaller("write_text", encoding=encoding), new_source
+                )
             else:
                 print("---------------------------------------")
                 print(file)
