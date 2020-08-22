@@ -13,10 +13,14 @@ Edge = Tuple[Node, Node]
 AdjacencyList = Dict[Node, Set[Node]]
 
 
-__all__ = ["CircularDependencyError", "Graph"]
+__all__ = ["CircularDependencyError", "SelfLoopError", "Graph"]
 
 
 class CircularDependencyError(Exception):
+    pass
+
+
+class SelfLoopError(Exception):
     pass
 
 
@@ -29,7 +33,7 @@ class Graph:
 
     def add_edge(self, v: Node, w: Node) -> None:
         if v == w:
-            raise CircularDependencyError("Self-pointing dependency is not accepted")
+            raise SelfLoopError("Self-pointing dependency is not accepted")
         self._adjacency_list[v].add(w)
         # add w to adjacency list. This line is necessary because without it, some
         # nodes who are sinks of the graph (i.e., have zero out-going edge) would
