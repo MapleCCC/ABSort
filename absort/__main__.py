@@ -31,6 +31,10 @@ except NameError:
     profile = lambda x: x
 
 
+# A global variable to store CLI arguments.
+args: SimpleNamespace
+
+
 # Alternative name: DuplicateNames
 class NameRedefinition(Exception):
     pass
@@ -64,9 +68,7 @@ def get_dependency_of_decl(decl: DeclarationType) -> Set[str]:
 
 
 @profile  # type: ignore
-def absort_decls(
-    decls: List[DeclarationType], reverse: bool, no_fix_main_to_bottom: bool
-) -> Iterator[DeclarationType]:
+def absort_decls(decls: List[DeclarationType]) -> Iterator[DeclarationType]:
     def same_rank_sorter(names: List[str]) -> List[str]:
         # Currently sort by retaining their original relative order, to reduce diff size.
         #
@@ -108,10 +110,10 @@ def absort_decls(
 
     sorted_names = list(graph.topological_sort(same_rank_sorter=same_rank_sorter))
 
-    if reverse:
+    if args.reverse:
         sorted_names.reverse()
 
-    if not no_fix_main_to_bottom and "main" in sorted_names:
+    if not args.no_fix_main_to_bottom and "main" in sorted_names:
         sorted_names.remove("main")
         sorted_names.append("main")
 
@@ -123,12 +125,7 @@ def absort_decls(
 
 
 @profile  # type: ignore
-def transform(
-    old_source: str,
-    comment_strategy: CommentStrategy,
-    reverse: bool,
-    no_fix_main_to_bottom: bool,
-) -> str:
+def transform(old_source: str) -> str:
     @profile  # type: ignore
     def get_related_source_lines(source: str, node: ast.AST) -> str:
         leading_comment_source_lines = ast_get_leading_comment_source_lines(
@@ -170,10 +167,10 @@ def transform(
             if isinstance(stmt, Declaration):
                 buffer.append(stmt)
             else:
-                yield from absort_decls(buffer, reverse, no_fix_main_to_bottom)
+                yield from absort_decls(buffer)
                 buffer.clear()
                 yield stmt
-        yield from absort_decls(buffer, reverse, no_fix_main_to_bottom)
+        yield from absort_decls(buffer)
 
     def preliminary_sanity_check(top_level_stmts: List[ast.stmt]) -> None:
         # TODO add more sanity checks
@@ -191,6 +188,8 @@ def transform(
     preliminary_sanity_check(top_level_stmts)
 
     new_stmts = transform_stmts(top_level_stmts)
+
+    comment_strategy = args.comment_strategy
 
     new_source = ""
     comments = ""
@@ -236,26 +235,15 @@ def collect_python_files(filepaths: Iterable[Path]) -> Iterator[Path]:
             raise NotImplementedError
 
 
-def absort_file(
-    file: Path,
-    display_diff: bool,
-    in_place: bool,
-    encoding: str,
-    verbose: str,
-    comment_strategy: CommentStrategy,
-    reverse: bool,
-    no_fix_main_to_bottom: bool,
-) -> None:
+def absort_file(file: Path) -> None:
     try:
-        old_source = file.read_text(encoding)
+        old_source = file.read_text(args.encoding)
     except UnicodeDecodeError:
         print(f"{file} has unknown encoding.")
         return
 
     try:
-        new_source = transform(
-            old_source, comment_strategy, reverse, no_fix_main_to_bottom
-        )
+        new_source = transform(old_source)
     except SyntaxError as exc:
         # if re.fullmatch(r"Missing parentheses in call to 'print'. Did you mean print(.*)\?", exc.msg):
         #     pass
@@ -270,16 +258,16 @@ def absort_file(
 
     # TODO add more styled output (e.g. colorized)
 
-    if display_diff:
+    if args.display_diff:
         # WARNING: Path.name is different from Path.__str__()
         # Path.name is "A string representing the final path component, excluding the drive and root, if any"
         # Path.__str__ is "The string representation of a path is the raw filesystem path itself (in native form, e.g. with backslashes under Windows), which you can pass to any function taking a file path as a string"
         display_diff_with_filename(old_source, new_source, str(file))
-    elif in_place:
+    elif args.in_place:
         click.confirm(
             f"Are you sure you want to in-place update the file {file}?", abort=True,
         )
-        file.write_text(new_source, encoding)
+        file.write_text(new_source, args.encoding)
     else:
         print("---------------------------------------")
         print(file)
@@ -288,7 +276,7 @@ def absort_file(
         print("***************************************")
         print("\n", end="")
 
-    if verbose:
+    if args.verbose:
         print(f"Processed {file}")
 
 
@@ -345,6 +333,19 @@ def main(
     if quiet and verbose:
         raise ValueError("Can't specify both `--quiet` and `--verbose` options")
 
+    # A global variable to store CLI arguments.
+    global args
+    args = SimpleNamespace(
+        display_diff=display_diff,
+        in_place=in_place,
+        no_fix_main_to_bottom=no_fix_main_to_bottom,
+        reverse=reverse,
+        encoding=encoding,
+        comment_strategy=comment_strategy,
+        quiet=quiet,
+        verbose=verbose,
+    )
+
     verboseness_context = contextlib.nullcontext
     if quiet:
         verboseness_context = silent_context  # type: ignore
@@ -358,18 +359,7 @@ def main(
 
         # FIXME race condition on printing to console
         with ThreadPoolExecutor() as executor:
-            for file in files:
-                executor.submit(
-                    absort_file,
-                    file,
-                    display_diff,
-                    in_place,
-                    encoding,
-                    verbose,
-                    comment_strategy,
-                    reverse,
-                    no_fix_main_to_bottom,
-                )
+            executor.map(absort_file, files)
 
 
 if __name__ == "__main__":
