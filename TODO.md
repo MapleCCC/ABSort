@@ -41,7 +41,7 @@
 - Entries from running `rg TODO` across the whole repo.
 - Entries from running `rg FIXME` across the whole repo.
 - Retain as much original layout as possible to reduce diff size.
-- 只 transform contiguous block of declarations 不要动其他部分的源码. This is also beneficial to reducing diff size.
+- 只 transform contiguous block of declarations 不要动其他部分的源码. This is also beneficial to reducing diff size, and optimize performance.
 - stackoverflow 关于 Python 测试列表中是否有重复元素的多种 code snippets 写法
 - 应用到 isort 的代码中去，再运行一波，看看有没有问题
 - 尝试使用 PyPy 来运行，看看会不会加速很大幅度
@@ -71,6 +71,9 @@
   - It might be a good idea and elegant way to use global object to pass command line arguments around.
 - Should we use ThreadPoolExecutor or ProcessPoolExecutor? Test which one yields better performance.
 - Why does ProcessPoolExecutor perform so much worse than ThreadPoolExecutor? Why?
+- Fill in unit tests, then deploy Travis-CI and codecov.io
+- 用 line-profiler 测试 absort 项目中多线程 get_dependency_of_decl 是否有助于提升性能，看性能热点占比百分比来定值确定
+- Provide a programmatical interface.
 
 ## Changelog
 

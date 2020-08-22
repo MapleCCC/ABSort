@@ -114,6 +114,16 @@ $ python -m pip install -r requirements-test.txt
 $ make test
 ```
 
+## Profile
+
+```bash
+$ python -m pip install -U line-profiler
+
+$ python scripts/profile.py
+```
+
+Note: special attention needs to be paid to that 1. line-profiler is not able to collect profiling information in thread other than main thread, and 2. it's most robust to have `@profile` as the innermost decorator.
+
 ## License
 
 [MIT](/LICENSE)
