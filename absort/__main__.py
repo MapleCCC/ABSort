@@ -336,27 +336,14 @@ def main(
 
         with ThreadPoolExecutor() as executor:
             # TODO add handling of decode error
-            old_sources = executor.map(
-                operator.methodcaller("read_text", args.encoding), files
+            old_sources = list(
+                executor.map(operator.methodcaller("read_text", args.encoding), files)
             )
 
-        for file, old_source in zip(files, old_sources):
-            try:
-                new_source = transform(old_source)
-            except SyntaxError as exc:
-                # if re.fullmatch(r"Missing parentheses in call to 'print'. Did you mean print(.*)\?", exc.msg):
-                #     pass
-                print(f"{file} has erroneous syntax: {exc.msg}")
-                continue
-            except NameRedefinition:
-                print(
-                    f"{file} contains duplicate name redefinitions. Not supported yet."
-                )
-                continue
-            except CircularDependencyError:
-                print(f"{file} contains circular dependency. Not supported yet.")
-                continue
+            # TODO add handling of errors transpiring within transform process
+            new_sources = executor.map(transform, old_sources)
 
+        for file, old_source, new_source in zip(files, old_sources, new_sources):
             # TODO add more styled output (e.g. colorized)
 
             if args.display_diff:
