@@ -38,6 +38,7 @@ def ast_pretty_dump(node: ast.AST, *args: Any, **kwargs: Any) -> str:
             "Try `python pip install -U black` to install."
         )
     except AttributeError:
+        # FIXME remove version incompatible check after black publishes the first stable version.
         raise RuntimeError("black version incompatible")
     return prettied
 

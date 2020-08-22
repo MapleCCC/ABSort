@@ -93,7 +93,7 @@ def absort_decls(decls: List[DeclarationType]) -> Iterator[DeclarationType]:
     graph = Graph()
 
     thread_pool_context_manager: ContextManager
-    if len(decls) < 3:
+    if len(decls) <= 3:
         dummy_executor = SimpleNamespace(map=map)
         thread_pool_context_manager = contextlib.nullcontext(
             enter_result=dummy_executor
@@ -142,7 +142,7 @@ def transform(old_source: str) -> str:
         source_lines = ""
 
         if comment_strategy is CommentStrategy.push_top:
-            # FIXME nonlocal usage makes the code hard to reason about. Try to eliminiate
+            # FIXME use of nonlocal makes the code hard to reason about. Try to eliminiate
             # use of nonlocal as possible.
             nonlocal comments  # type: ignore
             comments += leading_comment_source_lines
@@ -357,6 +357,8 @@ def main(
 
             if args.verbose:
                 print(f"Processed {file}")
+
+    # TODO add summary digest about how many files are modified, unmodified, skipped, failed, etc.
 
 
 if __name__ == "__main__":
