@@ -55,7 +55,6 @@
 - 在 GitHub 设为 public repo
 - Add .pylintrc
 - Remember timestamp to ignore unmodified files
-- Collect statistics of failure cases. And print summary digest at the end of execution to show user.
 - Use intelligent detect file encoding, instead of hardcoding UTF-8. Take inspiration from the autopep8 cli tool.
 - Release 1.0.0rc1 release candidate version.
 - Use multi-thread to accelerate when there are large amounts of input files waiting to be processed.
@@ -103,3 +102,4 @@
 - Fix the bug of starnge result after absorting isort.main module.
 - 只 transform contiguous block of declarations 不要动其他部分的源码. This is also beneficial to reducing diff size, and optimize performance.
 - Fix the bug: Adding heurstic blank lines at the front should be only applicable to declarations.
+- Collect statistics of failure cases. And print summary digest at the end of execution to show user.

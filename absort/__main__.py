@@ -2,6 +2,7 @@
 
 import ast
 import contextlib
+from collections import Counter
 from concurrent.futures import ThreadPoolExecutor
 from enum import Enum
 from pathlib import Path
@@ -326,6 +327,8 @@ def main(
     files = list(collect_python_files(map(Path, filepaths)))
     print(f"Found {len(files)} files")
 
+    digest = Counter.fromkeys(("modified", "unmodified", "failed"))
+
     verboseness_context = contextlib.nullcontext
     if quiet:
         verboseness_context = silent_context  # type: ignore
@@ -376,9 +379,11 @@ def main(
             file.write_text(new_source, encoding)
             if verbose:
                 print(f"Processed {file}")
+            digest["modified"] += 1
 
         for file, old_source, new_source in zip(files, old_sources, new_sources):
             if new_source is Fail:
+                digest["failed"] += 1
                 continue
 
             # TODO add more styled output (e.g. colorized)
@@ -389,6 +394,9 @@ def main(
                 # Path.__str__ is "The string representation of a path is the raw filesystem path itself (in native form, e.g. with backslashes under Windows), which you can pass to any function taking a file path as a string"
                 display_diff_with_filename(old_source, new_source, str(file))
             elif in_place:
+                if old_source == new_source:
+                    digest["unmodified"] += 1
+                    continue
                 executor.submit(write_source, file, new_source)
             else:
                 print("---------------------------------------")
@@ -398,8 +406,11 @@ def main(
                 print("***************************************")
                 print("\n", end="")
 
-
-    # TODO add summary digest about how many files are modified, unmodified, skipped, failed, etc.
+    print(
+        f"{digest['modified']} files modified, "
+        f"{digest['unmodified']} files unmodified, "
+        f"{digest['failed']} files failed."
+    )
 
 
 if __name__ == "__main__":
