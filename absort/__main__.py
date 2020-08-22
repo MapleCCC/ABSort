@@ -2,6 +2,7 @@
 
 import ast
 import contextlib
+import operator
 from concurrent.futures import ThreadPoolExecutor
 from enum import Enum
 from pathlib import Path
@@ -235,51 +236,6 @@ def collect_python_files(filepaths: Iterable[Path]) -> Iterator[Path]:
             raise NotImplementedError
 
 
-def absort_file(file: Path) -> None:
-    try:
-        old_source = file.read_text(args.encoding)
-    except UnicodeDecodeError:
-        print(f"{file} has unknown encoding.")
-        return
-
-    try:
-        new_source = transform(old_source)
-    except SyntaxError as exc:
-        # if re.fullmatch(r"Missing parentheses in call to 'print'. Did you mean print(.*)\?", exc.msg):
-        #     pass
-        print(f"{file} has erroneous syntax: {exc.msg}")
-        return
-    except NameRedefinition:
-        print(f"{file} contains duplicate name redefinitions. Not supported yet.")
-        return
-    except CircularDependencyError:
-        print(f"{file} contains circular dependency. Not supported yet.")
-        return
-
-    # TODO add more styled output (e.g. colorized)
-
-    if args.display_diff:
-        # WARNING: Path.name is different from Path.__str__()
-        # Path.name is "A string representing the final path component, excluding the drive and root, if any"
-        # Path.__str__ is "The string representation of a path is the raw filesystem path itself (in native form, e.g. with backslashes under Windows), which you can pass to any function taking a file path as a string"
-        display_diff_with_filename(old_source, new_source, str(file))
-    elif args.in_place:
-        click.confirm(
-            f"Are you sure you want to in-place update the file {file}?", abort=True,
-        )
-        file.write_text(new_source, args.encoding)
-    else:
-        print("---------------------------------------")
-        print(file)
-        print("***************************************")
-        print(new_source)
-        print("***************************************")
-        print("\n", end="")
-
-    if args.verbose:
-        print(f"Processed {file}")
-
-
 @click.command()
 @click.argument(
     "filepaths",
@@ -353,9 +309,52 @@ def main(
 
         print(f"Found {len(files)} files")
 
-        # FIXME race condition on printing to console
         with ThreadPoolExecutor() as executor:
-            executor.map(absort_file, files)
+            # TODO add handling of decode error
+            old_sources = executor.map(
+                operator.methodcaller("read_text", args.encoding), files
+            )
+
+        for file, old_source in zip(files, old_sources):
+            try:
+                new_source = transform(old_source)
+            except SyntaxError as exc:
+                # if re.fullmatch(r"Missing parentheses in call to 'print'. Did you mean print(.*)\?", exc.msg):
+                #     pass
+                print(f"{file} has erroneous syntax: {exc.msg}")
+                continue
+            except NameRedefinition:
+                print(
+                    f"{file} contains duplicate name redefinitions. Not supported yet."
+                )
+                continue
+            except CircularDependencyError:
+                print(f"{file} contains circular dependency. Not supported yet.")
+                continue
+
+            # TODO add more styled output (e.g. colorized)
+
+            if args.display_diff:
+                # WARNING: Path.name is different from Path.__str__()
+                # Path.name is "A string representing the final path component, excluding the drive and root, if any"
+                # Path.__str__ is "The string representation of a path is the raw filesystem path itself (in native form, e.g. with backslashes under Windows), which you can pass to any function taking a file path as a string"
+                display_diff_with_filename(old_source, new_source, str(file))
+            elif args.in_place:
+                click.confirm(
+                    f"Are you sure you want to in-place update the file {file}?",
+                    abort=True,
+                )
+                file.write_text(new_source, args.encoding)
+            else:
+                print("---------------------------------------")
+                print(file)
+                print("***************************************")
+                print(new_source)
+                print("***************************************")
+                print("\n", end="")
+
+            if args.verbose:
+                print(f"Processed {file}")
 
 
 if __name__ == "__main__":
