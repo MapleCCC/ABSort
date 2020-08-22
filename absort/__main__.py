@@ -2,9 +2,9 @@
 
 import ast
 import contextlib
-import operator
 from concurrent.futures import ThreadPoolExecutor
 from enum import Enum
+from operator import methodcaller
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any, ContextManager, Iterable, Iterator, List, Set, Tuple
@@ -325,7 +325,7 @@ def main(
     if quiet:
         verboseness_context = silent_context  # type: ignore
 
-    with verboseness_context(), colorama_text():
+    with verboseness_context(), colorama_text(), ThreadPoolExecutor() as executor:
 
         # TODO if amount of files is not big, use single thread to avoid overhead of
         # multi-thread.
@@ -334,24 +334,23 @@ def main(
 
         print(f"Found {len(files)} files")
 
-        with ThreadPoolExecutor() as executor:
-            # TODO add handling of decode error
-            old_sources = list(
-                executor.map(operator.methodcaller("read_text", args.encoding), files)
-            )
+        # TODO add handling of decode error
+        old_sources = list(
+            executor.map(methodcaller("read_text", encoding), files)
+        )
 
-            # TODO add handling of errors transpiring within transform process
-            new_sources = executor.map(transform, old_sources)
+        # TODO add handling of errors transpiring within transform process
+        new_sources = executor.map(transform, old_sources)
 
         for file, old_source, new_source in zip(files, old_sources, new_sources):
             # TODO add more styled output (e.g. colorized)
 
-            if args.display_diff:
+            if display_diff:
                 # WARNING: Path.name is different from Path.__str__()
                 # Path.name is "A string representing the final path component, excluding the drive and root, if any"
                 # Path.__str__ is "The string representation of a path is the raw filesystem path itself (in native form, e.g. with backslashes under Windows), which you can pass to any function taking a file path as a string"
                 display_diff_with_filename(old_source, new_source, str(file))
-            elif args.in_place:
+            elif in_place:
                 click.confirm(
                     f"Are you sure you want to in-place update the file {file}?",
                     abort=True,
@@ -365,7 +364,7 @@ def main(
                 print("***************************************")
                 print("\n", end="")
 
-            if args.verbose:
+            if verbose:
                 print(f"Processed {file}")
 
     # TODO add summary digest about how many files are modified, unmodified, skipped, failed, etc.
