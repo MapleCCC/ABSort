@@ -163,20 +163,25 @@ def transform(old_source: str) -> str:
 
         return source_lines
 
-    # TODO alternative implementation trick is to have two sentinel ast.stmt nodes as
-    # dummy head and dummy tail of the list of ast.stmt nodes. This could greatly
-    # simplify the code because many corner cases are eliminated.
     def find_continguous_decls(
         stmts: List[ast.stmt],
     ) -> Iterator[Tuple[int, int, List[DeclarationType]]]:
         # WARNING: lineno and end_lineno are 1-indexed
 
+        head_sentinel = ast.stmt()
+        head_sentinel.lineno = head_sentinel.end_lineno = 0
+        stmts.insert(0, head_sentinel)
+
+        tail_sentinel = ast.stmt()
+        tail_sentinel.lineno = tail_sentinel.end_lineno = stmts[-1].end_lineno + 1
+        stmts.append(tail_sentinel)
+
         buffer: List[DeclarationType] = []
-        last_nondecl_stmt: ast.stmt = ast.stmt()
-        last_nondecl_stmt.end_lineno = 0
+        last_nondecl_stmt = head_sentinel
         lineno: int = 0
         end_lineno: int = 0
-        for stmt in stmts:
+
+        for stmt in stmts[1:]:
             if isinstance(stmt, Declaration):
                 lineno = last_nondecl_stmt.end_lineno + 1
                 assert stmt.end_lineno is not None
@@ -187,9 +192,6 @@ def transform(old_source: str) -> str:
                     yield lineno, end_lineno, buffer
                     buffer.clear()
                 last_nondecl_stmt = stmt
-        if buffer:
-            yield lineno, end_lineno, buffer
-            # buffer.clear()
 
     def preliminary_sanity_check(top_level_stmts: List[ast.stmt]) -> None:
         # TODO add more sanity checks
