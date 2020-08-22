@@ -31,6 +31,7 @@ __all__ = [
     "silent_context",
     "lru_cache_with_key",
     "detect_encoding",
+    "apply",
 ]
 
 # Note: the name `profile` will be injected by line-profiler at run-time
@@ -218,3 +219,8 @@ def detect_encoding(filename: str, limit_byte_check: int = -1) -> str:
         return encoding
     except (LookupError, SyntaxError, UnicodeDecodeError):
         return "latin-1"
+
+
+def apply(fn: Callable, *args: Any, **kwargs: Any) -> Any:
+    """ Equivalent to Haskell's $ function """
+    return fn(*args, **kwargs)

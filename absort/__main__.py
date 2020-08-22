@@ -21,7 +21,7 @@ from .ast_utils import (
 )
 from .extra_typing import Declaration, DeclarationType
 from .graph import Graph
-from .utils import colored_unified_diff, detect_encoding, silent_context
+from .utils import apply, colored_unified_diff, detect_encoding, silent_context
 from .visitors import GetUndefinedVariableVisitor
 
 
@@ -335,7 +335,7 @@ def main(
 
     thread_pool_context_manager: ContextManager
     if len(files) <= 3:
-        dummy_executor = SimpleNamespace(map=map)
+        dummy_executor = SimpleNamespace(map=map, submit=apply)
         thread_pool_context_manager = contextlib.nullcontext(
             enter_result=dummy_executor
         )
