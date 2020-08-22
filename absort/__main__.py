@@ -349,7 +349,9 @@ def main(
         # TODO if amount of files is not big, use single thread to avoid overhead of
         # multi-thread.
 
-        files = collect_python_files(map(Path, filepaths))
+        files = list(collect_python_files(map(Path, filepaths)))
+
+        print(f"Found {len(files)} files")
 
         # FIXME race condition on printing to console
         with ThreadPoolExecutor() as executor:
