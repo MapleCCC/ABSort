@@ -71,6 +71,12 @@
 - Fill in unit tests, then deploy Travis-CI and codecov.io
 - 用 line-profiler 测试 absort 项目中多线程 get_dependency_of_decl 是否有助于提升性能，看性能热点占比百分比来定值确定
 - Provide a programmatical interface.
+- Stress test against CPython site-packages, see if any bugs are spotted.
+- Rewrite, refactor main function. The body code of main function is right now a bunch of mess. Go beyond executor.map/submit. There are more freedom in interface to use. Examine the async/await keyword, Future, Promise, etc.
+  - Take inspiration from black tool's source code.
+- Try to utilize diff-so-fancy when displaying diff.
+- Use click's mechanism to specify that two options are mutually exclusive.
+- Can we just use tokenize.detect_encoding to replace autopep8.detect_encoding?
 
 ## Changelog
 

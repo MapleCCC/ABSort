@@ -321,7 +321,7 @@ def collect_python_files(filepaths: Iterable[Path]) -> Iterator[Path]:
     "--encoding",
     default="utf-8",
     show_default=True,
-    help="The encoding scheme used to read and write Python files",
+    help="The encoding scheme used to read and write Python files.",
 )
 @click.option(
     "-c",
@@ -403,6 +403,7 @@ def main(
                     print(f"{file} has unknown encoding.")
                     return Fail  # type: ignore
 
+        # FIXME race condition on printing to console
         old_sources = list(executor.map(read_source, files))
 
         def transform_source(old_source: str) -> str:
@@ -422,6 +423,7 @@ def main(
                 )
                 return Fail  # type: ignore
 
+        # FIXME race condition on printing to console
         new_sources = executor.map(transform_source, old_sources)
 
         def write_source(file: Path, new_source: str) -> None:
@@ -447,6 +449,7 @@ def main(
                 # Path.__str__ is "The string representation of a path is the raw filesystem path itself (in native form, e.g. with backslashes under Windows), which you can pass to any function taking a file path as a string"
                 display_diff_with_filename(old_source, new_source, str(file))
             elif in_place:
+                # TODO backup the original file, in case of regret or when shit hits the fan.
                 if old_source == new_source:
                     digest["unmodified"] += 1
                     continue

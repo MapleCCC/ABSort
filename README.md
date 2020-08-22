@@ -102,7 +102,7 @@ Options:
                                   topper it locates.
 
   -e, --encoding TEXT             The encoding scheme used to read and write
-                                  Python files  [default: utf-8]
+                                  Python files.  [default: utf-8]
 
   -c, --comment-strategy COMMENT_STRATEGY
                                   Specify how to treat comments. Possible
@@ -169,8 +169,12 @@ $ python -m pip install -U line-profiler
 $ python scripts/profile.py
 ```
 
-Note: special attention needs to be paid to that 1. line-profiler is not able to collect profiling information in thread other than main thread, and 2. it's most robust to have `@profile` as the innermost decorator.
+Note: special attention needs to be paid to that 1. line-profiler is not able to collect profiling information in non-main threads, and 2. it's most robust practice to have `@profile` be the innermost decorator.
+
+## Contribution
+
+Go to [issues](https://github.com/MapleCCC/ABSort/issues) to send issues or feedbacks. Pull requests are welcome.
 
 ## License
 
-[MIT](/LICENSE)
+This project is currently licensed under terms of [MIT](LICENSE) license. Feel free to contribute, fork, modify or redistribute.
