@@ -12,7 +12,25 @@
 <!-- [![GitHub commits since latest release (by SemVer)](https://img.shields.io/github/commits-since/MapleCCC/ABSort/latest?sort=semver)](https://github.com/MapleCCC/ABSort/compare/v1.0.0...master) -->
 <!-- TODO which diff method should we use? two dots or three dots? -->
 
-<!-- Add TOC here -->
+## TOC
+
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+
+
+- [Overview](#overview)
+- [Example](#example)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Interanl Algorithm](#interanl-algorithm)
+- [Limitations](#limitations)
+- [Development](#development)
+  - [Test](#test)
+  - [Profile](#profile)
+- [Contribution](#contribution)
+- [License](#license)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 ## Overview
 
