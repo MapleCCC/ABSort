@@ -15,7 +15,7 @@ from typing import Any, ContextManager, Iterable, Iterator, List, Set, Tuple
 import click
 from colorama import colorama_text
 
-from .__init__ import __version__
+from .__version__ import __version__
 from .ast_utils import (
     ast_get_decorator_list_source_lines,
     ast_get_leading_comment_and_decorator_list_source_lines,
