@@ -24,6 +24,7 @@ from colorama import Fore, Style
 
 __all__ = [
     "ireverse",
+    "xreverse",
     "beginswith",
     "bright_red",
     "bright_green",
@@ -51,6 +52,14 @@ def ireverse(iterable: Iterable) -> Iterable:
     l = list(iterable)
     for i in range(len(l)):
         yield l[~i]
+
+
+def xreverse(iterable: Iterable) -> List:
+    """
+    Similar to the builtin function reversed(), except accept wider input,
+    and return non-lazy result
+    """
+    return list(ireverse(iterable))
 
 
 def beginswith(s: str, prefix: str) -> bool:
