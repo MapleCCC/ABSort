@@ -47,19 +47,13 @@ def main(component: str, no_release: bool) -> None:
 
     old_version_info = semver.VersionInfo.parse(current_version)
 
-    if component == "major":
-        new_version_info = old_version_info.bump_major()
-    elif component == "minor":
-        new_version_info = old_version_info.bump_minor()
-    elif component == "patch":
-        new_version_info = old_version_info.bump_patch()
-    elif component == "prerelease":
-        new_version_info = old_version_info.bump_prerelease()
-    else:
+    method = getattr(old_version_info, f"bump_{component}", None)
+    if method is None:
         raise ValueError(
             "Invalid value for argument `component`. "
             "Valid values are `major`, `minor`, `patch`, and `prerelease`."
         )
+    new_version_info = method()
 
     new_version = "v" + str(new_version_info)
 
