@@ -1,1 +1,4 @@
 astor==0.8.1
+black==19.10b0
+semver==2.10.2
+PyGithub==1.53
