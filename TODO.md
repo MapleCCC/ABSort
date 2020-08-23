@@ -109,4 +109,6 @@
 - 只 transform contiguous block of declarations 不要动其他部分的源码. This is also beneficial to reducing diff size, and optimize performance.
 - Fix the bug: Adding heurstic blank lines at the front should be only applicable to declarations.
 - Collect statistics of failure cases. And print summary digest at the end of execution to show user.
-- remove more-itertools dependency
+- Extract absort_files
+- Remove more-itertools dependency
+- Some error related information should be printed to stderr, not stdout.

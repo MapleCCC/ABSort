@@ -307,6 +307,7 @@ def absort_files(
             return Fail  # type: ignore
 
     def write_source(file: Path, new_source: str) -> None:
+        # FIXME Does --quiet silent the confirmation prompt?
         click.confirm(
             f"Are you sure you want to in-place update the file {file}?", abort=True
         )
@@ -372,7 +373,11 @@ def check_args() -> None:
 
 # TODO add -h option
 # TODO add -V as short option of --version
-@click.command()
+@click.command(
+    name="absort",
+    help="A command line utility to sort function/class definitions by abstraction levels",
+    no_args_is_help=True,  # type: ignore
+)
 @click.argument(
     "filepaths",
     nargs=-1,
@@ -440,8 +445,6 @@ def check_args() -> None:
 @click.option("-v", "--verbose", is_flag=True, help="Increase verboseness.")
 @click.version_option(__version__)
 @click.pass_context
-# TODO add multi thread support, to accelerate
-# TODO add help message to every parameters.
 # TODO add command line option --yes to bypass all confirmation prompts
 # TODO add description as argument to click.command()
 @profile  # type: ignore
