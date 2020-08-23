@@ -36,6 +36,7 @@ __all__ = [
     "lru_cache_with_key",
     "detect_encoding",
     "apply",
+    "first_true",
 ]
 
 # Note: the name `profile` will be injected by line-profiler at run-time
@@ -235,3 +236,14 @@ def detect_encoding(filename: str, limit_byte_check: int = -1) -> str:
 def apply(fn: Callable, *args: Any, **kwargs: Any) -> Any:
     """ Equivalent to Haskell's $ function """
     return fn(*args, **kwargs)
+
+
+def first_true(
+    iterable: Iterable, *, default: Any = None, pred: Callable = None
+) -> Any:
+    if pred is None:
+        pred = bool
+    for elem in iterable:
+        if pred(elem):
+            return elem
+    return default

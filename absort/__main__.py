@@ -11,7 +11,6 @@ from typing import Any, ContextManager, Iterable, Iterator, List, Set, Tuple
 
 import click
 from colorama import colorama_text
-from more_itertools import first_true
 
 from .__init__ import __version__
 from .ast_utils import (
@@ -27,6 +26,7 @@ from .utils import (
     bright_yellow,
     colored_unified_diff,
     detect_encoding,
+    first_true,
     silent_context,
 )
 from .visitors import GetUndefinedVariableVisitor
