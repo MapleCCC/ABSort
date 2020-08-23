@@ -148,7 +148,7 @@ def absort_decls(decls: List[DeclarationType]) -> Iterator[DeclarationType]:
     # short-circuit to optimize.
     for name in sorted_names:
         name_matcher = lambda decl: decl.name == name
-        yield first_true(decls, pred=name_matcher)  # type: ignore
+        yield first_true(decls, pred=name_matcher)
 
 
 @profile  # type: ignore
@@ -168,7 +168,7 @@ def transform(old_source: str) -> str:
         if args.comment_strategy is CommentStrategy.push_top:
             # FIXME use of nonlocal makes the code hard to reason about. Try to eliminiate
             # use of nonlocal as possible.
-            nonlocal comments  # type: ignore
+            nonlocal comments
             comments += leading_comment_source_lines
             source_lines += decorator_list_source_lines
         elif args.comment_strategy is CommentStrategy.attr_follow_decl:
