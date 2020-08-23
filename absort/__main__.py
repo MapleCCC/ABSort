@@ -2,6 +2,8 @@
 
 import ast
 import contextlib
+import os
+import shutil
 import sys
 from collections import Counter
 from concurrent.futures import ThreadPoolExecutor
@@ -32,6 +34,9 @@ from .utils import (
     xreverse,
 )
 from .visitors import GetUndefinedVariableVisitor
+
+
+CACHE_DIR = Path(__file__).parent.parent / ".cache"
 
 
 # Note: the name `profile` will be injected by line-profiler at run-time
@@ -315,6 +320,12 @@ def absort_files(
             f"Are you sure you want to in-place update the file {file}?", err=True
         )
         if ans:
+
+            if not CACHE_DIR.is_dir():
+                os.makedirs(CACHE_DIR)
+            backup_file = CACHE_DIR / (file.name + ".bak")
+            shutil.copy2(file, backup_file)
+
             file.write_text(new_source, args.encoding)
             digest["modified"] += 1
             if args.verbose:
@@ -339,7 +350,6 @@ def absort_files(
             digest["unmodified"] += 1
             display_diff_with_filename(old_source, new_source, str(file))
         elif args.in_place:
-            # TODO backup the original file, in case of regret or when shit hits the fan.
             if old_source == new_source:
                 digest["unmodified"] += 1
                 continue
