@@ -165,20 +165,20 @@ def transform(old_source: str) -> str:
 
         source_lines = ""
 
-        if comment_strategy is CommentStrategy.push_top:
+        if args.comment_strategy is CommentStrategy.push_top:
             # FIXME use of nonlocal makes the code hard to reason about. Try to eliminiate
             # use of nonlocal as possible.
             nonlocal comments  # type: ignore
             comments += leading_comment_source_lines
             source_lines += decorator_list_source_lines
-        elif comment_strategy is CommentStrategy.attr_follow_decl:
+        elif args.comment_strategy is CommentStrategy.attr_follow_decl:
             if leading_comment_and_decorator_list_source_lines:
                 source_lines += leading_comment_and_decorator_list_source_lines
             else:
                 # This line is a heuristic. It's visually bad to have no blank lines
                 # between two declarations. So we explicitly add one.
                 source_lines += "\n"
-        elif comment_strategy is CommentStrategy.ignore:
+        elif args.comment_strategy is CommentStrategy.ignore:
             source_lines += decorator_list_source_lines
         else:
             raise RuntimeError("Unreachable")
@@ -234,8 +234,6 @@ def transform(old_source: str) -> str:
 
     blocks = find_continguous_decls(top_level_stmts)
 
-    comment_strategy = args.comment_strategy
-
     new_source_lines = old_source.splitlines()
 
     comments = ""
@@ -247,7 +245,7 @@ def transform(old_source: str) -> str:
         ).splitlines()
     new_source = "\n".join(new_source_lines) + "\n"
 
-    if comment_strategy is CommentStrategy.push_top:
+    if args.comment_strategy is CommentStrategy.push_top:
         new_source = comments + new_source
 
     # This line is a heuristic. It's visually bad to have blank lines at the
