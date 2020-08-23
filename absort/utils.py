@@ -7,6 +7,7 @@ import os
 import sys
 import tokenize
 from collections import deque, namedtuple
+from pathlib import Path
 from typing import (
     IO,
     Any,
@@ -38,6 +39,7 @@ __all__ = [
     "detect_encoding",
     "apply",
     "first_true",
+    "dirsize",
 ]
 
 # Note: the name `profile` will be injected by line-profiler at run-time
@@ -257,3 +259,7 @@ def first_true(
         if pred(elem):
             return elem
     return default
+
+
+def dirsize(path: Path) -> int:
+    return sum(f.stat().st_size for f in path.rglob("*") if f.is_file)

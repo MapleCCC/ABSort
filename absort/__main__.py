@@ -29,6 +29,7 @@ from .utils import (
     bright_yellow,
     colored_unified_diff,
     detect_encoding,
+    dirsize,
     first_true,
     silent_context,
     xreverse,
@@ -37,6 +38,7 @@ from .visitors import GetUndefinedVariableVisitor
 
 
 CACHE_DIR = Path.home() / ".absort_cache"
+CACHE_MAX_SIZE = 400000  # unit is byte
 
 
 # Note: the name `profile` will be injected by line-profiler at run-time
@@ -320,6 +322,11 @@ def absort_files(
             f"Are you sure you want to in-place update the file {file}?", err=True
         )
         if ans:
+
+            if dirsize(CACHE_DIR) > CACHE_MAX_SIZE:
+                for backup_file in CACHE_DIR.rglob("*.bak"):
+                    backup_file.unlink
+                CACHE_DIR.rmdir()
 
             if not CACHE_DIR.is_dir():
                 os.makedirs(CACHE_DIR)
