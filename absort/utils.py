@@ -128,7 +128,7 @@ def add_profile_decorator_to_class_methods(cls: T) -> T:
     return cls
 
 
-@functools.lru_cache
+@functools.lru_cache(maxsize=None)
 def cached_splitlines(s: str) -> List[str]:
     return s.splitlines()
 
