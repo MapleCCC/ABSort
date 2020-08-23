@@ -29,6 +29,7 @@ from .utils import (
     detect_encoding,
     first_true,
     silent_context,
+    xreverse,
 )
 from .visitors import GetUndefinedVariableVisitor
 
@@ -81,7 +82,7 @@ def get_dependency_of_decl(decl: DeclarationType) -> Set[str]:
 
 @profile  # type: ignore
 def absort_decls(decls: List[DeclarationType]) -> Iterator[DeclarationType]:
-    def same_rank_sorter(names: List[str]) -> List[str]:
+    def same_abstract_level_sorter(names: List[str]) -> List[str]:
         # Currently sort by retaining their original relative order, to reduce diff size.
         #
         # Possible alternatives: sort by lexicographical order of the names, sort by body
@@ -120,8 +121,10 @@ def absort_decls(decls: List[DeclarationType]) -> Iterator[DeclarationType]:
             # Below line is necessary for adding node with zero out-degree to the graph.
             graph.add_node(decl.name)
 
-    sorted_names = list(
-        graph.relaxed_topological_sort(same_rank_sorter=same_rank_sorter)
+    sorted_names = xreverse(
+        graph.relaxed_topological_sort(
+            same_rank_sorter=lambda decls: xreverse(same_abstract_level_sorter(decls))
+        )
     )
 
     if args.reverse:
