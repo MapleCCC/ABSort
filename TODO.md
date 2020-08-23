@@ -34,7 +34,6 @@
 - 详细看完 Green Tree Sankes 文档，透彻了解
 - visit_Name 不同 context 在 Green Tree Snake 文档中查看
 - Remember timestamp to ignore unmodified files
-- Add .pylintrc
 - Use multi-thread to accelerate when there are large amounts of input files waiting to be processed.
   - Take inspiration from black tool's source code
   - Take inspiration from autopep8 tool's source code
@@ -112,6 +111,7 @@
 - Use intelligent detect file encoding, instead of hardcoding UTF-8. Take inspiration from the autopep8 cli tool.
 - 在 GitHub 设为 public repo
 - Retain as much original layout as possible to reduce diff size.
+- Add .pylintrc
 
 ## TIL
 
