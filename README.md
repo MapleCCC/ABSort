@@ -34,10 +34,10 @@ def add_three(x):
 def add_two(x):
     return increment(increment(x))
 
-class BigInt:
-    pass
+class Adder:
+    method = increment
 
-print(add_three(BigInt()))
+print(add_three(1))
 ```
 
 After ABSorting:
@@ -49,13 +49,13 @@ def add_three(x):
 def add_two(x):
     return increment(increment(x))
 
-class BigInt:
-    pass
+class Adder:
+    method = increment
 
 def increment(x):
     return x + 1
 
-print(add_three(BigInt()))
+print(add_three(1))
 ```
 
 ## Installation
@@ -79,7 +79,8 @@ $ absort --help
 """
 Usage: absort [OPTIONS] <files or directories to search for Python files>
 
-
+  A command line utility to sort function/class definitions by abstraction
+  levels
 
 Options:
   -d, --diff                      Specify whether to display diff view between
@@ -129,7 +130,7 @@ Alternatively, you can pass Python code from `stdin`.
 
 ## Interanl Algorithm
 
-The sorting algorithm is currently a topological sort on the dependency graph, with function/class definitions as graph nodes, and their dependencies as graph edges.
+The sorting algorithm is currently a reversed topological sort on the dependency graph, with function/class definitions as graph nodes, and their dependency relations as graph edges.
 
 ## Limitations
 

@@ -48,6 +48,7 @@ args = SimpleNamespace()
 # A singleton object to signal failure
 Fail = object()
 
+
 # Alternative name: DuplicateNames
 class NameRedefinition(Exception):
     pass
@@ -336,9 +337,6 @@ def absort_files(
 
         if args.display_diff:
             digest["unmodified"] += 1
-            # WARNING: Path.name is different from Path.__str__()
-            # Path.name is "A string representing the final path component, excluding the drive and root, if any"
-            # Path.__str__ is "The string representation of a path is the raw filesystem path itself (in native form, e.g. with backslashes under Windows), which you can pass to any function taking a file path as a string"
             display_diff_with_filename(old_source, new_source, str(file))
         elif args.in_place:
             # TODO backup the original file, in case of regret or when shit hits the fan.

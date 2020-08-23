@@ -1,35 +1,57 @@
 ## High Priority
 
-- How to handle name redefinition.
 - Use more advanced AST library, not the naive builtin ast module.
   - astor
   - astunparse
   - libcst
   - astroid
-
-## Medium Priority
-
-- Add docstring to module, function, method, etc. Elaborate on what they really do.
-- Deploy poetry.
+- Add unit tests
+- Release 1.0.0 version
+- Check whether ast.iter_child_nodes yield ordered results?
 - Deploy pre-commit.
   - Generate README TOC
   - Concatenate TODO.md to README.md
   - Reformat
   - Lint
+- Add docstring to module, function, method, etc. Elaborate on what they really do.
+- Release 1.0.0rc1 release candidate version.
+- Fill in unit tests, then deploy Travis-CI and codecov.io
+- GetUndefinedVariableVisitor __slots__ doesn't seem to work?
+- Rewrite, refactor main function. The body code of main function is right now a bunch of mess. Go beyond executor.map/submit. There are more freedom in interface to use. Examine the async/await keyword, Future, Promise, etc.
+  - Take inspiration from black tool's source code.
+- 完善 README
+- Specify release version when installing, in README.
+
+## Medium Priority
+
+- Deploy poetry.
+- stackoverflow 关于 Python 测试列表中是否有重复元素的多种 code snippets 写法
+- 应用到 isort 的代码中去，再运行一波，看看有没有问题
+- 尝试使用 PyPy 来运行，看看会不会加速很大幅度
+- 详细看完 Green Tree Sankes 文档，透彻了解
+- visit_Name 不同 context 在 Green Tree Snake 文档中查看
+- Remember timestamp to ignore unmodified files
+- Add .pylintrc
+- Use multi-thread to accelerate when there are large amounts of input files waiting to be processed.
+  - Take inspiration from black tool's source code
+  - Take inspiration from autopep8 tool's source code
+  - File IO is the most expensive and most suitable for multi-thread.
+- Try to utilize diff-so-fancy when displaying diff.
+- Should we use ThreadPoolExecutor or ProcessPoolExecutor? Test which one yields better performance.
+- Why does ProcessPoolExecutor perform so much worse than ThreadPoolExecutor? Why?
+- 用 line-profiler 测试 absort 项目中多线程 get_dependency_of_decl 是否有助于提升性能，看性能热点占比百分比来定值确定
+- Entries from running `rg TODO` across the whole repo.
+- Entries from running `rg FIXME` across the whole repo.
+- The whole implementation in visitors.py is a mess and catastrophic! We need REWRITE IT!!!
 
 ## Low Priority
 
+- How to handle name redefinition.
 - Try README-driven development
 - Use semver and conventional commit message guidelines.
 - More detail in symbol table.
   - More detail in symbol table to distinguish different variable with same identifier.
 - When programming, use Tickey to broadcast keyboard sound.
-- Add unit tests
-- Release 1.0.0 version
-- Check whether ast.iter_child_nodes yield ordered results?
-
-## Uncategorized
-
 - Profile to find performance hotspots. Optimize and accelerate the script.
   - Algorithmic optimization
   - Memoization optimization
@@ -37,46 +59,16 @@
   - Multi-thread/process optimization
   - Rewrite-in-Generator-Style optimization
   - Caculate and Save for next time optimization
-- Add click parameter help messages.
-- Entries from running `rg TODO` across the whole repo.
-- Entries from running `rg FIXME` across the whole repo.
-- Retain as much original layout as possible to reduce diff size.
-- stackoverflow 关于 Python 测试列表中是否有重复元素的多种 code snippets 写法
-- 应用到 isort 的代码中去，再运行一波，看看有没有问题
-- 尝试使用 PyPy 来运行，看看会不会加速很大幅度
-- 详细看完 Green Tree Sankes 文档，透彻了解
-- visit_Name 不同 context 在 Green Tree Snake 文档中查看
-- 完善 README
-  - 添加 GitHub badges
-    - use black code style
-    - total line count
-    - license
-  - add examples to showcase
-- 在 GitHub 设为 public repo
-- Add .pylintrc
-- Remember timestamp to ignore unmodified files
-- Use intelligent detect file encoding, instead of hardcoding UTF-8. Take inspiration from the autopep8 cli tool.
-- Release 1.0.0rc1 release candidate version.
-- Use multi-thread to accelerate when there are large amounts of input files waiting to be processed.
-  - Take inspiration from black tool's source code
-  - Take inspiration from autopep8 tool's source code
-  - File IO is the most expensive and most suitable for multi-thread.
-- GetUndefinedVariableVisitor __slots__ doesn't seem to work?
+- Provide a programmatical interface.
+- Can we just use tokenize.detect_encoding to replace autopep8.detect_encoding?
+- Use click's mechanism to specify that two options are mutually exclusive.
+- Stress test against CPython site-packages, see if any bugs are spotted.
 - What's the elegant way to pass bunch of cli parameters around functions?
   - Take inspiration from black tool's source code.
   - Take inspiration from autopep8 tool's source code.
   - It might be a good idea and elegant way to use global object to pass command line arguments around.
-- Should we use ThreadPoolExecutor or ProcessPoolExecutor? Test which one yields better performance.
-- Why does ProcessPoolExecutor perform so much worse than ThreadPoolExecutor? Why?
-- Fill in unit tests, then deploy Travis-CI and codecov.io
-- 用 line-profiler 测试 absort 项目中多线程 get_dependency_of_decl 是否有助于提升性能，看性能热点占比百分比来定值确定
-- Provide a programmatical interface.
-- Stress test against CPython site-packages, see if any bugs are spotted.
-- Rewrite, refactor main function. The body code of main function is right now a bunch of mess. Go beyond executor.map/submit. There are more freedom in interface to use. Examine the async/await keyword, Future, Promise, etc.
-  - Take inspiration from black tool's source code.
-- Try to utilize diff-so-fancy when displaying diff.
-- Use click's mechanism to specify that two options are mutually exclusive.
-- Can we just use tokenize.detect_encoding to replace autopep8.detect_encoding?
+
+## Uncategorized
 
 ## Changelog
 
@@ -112,3 +104,19 @@
 - Extract absort_files
 - Remove more-itertools dependency
 - Some error related information should be printed to stderr, not stdout.
+- Add click parameter help messages.
+- Use intelligent detect file encoding, instead of hardcoding UTF-8. Take inspiration from the autopep8 cli tool.
+- 在 GitHub 设为 public repo
+- Retain as much original layout as possible to reduce diff size.
+
+## TIL
+
+- Path.name is different from Path.__str__()
+  - Path.name is "A string representing the final path component, excluding the drive and root, if any"
+  - Path.__str__ is "The string representation of a path is the raw filesystem path itself (in native form, e.g. with backslashes under Windows), which you can pass to any function taking a file path as a string"
+- 完善 README
+  - 添加 GitHub badges
+    - use black code style
+    - total line count
+    - license
+  - add examples to showcase
