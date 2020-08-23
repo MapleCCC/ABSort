@@ -307,9 +307,10 @@ def absort_files(
             return Fail  # type: ignore
 
     def write_source(file: Path, new_source: str) -> None:
-        # FIXME Does --quiet silent the confirmation prompt?
         click.confirm(
-            f"Are you sure you want to in-place update the file {file}?", abort=True
+            f"Are you sure you want to in-place update the file {file}?",
+            abort=True,
+            err=True,
         )
         file.write_text(new_source, args.encoding)
         if args.verbose:
