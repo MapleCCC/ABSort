@@ -40,6 +40,8 @@ from .visitors import GetUndefinedVariableVisitor
 CACHE_DIR = Path.home() / ".absort_cache"
 CACHE_MAX_SIZE = 400000  # unit is byte
 
+SINGLE_THREAD_APROACH_MAX_FILENUM = 3
+SINGLE_THREAD_APROACH_MAX_DECLNUM = 3
 
 # Note: the name `profile` will be injected by line-profiler at run-time
 try:
@@ -113,7 +115,7 @@ def absort_decls(decls: List[DeclarationType]) -> Iterator[DeclarationType]:
     graph = Graph()
 
     thread_pool_context_manager: ContextManager
-    if len(decls) <= 3:
+    if len(decls) <= SINGLE_THREAD_APROACH_MAX_DECLNUM:
         dummy_executor = SimpleNamespace(map=map)
         thread_pool_context_manager = contextlib.nullcontext(
             enter_result=dummy_executor
@@ -498,7 +500,7 @@ def main(
         verboseness_context = silent_context  # type: ignore
 
     thread_pool_context_manager: ContextManager
-    if len(files) <= 3:
+    if len(files) <= SINGLE_THREAD_APROACH_MAX_FILENUM:
         dummy_executor = SimpleNamespace(map=map, submit=apply)
         thread_pool_context_manager = contextlib.nullcontext(
             enter_result=dummy_executor
