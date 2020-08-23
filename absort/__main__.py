@@ -2,6 +2,7 @@
 
 import ast
 import contextlib
+import sys
 from collections import Counter
 from concurrent.futures import ThreadPoolExecutor
 from enum import Enum
@@ -278,13 +279,13 @@ def absort_files(
         try:
             return file.read_text(args.encoding)
         except UnicodeDecodeError:
-            print(f"{file} is not decodable by {args.encoding}")
-            print(f"Try to automatically detect file encoding......")
+            print(f"{file} is not decodable by {args.encoding}", file=sys.stderr)
+            print(f"Try to automatically detect file encoding......", file=sys.stderr)
             detected_encoding = detect_encoding(str(file))
             try:
                 return file.read_text(detected_encoding)
             except UnicodeDecodeError:
-                print(f"{file} has unknown encoding.")
+                print(f"{file} has unknown encoding.", file=sys.stderr)
                 return Fail  # type: ignore
 
     def transform_source(old_source: str) -> str:
@@ -296,10 +297,13 @@ def absort_files(
         except SyntaxError as exc:
             # if re.fullmatch(r"Missing parentheses in call to 'print'. Did you mean print(.*)\?", exc.msg):
             #     pass
-            print(f"{file} has erroneous syntax: {exc.msg}")
+            print(f"{file} has erroneous syntax: {exc.msg}", file=sys.stderr)
             return Fail  # type: ignore
         except NameRedefinition:
-            print(f"{file} contains duplicate name redefinitions. Not supported yet.")
+            print(
+                f"{file} contains duplicate name redefinitions. Not supported yet.",
+                file=sys.stderr,
+            )
             return Fail  # type: ignore
 
     def write_source(file: Path, new_source: str) -> None:
