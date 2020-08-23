@@ -145,10 +145,10 @@ $ cd ABSort
 $ python -m virtualenv .venv
 $ source .venv/Scripts/activate
 
-# Install build prerequisites
-$ python -m pip install -r requirements.txt
+# Install install prerequisites
+$ python -m pip install -r requirements/install.txt
 # Install development prerequisites
-$ python -m pip install -r requirements-dev.txt
+$ python -m pip install -r requirements/dev.txt
 $ python -m pip install -e .  # Mind the dot
 ```
 
@@ -156,7 +156,7 @@ $ python -m pip install -e .  # Mind the dot
 
 ```bash
 # Install test prerequisites
-$ python -m pip install -r requirements-test.txt
+$ python -m pip install -r requirements/test.txt
 
 $ make test
 ```

@@ -21,6 +21,6 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     python_requires=">=3.8",
-    install_requires=open("requirements.txt", "r").read().splitlines(),
+    install_requires=open("requirements/install.txt", "r").read().splitlines(),
     entry_points={"console_scripts": ["absort=absort.__main__:main"]},
 )
