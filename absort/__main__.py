@@ -271,6 +271,101 @@ def collect_python_files(filepaths: Iterable[Path]) -> Iterator[Path]:
             raise NotImplementedError
 
 
+def absort_files(
+    files: List[Path], executor: ThreadPoolExecutor, digest: Counter
+) -> None:
+    def read_source(file: Path) -> str:
+        try:
+            return file.read_text(args.encoding)
+        except UnicodeDecodeError:
+            print(f"{file} is not decodable by {args.encoding}")
+            print(f"Try to automatically detect file encoding......")
+            detected_encoding = detect_encoding(str(file))
+            try:
+                return file.read_text(detected_encoding)
+            except UnicodeDecodeError:
+                print(f"{file} has unknown encoding.")
+                return Fail  # type: ignore
+
+    def transform_source(old_source: str) -> str:
+        if old_source is Fail:
+            return Fail  # type: ignore
+
+        try:
+            return transform(old_source)
+        except SyntaxError as exc:
+            # if re.fullmatch(r"Missing parentheses in call to 'print'. Did you mean print(.*)\?", exc.msg):
+            #     pass
+            print(f"{file} has erroneous syntax: {exc.msg}")
+            return Fail  # type: ignore
+        except NameRedefinition:
+            print(f"{file} contains duplicate name redefinitions. Not supported yet.")
+            return Fail  # type: ignore
+
+    def write_source(file: Path, new_source: str) -> None:
+        click.confirm(
+            f"Are you sure you want to in-place update the file {file}?", abort=True
+        )
+        file.write_text(new_source, args.encoding)
+        if args.verbose:
+            print(f"Processed {file}")
+        digest["modified"] += 1
+
+    # FIXME race condition on printing to console
+    old_sources = list(executor.map(read_source, files))
+
+    # FIXME race condition on printing to console
+    new_sources = executor.map(transform_source, old_sources)
+
+    for file, old_source, new_source in zip(files, old_sources, new_sources):
+        if new_source is Fail:
+            digest["failed"] += 1
+            continue
+
+        # TODO add more styled output (e.g. colorized)
+
+        if args.display_diff:
+            digest["unmodified"] += 1
+            # WARNING: Path.name is different from Path.__str__()
+            # Path.name is "A string representing the final path component, excluding the drive and root, if any"
+            # Path.__str__ is "The string representation of a path is the raw filesystem path itself (in native form, e.g. with backslashes under Windows), which you can pass to any function taking a file path as a string"
+            display_diff_with_filename(old_source, new_source, str(file))
+        elif args.in_place:
+            # TODO backup the original file, in case of regret or when shit hits the fan.
+            if old_source == new_source:
+                digest["unmodified"] += 1
+                continue
+            executor.submit(write_source, file, new_source)
+        else:
+            digest["unmodified"] += 1
+            divider = bright_yellow("-" * 79)
+            print(divider)
+            print(file)
+            print(divider)
+            print(new_source)
+            print(divider)
+            print("\n", end="")
+
+
+def display_summary(digest: Counter) -> None:
+    summary = []
+    if digest["modified"]:
+        summary.append(f"{digest['modified']} files modified")
+    if digest["unmodified"]:
+        summary.append(f"{digest['unmodified']} files unmodified")
+    if digest["failed"]:
+        summary.append(f"{digest['failed']} files failed")
+    print(", ".join(summary) + ".")
+
+
+def check_args() -> None:
+    if args.display_diff and args.in_place:
+        raise ValueError("Can't specify both `--diff` and `--in-place` options")
+
+    if args.quiet and args.verbose:
+        raise ValueError("Can't specify both `--quiet` and `--verbose` options")
+
+
 # TODO add -h option
 # TODO add -V as short option of --version
 @click.command()
@@ -359,16 +454,12 @@ def main(
     verbose: bool,
 ) -> None:
 
-    if display_diff and in_place:
-        raise ValueError("Can't specify both `--diff` and `--in-place` options")
-
-    if quiet and verbose:
-        raise ValueError("Can't specify both `--quiet` and `--verbose` options")
-
     # A global variable to store CLI arguments.
     global args
     for param_name, param_value in ctx.params.items():
         setattr(args, param_name, param_value)
+
+    check_args()
 
     files = list(collect_python_files(map(Path, filepaths)))
     print(f"Found {len(files)} files")
@@ -390,88 +481,9 @@ def main(
 
     with verboseness_context(), colorama_text(), thread_pool_context_manager as executor:
 
-        def read_source(file: Path) -> str:
-            try:
-                return file.read_text(encoding)
-            except UnicodeDecodeError:
-                print(f"{file} is not decodable by {encoding}")
-                print(f"Try to automatically detect file encoding......")
-                detected_encoding = detect_encoding(str(file))
-                try:
-                    return file.read_text(detected_encoding)
-                except UnicodeDecodeError:
-                    print(f"{file} has unknown encoding.")
-                    return Fail  # type: ignore
+        absort_files(files, executor, digest)
 
-        # FIXME race condition on printing to console
-        old_sources = list(executor.map(read_source, files))
-
-        def transform_source(old_source: str) -> str:
-            if old_source is Fail:
-                return Fail  # type: ignore
-
-            try:
-                return transform(old_source)
-            except SyntaxError as exc:
-                # if re.fullmatch(r"Missing parentheses in call to 'print'. Did you mean print(.*)\?", exc.msg):
-                #     pass
-                print(f"{file} has erroneous syntax: {exc.msg}")
-                return Fail  # type: ignore
-            except NameRedefinition:
-                print(
-                    f"{file} contains duplicate name redefinitions. Not supported yet."
-                )
-                return Fail  # type: ignore
-
-        # FIXME race condition on printing to console
-        new_sources = executor.map(transform_source, old_sources)
-
-        def write_source(file: Path, new_source: str) -> None:
-            click.confirm(
-                f"Are you sure you want to in-place update the file {file}?", abort=True
-            )
-            file.write_text(new_source, encoding)
-            if verbose:
-                print(f"Processed {file}")
-            digest["modified"] += 1
-
-        for file, old_source, new_source in zip(files, old_sources, new_sources):
-            if new_source is Fail:
-                digest["failed"] += 1
-                continue
-
-            # TODO add more styled output (e.g. colorized)
-
-            if display_diff:
-                digest["unmodified"] += 1
-                # WARNING: Path.name is different from Path.__str__()
-                # Path.name is "A string representing the final path component, excluding the drive and root, if any"
-                # Path.__str__ is "The string representation of a path is the raw filesystem path itself (in native form, e.g. with backslashes under Windows), which you can pass to any function taking a file path as a string"
-                display_diff_with_filename(old_source, new_source, str(file))
-            elif in_place:
-                # TODO backup the original file, in case of regret or when shit hits the fan.
-                if old_source == new_source:
-                    digest["unmodified"] += 1
-                    continue
-                executor.submit(write_source, file, new_source)
-            else:
-                digest["unmodified"] += 1
-                divider = bright_yellow("-" * 79)
-                print(divider)
-                print(file)
-                print(divider)
-                print(new_source)
-                print(divider)
-                print("\n", end="")
-
-    summary = []
-    if digest["modified"]:
-        summary.append(f"{digest['modified']} files modified")
-    if digest["unmodified"]:
-        summary.append(f"{digest['unmodified']} files unmodified")
-    if digest["failed"]:
-        summary.append(f"{digest['failed']} files failed")
-    print(", ".join(summary) + ".")
+        display_summary(digest)
 
 
 if __name__ == "__main__":
