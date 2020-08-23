@@ -59,7 +59,7 @@ def xreverse(iterable: Iterable) -> List:
     Similar to the builtin function reversed(), except accept wider input,
     and return non-lazy result
     """
-    return list(ireverse(iterable))
+    return list(iterable)[::-1]
 
 
 def beginswith(s: str, prefix: str) -> bool:
