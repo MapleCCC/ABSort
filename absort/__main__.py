@@ -307,15 +307,16 @@ def absort_files(
             return Fail  # type: ignore
 
     def write_source(file: Path, new_source: str) -> None:
-        click.confirm(
-            f"Are you sure you want to in-place update the file {file}?",
-            abort=True,
-            err=True,
+        ans = click.confirm(
+            f"Are you sure you want to in-place update the file {file}?", err=True
         )
-        file.write_text(new_source, args.encoding)
-        if args.verbose:
-            print(f"Processed {file}")
-        digest["modified"] += 1
+        if ans:
+            file.write_text(new_source, args.encoding)
+            digest["modified"] += 1
+            if args.verbose:
+                print(f"Processed {file}")
+        else:
+            digest["unmodified"] += 1
 
     # FIXME race condition on printing to console
     old_sources = list(executor.map(read_source, files))
