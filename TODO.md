@@ -21,6 +21,9 @@
   - Take inspiration from black tool's source code.
 - 完善 README
 - Specify release version when installing, in README.
+- Fix race condition on writing to stdout/stderr in absort_files()
+- Instead of LRU, maybe we should use LFU?, or frecency? Investigate different cache replacement policy/strategy.
+- Pre-commit hook to update absort --help message in README
 
 ## Medium Priority
 
@@ -43,6 +46,7 @@
 - Entries from running `rg TODO` across the whole repo.
 - Entries from running `rg FIXME` across the whole repo.
 - The whole implementation in visitors.py is a mess and catastrophic! We need REWRITE IT!!!
+  - Read Pylint source code to figure out how to properly detect undefined variables.
 
 ## Low Priority
 

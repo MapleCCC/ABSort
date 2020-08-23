@@ -325,6 +325,8 @@ def absort_files(
         )
         if ans:
 
+            # TODO instead of empty the whole cache, use more subtle cache replacement
+            # policy, eg. LRU.
             if dirsize(CACHE_DIR) > CACHE_MAX_SIZE:
                 for backup_file in CACHE_DIR.rglob("*.bak"):
                     backup_file.unlink
@@ -468,7 +470,6 @@ def check_args() -> None:
 @click.version_option(__version__)
 @click.pass_context
 # TODO add command line option --yes to bypass all confirmation prompts
-# TODO add description as argument to click.command()
 @profile  # type: ignore
 def main(
     ctx: click.Context,

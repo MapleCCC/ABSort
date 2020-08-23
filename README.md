@@ -153,7 +153,7 @@ $ python -m pip install -r requirements/dev.txt
 $ python -m pip install -e .  # Mind the dot
 ```
 
-## Test
+### Test
 
 ```bash
 # Install test prerequisites
@@ -162,7 +162,7 @@ $ python -m pip install -r requirements/test.txt
 $ make test
 ```
 
-## Profile
+### Profile
 
 ```bash
 $ python -m pip install -U line-profiler
