@@ -36,7 +36,7 @@ from .utils import (
 from .visitors import GetUndefinedVariableVisitor
 
 
-CACHE_DIR = Path(__file__).parent.parent / ".cache"
+CACHE_DIR = Path.home() / ".absort_cache"
 
 
 # Note: the name `profile` will be injected by line-profiler at run-time
