@@ -23,7 +23,7 @@ from typing import (
 from colorama import Fore, Style
 
 __all__ = [
-    "reverse",
+    "ireverse",
     "beginswith",
     "bright_red",
     "bright_green",
@@ -46,7 +46,8 @@ except NameError:
     profile = lambda x: x
 
 
-def reverse(iterable: Iterable) -> Iterable:
+def ireverse(iterable: Iterable) -> Iterable:
+    """ Similar to the builtin function reversed(), except accept wider input """
     l = list(iterable)
     for i in range(len(l)):
         yield l[~i]
