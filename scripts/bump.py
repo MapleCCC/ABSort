@@ -34,6 +34,10 @@ def bump_file_README(new_version: str) -> None:
     repl = f"github.com/MapleCCC/ABSort/compare/{new_version}...master"
     bump_file("README.md", pattern, repl)
 
+    pattern = r"git\+https://github\.com/MapleCCC/ABSort\.git@.*#egg=ABSort"
+    repl = f"git+https://github.com/MapleCCC/ABSort.git@{new_version}#egg=ABSort"
+    bump_file("README.md", pattern, repl)
+
 
 def run(cmd: Sequence[str]) -> None:
     subprocess.run(cmd).check_returncode()

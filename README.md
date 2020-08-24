@@ -78,10 +78,8 @@ print(add_three(1))
 
 ## Installation
 
-<!-- TODO Specify release version when installing -->
-
 ```bash
-$ python -m pip install git+https://github.com/MapleCCC/ABSort.git#egg=ABSort
+$ python -m pip install git+https://github.com/MapleCCC/ABSort.git@v0.1.0#egg=ABSort
 ```
 
 ## Usage

@@ -20,7 +20,6 @@
 - Rewrite, refactor main function. The body code of main function is right now a bunch of mess. Go beyond executor.map/submit. There are more freedom in interface to use. Examine the async/await keyword, Future, Promise, etc.
   - Take inspiration from black tool's source code.
 - 完善 README
-- Specify release version when installing, in README.
 - Fix race condition on writing to stdout/stderr in absort_files()
 - Instead of LRU, maybe we should use LFU?, or frecency? Investigate different cache replacement policy/strategy.
 - Pre-commit hook to update absort --help message in README
@@ -114,6 +113,7 @@
 - 在 GitHub 设为 public repo
 - Retain as much original layout as possible to reduce diff size.
 - Add .pylintrc
+- Specify release version when installing, in README.
 
 ## TIL
 
