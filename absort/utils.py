@@ -40,6 +40,7 @@ __all__ = [
     "apply",
     "first_true",
     "dirsize",
+    "rmdir",
 ]
 
 # Note: the name `profile` will be injected by line-profiler at run-time
@@ -263,3 +264,13 @@ def first_true(
 
 def dirsize(path: Path) -> int:
     return sum(f.stat().st_size for f in path.rglob("*") if f.is_file)
+
+
+def rmdir(path: Path) -> None:
+    if path.is_dir():
+        raise NotADirectoryError(f"{path} is not a directory")
+
+    for file in path.rglob("*.bak"):
+        file.unlink()
+
+    path.rmdir()

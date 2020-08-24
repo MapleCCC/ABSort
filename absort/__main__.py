@@ -31,6 +31,7 @@ from .utils import (
     detect_encoding,
     dirsize,
     first_true,
+    rmdir,
     silent_context,
     xreverse,
 )
@@ -331,9 +332,7 @@ def absort_files(
         # TODO instead of empty the whole cache, use more subtle cache replacement
         # policy, eg. LRU.
         if dirsize(CACHE_DIR) > CACHE_MAX_SIZE:
-            for backup_file in CACHE_DIR.rglob("*.bak"):
-                backup_file.unlink()
-            CACHE_DIR.rmdir()
+            rmdir(CACHE_DIR)
 
         if not CACHE_DIR.is_dir():
             os.makedirs(CACHE_DIR)
