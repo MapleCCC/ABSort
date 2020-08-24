@@ -275,7 +275,9 @@ def display_diff_with_filename(
 
 def collect_python_files(filepaths: Iterable[Path]) -> Iterator[Path]:
     for filepath in filepaths:
-        if filepath.is_file():
+        if not filepath.exists():
+            print(f'File "{filepath}" doesn\'t exist. Skipped.')
+        elif filepath.is_file():
             # We don't test file suffix, because it's possible user explicitly enters an
             # input file that contains Python code but doesn't have `.py` extension.
             # If it doesn't contain Python code, a SyntaxError will be raised from other
