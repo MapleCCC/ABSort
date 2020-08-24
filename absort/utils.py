@@ -8,7 +8,7 @@ import sys
 import tokenize
 from collections import namedtuple
 from pathlib import Path
-from typing import IO, Any, Callable, Iterable, Iterator, List, Optional, TypeVar
+from typing import IO, Any, Callable, Iterable, Iterator, List, Optional
 
 from colorama import Fore, Style
 
@@ -23,7 +23,6 @@ __all__ = [
     "bright_blue",
     "bright_yellow",
     "colored_unified_diff",
-    "add_profile_decorator_to_class_methods",
     "cached_splitlines",
     "silent_context",
     "lru_cache_with_key",
@@ -112,16 +111,6 @@ def colored_unified_diff(
         else:
             raise RuntimeError("Unreachable")
 
-
-T = TypeVar("T")
-
-
-def add_profile_decorator_to_class_methods(cls: T) -> T:
-    """
-    A dummy function. The actual function body will be injected by profile.py script at
-    runtime.
-    """
-    return cls
 
 
 @functools.lru_cache(maxsize=None)

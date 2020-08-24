@@ -2,7 +2,7 @@ import math
 from collections import deque
 from typing import Any, Deque, Dict, Optional
 
-from .utils import add_profile_decorator_to_class_methods
+from .profile_tools import add_profile_decorator_to_class_methods
 
 
 __all__ = ["LRU"]
