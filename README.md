@@ -79,6 +79,10 @@ print(add_three(1))
 ## Installation
 
 ```bash
+# Optionally create a virtual environment for isolation purpose
+$ python -m virtualenv .venv
+$ source .venv/Scripts/activate
+
 $ python -m pip install git+https://github.com/MapleCCC/ABSort.git@v0.1.0#egg=ABSort
 ```
 
@@ -166,7 +170,18 @@ $ source .venv/Scripts/activate
 $ python -m pip install -r requirements/install.txt
 # Install development prerequisites
 $ python -m pip install -r requirements/dev.txt
+
 $ python -m pip install -e .  # Mind the dot
+```
+
+Or just a one-liner:
+
+```bash
+# Optionally create a virtual environment for isolation purpose
+$ python -m virtualenv .venv
+$ source .venv/Scripts/activate
+
+$ python -m pip install -e git+https://github.com/MapleCCC/ABSort.git#egg=ABSort
 ```
 
 ### Test
@@ -175,8 +190,10 @@ $ python -m pip install -e .  # Mind the dot
 # Install test prerequisites
 $ python -m pip install -r requirements/test.txt
 
-$ make test
+$ pytest tests
 ```
+
+<!-- tox -->
 
 ### Profile
 
