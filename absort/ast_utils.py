@@ -2,7 +2,7 @@ import ast
 from collections import deque
 from typing import Any, Deque, Iterator, List, Set
 
-from .utils import beginswith, cached_splitlines, lru_cache_with_key, ireverse
+from .utils import beginswith, cached_splitlines, ireverse, lru_cache_with_key
 
 __all__ = [
     "ast_pretty_dump",

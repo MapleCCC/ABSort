@@ -493,6 +493,7 @@ def main(
     files = list(collect_python_files(map(Path, filepaths)))
     print(f"Found {len(files)} files")
 
+    # TODO make digest a global variable so that we don't need to pass around
     digest: Counter = Counter(modified=0, unmodified=0, failed=0)
 
     verboseness_context_manager = silent_context() if quiet else contextlib.nullcontext()
