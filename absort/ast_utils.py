@@ -67,7 +67,7 @@ def ast_remove_location_info(node: ast.AST) -> None:
 @profile  # type: ignore
 def ast_get_leading_comment_and_decorator_list_source_lines(
     source: str, node: ast.AST
-) -> str:
+) -> List[str]:
     # WARNING: ast.AST.lineno and ast.AST.end_lineno are 1-indexed
 
     above_lines = cached_splitlines(source)[: node.lineno - 1]
@@ -89,14 +89,11 @@ def ast_get_leading_comment_and_decorator_list_source_lines(
 
     leading_source_lines = above_lines[boundary_lineno : node.lineno - 1]
 
-    if leading_source_lines:
-        return "\n".join(leading_source_lines) + "\n"
-    else:
-        return ""
+    return leading_source_lines
 
 
 @profile  # type: ignore
-def ast_get_leading_comment_source_lines(source: str, node: ast.AST) -> str:
+def ast_get_leading_comment_source_lines(source: str, node: ast.AST) -> List[str]:
     # WARNING: ast.AST.lineno and ast.AST.end_lineno are 1-indexed
 
     above_lines = cached_splitlines(source)[: node.lineno - 1]
@@ -115,19 +112,15 @@ def ast_get_leading_comment_source_lines(source: str, node: ast.AST) -> str:
         else:
             break
 
-    if leading_comment_lines:
-        result = "\n".join(leading_comment_lines) + "\n"
-        # A heuristic to return empty string if only whitespaces are present
-        if not result.strip():
-            return ""
-        else:
-            return result
-    else:
-        return ""
+    # A heuristic to return empty result if only whitespaces are present
+    if all(not line.strip() for line in leading_comment_lines):
+        return []
+
+    return list(leading_comment_lines)
 
 
 @profile  # type: ignore
-def ast_get_decorator_list_source_lines(source: str, node: ast.AST) -> str:
+def ast_get_decorator_list_source_lines(source: str, node: ast.AST) -> List[str]:
     """
     Return source lines of the decorator list that decorate a function/class as given
     by the node argument.
@@ -142,14 +135,11 @@ def ast_get_decorator_list_source_lines(source: str, node: ast.AST) -> str:
         lineno, end_lineno = decorator.lineno, decorator.end_lineno
         decorator_list_lines.extend(source_lines[lineno - 1 : end_lineno])
 
-    if decorator_list_lines:
-        return "\n".join(decorator_list_lines) + "\n"
-    else:
-        return ""
+    return decorator_list_lines
 
 
 @profile  # type: ignore
-def ast_get_source_lines(source: str, node: ast.AST) -> str:
+def ast_get_source_lines(source: str, node: ast.AST) -> List[str]:
     # WARNING: ast.AST.lineno and ast.AST.end_lineno are 1-indexed
 
     whole_source_lines = cached_splitlines(source)
@@ -157,10 +147,7 @@ def ast_get_source_lines(source: str, node: ast.AST) -> str:
     lineno, end_lineno = node.lineno, node.end_lineno
     source_lines = whole_source_lines[lineno - 1 : end_lineno]
 
-    if source_lines:
-        return "\n".join(source_lines) + "\n"
-    else:
-        return ""
+    return source_lines
 
 
 @lru_cache_with_key(key=id, maxsize=None)

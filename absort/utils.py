@@ -2,6 +2,7 @@ import contextlib
 import difflib
 import functools
 import io
+import itertools
 import os
 import sys
 import tokenize
@@ -41,6 +42,7 @@ __all__ = [
     "dirsize",
     "rmdir",
     "Logger",
+    "concat",
 ]
 
 # Note: the name `profile` will be injected by line-profiler at run-time
@@ -257,3 +259,8 @@ class Logger:
         """
         print(bright_green(str(self._count) + ". ") + s)
         self._count += 1
+
+
+def concat(lists: Iterable[List]) -> List:
+    """ Concatenate multiple lists into one list """
+    return list(itertools.chain.from_iterable(lists))

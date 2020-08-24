@@ -28,6 +28,7 @@ from .utils import (
     apply,
     bright_yellow,
     colored_unified_diff,
+    concat,
     detect_encoding,
     dirsize,
     first_true,
@@ -154,8 +155,8 @@ def absort_decls(decls: List[DeclarationType]) -> Iterator[DeclarationType]:
 
 
 @profile  # type: ignore
-def get_related_source_lines(source: str, node: ast.AST) -> str:
-    source_lines = ""
+def get_related_source_lines(source: str, node: ast.AST) -> List[str]:
+    source_lines = []
 
     if args.comment_strategy is CommentStrategy.attr_follow_decl:
         leading_comment_and_decorator_list_source_lines = ast_get_leading_comment_and_decorator_list_source_lines(
@@ -167,12 +168,12 @@ def get_related_source_lines(source: str, node: ast.AST) -> str:
             # This line is a heuristic. It's visually bad to have no blank lines
             # between two declarations. So we explicitly add it. Two blank lines between
             # declarations are black style (https://github.com/psf/black.)
-            source_lines += "\n\n"
+            source_lines += ["", ""]
     else:
         # This line is a heuristic. It's visually bad to have no blank lines
         # between two declarations. So we explicitly add it. Two blank lines between
         # declarations are black style (https://github.com/psf/black.)
-        source_lines += "\n\n"
+        source_lines += ["", ""]
 
         decorator_list_source_lines = ast_get_decorator_list_source_lines(source, node)
         source_lines += decorator_list_source_lines
@@ -237,18 +238,14 @@ def transform(old_source: str) -> str:
 
     for lineno, end_lineno, decls in blocks:
         sorted_decls = absort_decls(decls)
-        source_lines = "".join(
-            get_related_source_lines(old_source, decl) for decl in sorted_decls
-        )
+        source_lines = concat(get_related_source_lines(old_source, decl) for decl in sorted_decls)
 
         if args.comment_strategy is CommentStrategy.push_top:
-            comment_lines = "".join(
-                ast_get_leading_comment_source_lines(old_source, decl) for decl in decls
-            )
+            comment_lines = concat(ast_get_leading_comment_source_lines(old_source, decl) for decl in decls)
 
             source_lines = comment_lines + source_lines
 
-        new_source_lines[lineno - 1 : end_lineno] = source_lines.splitlines()
+        new_source_lines[lineno - 1 : end_lineno] = source_lines
 
     new_source = "\n".join(new_source_lines) + "\n"
 
