@@ -154,80 +154,71 @@ def absort_decls(decls: List[DeclarationType]) -> Iterator[DeclarationType]:
 
 
 @profile  # type: ignore
-def transform(old_source: str) -> str:
-    @profile  # type: ignore
-    def get_related_source_lines(source: str, node: ast.AST) -> str:
-        leading_comment_source_lines = ast_get_leading_comment_source_lines(
-            source, node
-        )
-        decorator_list_source_lines = ast_get_decorator_list_source_lines(source, node)
+def get_related_source_lines(source: str, node: ast.AST) -> str:
+    source_lines = ""
+
+    if args.comment_strategy is CommentStrategy.attr_follow_decl:
         leading_comment_and_decorator_list_source_lines = ast_get_leading_comment_and_decorator_list_source_lines(
             source, node
         )
-
-        source_lines = ""
-
-        if args.comment_strategy is CommentStrategy.push_top:
-            # FIXME use of nonlocal makes the code hard to reason about. Try to eliminiate
-            # use of nonlocal as possible.
-            nonlocal comments
-            comments += leading_comment_source_lines
-            source_lines += decorator_list_source_lines
-        elif args.comment_strategy is CommentStrategy.attr_follow_decl:
-            if leading_comment_and_decorator_list_source_lines:
-                source_lines += leading_comment_and_decorator_list_source_lines
-            else:
-                # This line is a heuristic. It's visually bad to have no blank lines
-                # between two declarations. So we explicitly add one.
-                source_lines += "\n"
-        elif args.comment_strategy is CommentStrategy.ignore:
-            source_lines += decorator_list_source_lines
+        if leading_comment_and_decorator_list_source_lines:
+            source_lines += leading_comment_and_decorator_list_source_lines
         else:
-            raise RuntimeError("Unreachable")
+            # This line is a heuristic. It's visually bad to have no blank lines
+            # between two declarations. So we explicitly add one.
+            source_lines += "\n"
+    else:
+        decorator_list_source_lines = ast_get_decorator_list_source_lines(source, node)
+        source_lines += decorator_list_source_lines
 
-        source_lines += ast_get_source_lines(source, node)
+    source_lines += ast_get_source_lines(source, node)
 
-        return source_lines
+    return source_lines
 
-    def find_continguous_decls(
-        stmts: List[ast.stmt],
-    ) -> Iterator[Tuple[int, int, List[DeclarationType]]]:
-        # WARNING: lineno and end_lineno are 1-indexed
 
-        head_sentinel = ast.stmt()
-        head_sentinel.lineno = head_sentinel.end_lineno = 0
-        stmts.insert(0, head_sentinel)
+def find_continguous_decls(
+    stmts: List[ast.stmt],
+) -> Iterator[Tuple[int, int, List[DeclarationType]]]:
+    # WARNING: lineno and end_lineno are 1-indexed
 
-        tail_sentinel = ast.stmt()
-        tail_sentinel.lineno = tail_sentinel.end_lineno = stmts[-1].end_lineno + 1
-        stmts.append(tail_sentinel)
+    head_sentinel = ast.stmt()
+    head_sentinel.lineno = head_sentinel.end_lineno = 0
+    stmts.insert(0, head_sentinel)
 
-        buffer: List[DeclarationType] = []
-        last_nondecl_stmt = head_sentinel
-        lineno: int = 0
-        end_lineno: int = 0
+    tail_sentinel = ast.stmt()
+    tail_sentinel.lineno = tail_sentinel.end_lineno = stmts[-1].end_lineno + 1
+    stmts.append(tail_sentinel)
 
-        for stmt in stmts[1:]:
-            if isinstance(stmt, Declaration):
-                lineno = last_nondecl_stmt.end_lineno + 1
-                assert stmt.end_lineno is not None
-                end_lineno = stmt.end_lineno
-                buffer.append(stmt)
-            else:
-                if buffer:
-                    yield lineno, end_lineno, buffer
-                    buffer.clear()
-                last_nondecl_stmt = stmt
+    buffer: List[DeclarationType] = []
+    last_nondecl_stmt = head_sentinel
+    lineno: int = 0
+    end_lineno: int = 0
 
-    def preliminary_sanity_check(top_level_stmts: List[ast.stmt]) -> None:
-        # TODO add more sanity checks
+    for stmt in stmts[1:]:
+        if isinstance(stmt, Declaration):
+            lineno = last_nondecl_stmt.end_lineno + 1
+            assert stmt.end_lineno is not None
+            end_lineno = stmt.end_lineno
+            buffer.append(stmt)
+        else:
+            if buffer:
+                yield lineno, end_lineno, buffer
+                buffer.clear()
+            last_nondecl_stmt = stmt
 
-        decls = [stmt for stmt in top_level_stmts if isinstance(stmt, Declaration)]
-        decl_names = [decl.name for decl in decls]
 
-        if len(set(decl_names)) < len(decl_names):
-            raise NameRedefinition("Name redefinition exists. Not supported yet.")
+def preliminary_sanity_check(top_level_stmts: List[ast.stmt]) -> None:
+    # TODO add more sanity checks
 
+    decls = [stmt for stmt in top_level_stmts if isinstance(stmt, Declaration)]
+    decl_names = [decl.name for decl in decls]
+
+    if len(set(decl_names)) < len(decl_names):
+        raise NameRedefinition("Name redefinition exists. Not supported yet.")
+
+
+@profile  # type: ignore
+def transform(old_source: str) -> str:
     module_tree = ast.parse(old_source)
 
     top_level_stmts = module_tree.body
@@ -239,17 +230,20 @@ def transform(old_source: str) -> str:
     new_source_lines = old_source.splitlines()
 
     for lineno, end_lineno, decls in blocks:
-        comments = ""
-
         sorted_decls = absort_decls(decls)
         source_lines = "".join(
             get_related_source_lines(old_source, decl) for decl in sorted_decls
         )
 
         if args.comment_strategy is CommentStrategy.push_top:
-            source_lines = comments + source_lines
+            comment_lines = "".join(
+                ast_get_leading_comment_source_lines(old_source, decl) for decl in decls
+            )
+
+            source_lines = comment_lines + source_lines
 
         new_source_lines[lineno - 1 : end_lineno] = source_lines.splitlines()
+
     new_source = "\n".join(new_source_lines) + "\n"
 
     # This line is a heuristic. It's visually bad to have blank lines at the
