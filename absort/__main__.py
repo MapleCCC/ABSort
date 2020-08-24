@@ -494,9 +494,7 @@ def main(
 
     digest: Counter = Counter(modified=0, unmodified=0, failed=0)
 
-    verboseness_context = contextlib.nullcontext
-    if quiet:
-        verboseness_context = silent_context  # type: ignore
+    verboseness_context_manager = silent_context() if quiet else contextlib.nullcontext()
 
     thread_pool_context_manager: ContextManager
     if len(files) <= SINGLE_THREAD_APROACH_MAX_FILENUM:
@@ -507,7 +505,7 @@ def main(
     else:
         thread_pool_context_manager = ThreadPoolExecutor()
 
-    with verboseness_context(), colorama_text(), thread_pool_context_manager as executor:
+    with verboseness_context_manager, colorama_text(), thread_pool_context_manager as executor:
 
         absort_files(files, executor, digest)
 
