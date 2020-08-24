@@ -174,7 +174,7 @@ $ python -m pip install -r requirements/dev.txt
 $ python -m pip install -e .  # Mind the dot
 ```
 
-Or just a one-liner:
+Alternatively, just a one-liner:
 
 ```bash
 # Optionally create a virtual environment for isolation purpose

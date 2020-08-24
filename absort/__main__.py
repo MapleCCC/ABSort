@@ -204,18 +204,17 @@ def find_continguous_decls(
             last_nondecl_stmt = stmt
 
 
-def preliminary_sanity_check(top_level_stmts: List[ast.stmt]) -> None:
-    # TODO add more sanity checks
-
-    decls = [stmt for stmt in top_level_stmts if isinstance(stmt, Declaration)]
-    decl_names = [decl.name for decl in decls]
-
-    if len(set(decl_names)) < len(decl_names):
-        raise NameRedefinition("Name redefinition exists. Not supported yet.")
-
-
 @profile  # type: ignore
 def transform(old_source: str) -> str:
+    def preliminary_sanity_check(top_level_stmts: List[ast.stmt]) -> None:
+        # TODO add more sanity checks
+
+        decls = [stmt for stmt in top_level_stmts if isinstance(stmt, Declaration)]
+        decl_names = [decl.name for decl in decls]
+
+        if len(set(decl_names)) < len(decl_names):
+            raise NameRedefinition("Name redefinition exists. Not supported yet.")
+
     module_tree = ast.parse(old_source)
 
     top_level_stmts = module_tree.body
@@ -340,7 +339,7 @@ def absort_files(
             return
 
         # TODO instead of empty the whole cache, use more subtle cache replacement
-        # policy, eg. LRU.
+        # policy, eg. LRU, LFU, etc.
         if dirsize(CACHE_DIR) > CACHE_MAX_SIZE:
             rmdir(CACHE_DIR)
 

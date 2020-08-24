@@ -8,16 +8,7 @@ import sys
 import tokenize
 from collections import namedtuple
 from pathlib import Path
-from typing import (
-    IO,
-    Any,
-    Callable,
-    Iterable,
-    Iterator,
-    List,
-    Optional,
-    TypeVar,
-)
+from typing import IO, Any, Callable, Iterable, Iterator, List, Optional, TypeVar
 
 from colorama import Fore, Style
 

@@ -25,6 +25,8 @@
 - Pre-commit hook to update absort --help message in README
 - Try to use threading.lock or asyncio.lock to solve race condition on writing to stdout/stderr.
 - Open issue in https://github.com/python/typeshed about NodeTransformer.generic_visit method's return type annotation
+- Fill in requirements*.txt files.
+
 
 ## Medium Priority
 

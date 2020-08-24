@@ -276,6 +276,9 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
         )
 
     def visit_Try(self, node: ast.Try) -> None:
+        # FIXME try block is not a new scope, the symbols here are visible and live
+        # after the try block.
+
         self._visit_new_scope(node.body, ScopeContext.Try)
 
         for handler in node.handlers:
