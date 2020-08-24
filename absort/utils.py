@@ -50,8 +50,10 @@ except NameError:
     profile = lambda x: x
 
 
-def ireverse(iterable: Iterable) -> Iterable:
-    """ Similar to the builtin function reversed(), except accept wider input """
+def ireverse(iterable: Iterable) -> Iterator:
+    """
+    Similar to the builtin function reversed(), except accept iterable objects as input
+    """
     l = list(iterable)
     for i in range(len(l)):
         yield l[~i]
@@ -59,7 +61,7 @@ def ireverse(iterable: Iterable) -> Iterable:
 
 def xreverse(iterable: Iterable) -> List:
     """
-    Similar to the builtin function reversed(), except accept wider input,
+    Similar to the builtin function reversed(), except accept iterable objects as input,
     and return non-lazy result
     """
     return list(iterable)[::-1]
