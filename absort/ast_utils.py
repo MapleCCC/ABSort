@@ -108,10 +108,10 @@ def ast_get_leading_comment_source_lines(source: str, node: ast.AST) -> str:
 
     leading_comment_lines: Deque[str] = deque()
     for lineno, line in ireverse(zip(range(1, node.lineno), above_lines)):
-        if len(line.strip()) == 0 or beginswith(line.lstrip(), "#"):
-            leading_comment_lines.appendleft(line)
-        elif lineno in decorator_list_linenos:
+        if lineno in decorator_list_linenos:
             continue
+        elif len(line.strip()) == 0 or beginswith(line.lstrip(), "#"):
+            leading_comment_lines.appendleft(line)
         else:
             break
 
