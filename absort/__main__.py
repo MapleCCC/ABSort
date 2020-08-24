@@ -114,22 +114,23 @@ def absort_decls(decls: List[DeclarationType]) -> Iterator[DeclarationType]:
 
     graph = Graph()
 
-    thread_pool_context_manager: ContextManager
     if len(decls) <= SINGLE_THREAD_APROACH_MAX_DECLNUM:
-        dummy_executor = SimpleNamespace(map=map)
-        thread_pool_context_manager = contextlib.nullcontext(
-            enter_result=dummy_executor
-        )
-    else:
-        thread_pool_context_manager = ThreadPoolExecutor()
-
-    with thread_pool_context_manager as executor:
-        for decl, deps in zip(decls, executor.map(get_dependency_of_decl, decls)):
+        depses = map(get_dependency_of_decl, decls)
+        for decl, deps in zip(decls, depses):
             for dep in deps:
                 if dep in decl_names:
                     graph.add_edge(dep, decl.name)
             # Below line is necessary for adding node with zero out-degree to the graph.
             graph.add_node(decl.name)
+    else:
+        with ThreadPoolExecutor() as executor:
+            depses = executor.map(get_dependency_of_decl, decls)
+            for decl, deps in zip(decls, depses):
+                for dep in deps:
+                    if dep in decl_names:
+                        graph.add_edge(dep, decl.name)
+                # Below line is necessary for adding node with zero out-degree to the graph.
+                graph.add_node(decl.name)
 
     sorted_names = xreverse(
         graph.relaxed_topological_sort(
