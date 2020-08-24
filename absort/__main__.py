@@ -237,17 +237,19 @@ def transform(old_source: str) -> str:
 
     new_source_lines = old_source.splitlines()
 
-    comments = ""
-
     for lineno, end_lineno, decls in blocks:
-        sorted_decls = absort_decls(decls)
-        new_source_lines[lineno - 1 : end_lineno] = "".join(
-            get_related_source_lines(old_source, decl) for decl in sorted_decls
-        ).splitlines()
-    new_source = "\n".join(new_source_lines) + "\n"
+        comments = ""
 
-    if args.comment_strategy is CommentStrategy.push_top:
-        new_source = comments + new_source
+        sorted_decls = absort_decls(decls)
+        source_lines = "".join(
+            get_related_source_lines(old_source, decl) for decl in sorted_decls
+        )
+
+        if args.comment_strategy is CommentStrategy.push_top:
+            source_lines = comments + source_lines
+
+        new_source_lines[lineno - 1 : end_lineno] = source_lines.splitlines()
+    new_source = "\n".join(new_source_lines) + "\n"
 
     # This line is a heuristic. It's visually bad to have blank lines at the
     # start of the document. So we explicitly remove them.
