@@ -164,17 +164,7 @@ def get_related_source_lines(source: str, node: ast.AST) -> List[str]:
         )
         if leading_comment_and_decorator_list_source_lines:
             source_lines += leading_comment_and_decorator_list_source_lines
-        else:
-            # This line is a heuristic. It's visually bad to have no blank lines
-            # between two declarations. So we explicitly add it. Two blank lines between
-            # declarations are black style (https://github.com/psf/black.)
-            source_lines += ["", ""]
     else:
-        # This line is a heuristic. It's visually bad to have no blank lines
-        # between two declarations. So we explicitly add it. Two blank lines between
-        # declarations are black style (https://github.com/psf/black.)
-        source_lines += ["", ""]
-
         decorator_list_source_lines = ast_get_decorator_list_source_lines(source, node)
         source_lines += decorator_list_source_lines
 
@@ -237,13 +227,34 @@ def transform(old_source: str) -> str:
     new_source_lines = old_source.splitlines()
 
     for lineno, end_lineno, decls in blocks:
+        source_lines = []
+
         sorted_decls = absort_decls(decls)
-        source_lines = concat(get_related_source_lines(old_source, decl) for decl in sorted_decls)
+        for decl in sorted_decls:
+            related_source_lines = get_related_source_lines(old_source, decl)
+            if all(not line.strip() for line in related_source_lines):
+                # A heuristic. If only whitespaces are present, compress to two blank lines.
+                # Because it's visually bad to have zero or too many blank lines between
+                # two declarations. So we explicitly add it. Two blank lines between
+                # declarations are black style (https://github.com/psf/black.)
+                source_lines += "\n\n".splitlines()
+            elif related_source_lines[0].strip():
+                # A heuristic. It's visually bad to have no blank lines
+                # between two declarations. So we explicitly add it. Two blank lines between
+                # declarations are black style (https://github.com/psf/black.)
+                source_lines += "\n\n".splitlines() + related_source_lines
+            else:
+                source_lines += related_source_lines
 
         if args.comment_strategy is CommentStrategy.push_top:
-            comment_lines = concat(ast_get_leading_comment_source_lines(old_source, decl) for decl in decls)
+            total_comment_lines = []
+            for decl in sorted_decls:
+                comment_lines = ast_get_leading_comment_source_lines(old_source, decl)
+                # A heuristic to return empty result if only whitespaces are present
+                if not all(not line.strip() for line in comment_lines):
+                    total_comment_lines += comment_lines
 
-            source_lines = comment_lines + source_lines
+            source_lines = total_comment_lines + source_lines
 
         new_source_lines[lineno - 1 : end_lineno] = source_lines
 

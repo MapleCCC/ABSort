@@ -89,10 +89,6 @@ def ast_get_leading_comment_and_decorator_list_source_lines(
 
     leading_source_lines = above_lines[boundary_lineno : node.lineno - 1]
 
-    # A heuristic to return empty result if only whitespaces are present
-    if all(not line.strip() for line in leading_source_lines):
-        return []
-
     return leading_source_lines
 
 
@@ -115,10 +111,6 @@ def ast_get_leading_comment_source_lines(source: str, node: ast.AST) -> List[str
             leading_comment_lines.appendleft(line)
         else:
             break
-
-    # A heuristic to return empty result if only whitespaces are present
-    if all(not line.strip() for line in leading_comment_lines):
-        return []
 
     return list(leading_comment_lines)
 
