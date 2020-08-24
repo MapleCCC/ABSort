@@ -116,7 +116,12 @@ def ast_get_leading_comment_source_lines(source: str, node: ast.AST) -> str:
             break
 
     if leading_comment_lines:
-        return "\n".join(leading_comment_lines) + "\n"
+        result = "\n".join(leading_comment_lines) + "\n"
+        # A heuristic to return empty string if only whitespaces are present
+        if not result.strip():
+            return ""
+        else:
+            return result
     else:
         return ""
 

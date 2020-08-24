@@ -165,9 +165,15 @@ def get_related_source_lines(source: str, node: ast.AST) -> str:
             source_lines += leading_comment_and_decorator_list_source_lines
         else:
             # This line is a heuristic. It's visually bad to have no blank lines
-            # between two declarations. So we explicitly add one.
-            source_lines += "\n"
+            # between two declarations. So we explicitly add it. Two blank lines between
+            # declarations are black style (https://github.com/psf/black.)
+            source_lines += "\n\n"
     else:
+        # This line is a heuristic. It's visually bad to have no blank lines
+        # between two declarations. So we explicitly add it. Two blank lines between
+        # declarations are black style (https://github.com/psf/black.)
+        source_lines += "\n\n"
+
         decorator_list_source_lines = ast_get_decorator_list_source_lines(source, node)
         source_lines += decorator_list_source_lines
 
