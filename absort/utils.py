@@ -41,6 +41,7 @@ __all__ = [
     "first_true",
     "dirsize",
     "rmdir",
+    "Logger",
 ]
 
 # Note: the name `profile` will be injected by line-profiler at run-time
@@ -276,3 +277,25 @@ def rmdir(path: Path) -> None:
         file.unlink()
 
     path.rmdir()
+
+
+class Logger:
+    """
+    A lightweight logger.
+
+    It's just a thin wrapper over the builtin print function, except that it prints
+    strings with order numbers prepended.
+    """
+
+    def __init__(self) -> None:
+        self._count = 1
+
+    __slots__ = "_count"
+
+    def log(self, s: str) -> None:
+        """
+        It's just a thin wrapper over the builtin print function, except that it prints
+        strings with order numbers prepended.
+        """
+        print(bright_green(str(self._count) + ". ") + s)
+        self._count += 1
