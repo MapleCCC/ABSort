@@ -332,7 +332,7 @@ def absort_files(
         # policy, eg. LRU.
         if dirsize(CACHE_DIR) > CACHE_MAX_SIZE:
             for backup_file in CACHE_DIR.rglob("*.bak"):
-                backup_file.unlink
+                backup_file.unlink()
             CACHE_DIR.rmdir()
 
         if not CACHE_DIR.is_dir():
