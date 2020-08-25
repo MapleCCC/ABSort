@@ -324,6 +324,11 @@ def backup_to_cache(file: Path) -> None:
     backup_file = CACHE_DIR / (file.name + "." + timestamp + ".backup")
     shutil.copy2(file, backup_file)
 
+    # TODO instead of brutally empty the whole cache, use more subtle cache replacement
+    # policy, eg. LRU, LFU, etc.
+    if dirsize(CACHE_DIR) > CACHE_MAX_SIZE:
+        rmdir(CACHE_DIR)
+
 
 def absort_files(
     files: List[Path], executor: ThreadPoolExecutor, digest: Counter
@@ -366,11 +371,6 @@ def absort_files(
         if not ans:
             digest["unmodified"] += 1
             return
-
-        # TODO instead of brutally empty the whole cache, use more subtle cache replacement
-        # policy, eg. LRU, LFU, etc.
-        if dirsize(CACHE_DIR) > CACHE_MAX_SIZE:
-            rmdir(CACHE_DIR)
 
         if not CACHE_DIR.is_dir():
             os.makedirs(CACHE_DIR)
