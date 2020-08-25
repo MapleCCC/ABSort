@@ -122,6 +122,10 @@ Options:
                                   that the higher the abstraction level the
                                   topper it locates.
 
+  -a, --aggressive                Enable some aggressive transformations to
+                                  the source code, mostly for cosmetic
+                                  purpose.
+
   -e, --encoding TEXT             The encoding scheme used to read and write
                                   Python files.  [default: utf-8]
 

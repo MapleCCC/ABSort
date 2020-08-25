@@ -231,7 +231,9 @@ def transform(old_source: str) -> str:
         sorted_decls = absort_decls(decls)
         for decl in sorted_decls:
             related_source_lines = get_related_source_lines(old_source, decl)
-            if all(not line.strip() for line in related_source_lines):
+            if not args.aggressive:
+                source_lines += related_source_lines
+            elif all(not line.strip() for line in related_source_lines):
                 # A heuristic. If only whitespaces are present, compress to two blank lines.
                 # Because it's visually bad to have zero or too many blank lines between
                 # two declarations. So we explicitly add it. Two blank lines between
@@ -454,6 +456,12 @@ def check_args() -> None:
     "level the topper it locates.",
 )
 @click.option(
+    "-a",
+    "--aggressive",
+    is_flag=True,
+    help="Enable some aggressive transformations to the source code, mostly for cosmetic purpose.",
+)
+@click.option(
     "-e",
     "--encoding",
     default="utf-8",
@@ -487,6 +495,7 @@ def main(
     in_place: bool,
     no_fix_main_to_bottom: bool,
     reverse: bool,
+    aggressive: bool,
     encoding: str,
     comment_strategy: CommentStrategy,
     quiet: bool,
