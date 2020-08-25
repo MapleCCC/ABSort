@@ -410,7 +410,7 @@ def check_args() -> None:
 # TODO add -V as short option of --version
 @click.command(
     name="absort",
-    help="A command line utility to sort function/class definitions by abstraction levels",
+    help="A command line utility to sort Python source code by abstraction levels",
     no_args_is_help=True,  # type: ignore
 )
 @click.argument(

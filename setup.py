@@ -9,7 +9,7 @@ setuptools.setup(
     name="ABSort",
     author="MapleCCC",
     author_email="littlelittlemaple@gmail.com",
-    description="A command line utility to sort function/class definitions by abstraction levels",
+    description="A command line utility to sort Python source code by abstraction levels",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/MapleCCC/ABSort",

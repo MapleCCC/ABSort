@@ -1,4 +1,4 @@
-# ABSort - Sort Function/Class Definitions By Abstraction Level/Layer
+# ABSort - Sort Python Source Code by Abstraction Levels
 
 <!-- TODO add badge about code coverage -->
 <!-- TODO add badge about requires.io -->
@@ -36,7 +36,7 @@
 
 `isort`, one of the most popular libraries in Python ecosystem, is specialized at sorting import statements. Besides import statements, there are other kinds of statements in Python code that can benefit from a sorting process. What about a tool that sorts function/class definitions? Don't worry, `ABSort` got your back!
 
-`ABSort` is a lightweight library and a command line utility to sort Python function/class definitions by their abstraction levels.
+`ABSort` is a lightweight library and a command line utility to sort Python source code by their abstraction levels.
 
 ## Example
 
@@ -99,8 +99,7 @@ $ absort --help
 """
 Usage: absort [OPTIONS] <files or directories to search for Python files>
 
-  A command line utility to sort function/class definitions by abstraction
-  levels
+  A command line utility to sort Python source code by abstraction levels
 
 Options:
   -d, --diff                      Specify whether to display diff view between
