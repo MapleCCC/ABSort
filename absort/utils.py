@@ -35,6 +35,7 @@ __all__ = [
     "Logger",
     "concat",
     "SingleThreadPoolExecutor",
+    "compose",
 ]
 
 # Note: the name `profile` will be injected by line-profiler at run-time
@@ -249,3 +250,10 @@ def concat(lists: Iterable[List]) -> List:
 
 _single_thread_pool_executor = SimpleNamespace(map=map, submit=apply)
 SingleThreadPoolExecutor = lambda: _single_thread_pool_executor
+
+
+def compose(fn1: Callable, fn2: Callable) -> Callable:
+    def fn3(*args: Any, **kwargs: Any) -> Any:
+        return fn1(fn2(*args, **kwargs))
+
+    return fn3

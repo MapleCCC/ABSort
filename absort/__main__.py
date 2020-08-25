@@ -28,6 +28,7 @@ from .utils import (
     SingleThreadPoolExecutor,
     bright_yellow,
     colored_unified_diff,
+    compose,
     concat,
     detect_encoding,
     dirsize,
@@ -132,7 +133,7 @@ def absort_decls(decls: List[DeclarationType]) -> Iterator[DeclarationType]:
 
     sorted_names = xreverse(
         graph.relaxed_topological_sort(
-            same_rank_sorter=lambda decls: xreverse(same_abstract_level_sorter(decls))
+            same_rank_sorter=compose(xreverse, same_abstract_level_sorter)
         )
     )
 
