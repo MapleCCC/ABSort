@@ -112,7 +112,6 @@ def colored_unified_diff(
             raise RuntimeError("Unreachable")
 
 
-
 @functools.lru_cache(maxsize=None)
 def cached_splitlines(s: str) -> List[str]:
     return s.splitlines()
@@ -149,7 +148,7 @@ def lru_cache_with_key(
                 nonlocal miss
                 miss += 1
                 result = fn(*args, **kwargs)
-                lru.update(arg_key, result)
+                lru[arg_key] = result
                 return result
 
         wrapper.__lru__ = lru
