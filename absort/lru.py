@@ -1,11 +1,28 @@
+from __future__ import annotations
+
 import math
 from collections import deque
-from typing import Any, Deque, Dict, Optional
+from typing import Any, Deque, Dict, Optional, Type
 
 from .profile_tools import add_profile_decorator_to_class_methods
 
 
 __all__ = ["LRU"]
+
+
+class DummyCell:
+    """ A singleton to signal lack of value """
+
+    _singleton = None
+
+    def __new__(cls: Type[DummyCell])->DummyCell:
+        if cls._singleton is None:
+            cls._singleton = object.__new__(cls)
+        return cls._singleton
+
+
+# A singleton to signal lack of value
+_DUMMY_CELL = DummyCell()
 
 
 @add_profile_decorator_to_class_methods
@@ -18,22 +35,34 @@ class LRU:
         self._maxsize = maxsize
         self._storage: Dict = dict()
         self._recency: Deque = deque()
+        self._indexer: Dict = dict()
+        self._offset: int = 0
 
-    __slots__ = ("_maxsize", "_storage", "_recency")
+    __slots__ = ("_maxsize", "_storage", "_recency", "_indexer", "_offset")
 
     @property
     def size(self) -> int:
-        return len(self._recency)
+        return len(self._storage)
 
-    def update(self, key: Any, value: Any) -> None:
-        if key in self._storage:
-            self._recency.remove(key)
+    def __setitem__(self, key: Any, value: Any) -> None:
+        if key in self._indexer:
+            index = self._indexer[key]
+            self._recency[index] = _DUMMY_CELL
         self._recency.append(key)
+        self._indexer[key] = len(self._recency) - 1
         self._storage[key] = value
 
-        if len(self._recency) > self._maxsize:
-            to_evict = self._recency.popleft()
-            del self._storage[to_evict]
+        if len(self._storage) > self._maxsize:
+            target_key = None
+            for idx, key in enumerate(self._recency[self._offset:], self._offset):
+                if key is not _DUMMY_CELL:
+                    self._recency[idx] = _DUMMY_CELL
+                    self._offset =  idx + 1
+                    target_key = key
+                    break
+
+            del self._storage[target_key]
+            del self._indexer[target_key]
 
     def __contains__(self, key: Any) -> bool:
         return key in self._storage
@@ -47,3 +76,5 @@ class LRU:
     def clear(self) -> None:
         self._storage.clear()
         self._recency.clear()
+        self._indexer.clear()
+        self._offset = 0
