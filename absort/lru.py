@@ -1,13 +1,15 @@
 from __future__ import annotations
 
 import math
-from collections import deque
-from typing import Any, Deque, Dict, Optional, Type
+from typing import Any, Dict, List, Optional, Type
 
 from .profile_tools import add_profile_decorator_to_class_methods
 
 
 __all__ = ["LRU"]
+
+
+MAXIMUM_RECENCY_LIST_SIZE = 1000
 
 
 class DummyCell:
@@ -34,7 +36,7 @@ class LRU:
             raise ValueError("maxsize should be positive integer")
         self._maxsize = maxsize
         self._storage: Dict = dict()
-        self._recency: Deque = deque()
+        self._recency: List = list()
         self._indexer: Dict = dict()
         self._offset: int = 0
 
@@ -64,6 +66,9 @@ class LRU:
             del self._storage[target_key]
             del self._indexer[target_key]
 
+        if len(self._recency) > MAXIMUM_RECENCY_LIST_SIZE:
+            self._reconstruct()
+
     def __contains__(self, key: Any) -> bool:
         return key in self._storage
 
@@ -72,6 +77,17 @@ class LRU:
             return self._storage[key]
         except KeyError:
             raise KeyError(f"Key {key} is not in LRU")
+
+    def _reconstruct(self)->None:
+        self._offset = 0
+        self._indexer.clear()
+        old_recency_list = self._recency
+        self._recency.clear()
+
+        for key in old_recency_list:
+            if key is not _DUMMY_CELL:
+                self._recency.append(key)
+                self._indexer[key] = len(self._recency) - 1
 
     def clear(self) -> None:
         self._storage.clear()
