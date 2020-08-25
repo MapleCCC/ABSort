@@ -266,6 +266,9 @@ _single_thread_pool_executor = SimpleNamespace(map=map, submit=apply)
 SingleThreadPoolExecutor = lambda: _single_thread_pool_executor
 
 
+# FIXME the problem is that the result object has a name called "fn3", which is confusing.
+# A workaround is to immitate behavior of builtin functions zip(), map(), partial(). We
+# return a "compose object".
 def compose(fn1: Callable, fn2: Callable) -> Callable:
     def fn3(*args: Any, **kwargs: Any) -> Any:
         return fn1(fn2(*args, **kwargs))

@@ -97,7 +97,9 @@ $ absort .
 # This is equivalent to `absort **/*.py`
 
 $ absort --help
-"""
+```
+
+```
 Usage: absort [OPTIONS] <files or directories to search for Python files>
 
   A command line utility to sort Python source code by abstraction levels
@@ -149,7 +151,6 @@ Options:
   -v, --verbose                   Increase verboseness.
   --version                       Show the version and exit.
   --help                          Show this message and exit.
-"""
 ```
 
 Alternatively, you can pass Python code from `stdin`.

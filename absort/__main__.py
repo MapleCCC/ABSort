@@ -322,7 +322,9 @@ def shrink_cache() -> None:
         if m := re.fullmatch(backup_filename_pattern, f.name):
             timestamp = m.group("timestamp")
             files.append((timestamp, f))
+
     sorted_files = sorted(files, key=itemgetter(0))
+
     shrinked_size = 0
     for _, f in sorted_files:
         shrinked_size += f.stat().st_size
@@ -450,6 +452,8 @@ def check_args() -> None:
     if args.quiet and args.verbose:
         raise ValueError("Can't specify both `--quiet` and `--verbose` options")
 
+
+# TODO provide a programmatical interface
 
 # TODO add -h option
 # TODO add -V as short option of --version
