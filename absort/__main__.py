@@ -3,12 +3,14 @@
 import ast
 import contextlib
 import os
+import re
 import shutil
 import sys
 from collections import Counter
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from enum import Enum
+from operator import itemgetter
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any, ContextManager, Iterable, Iterator, List, Set, Tuple
@@ -33,7 +35,6 @@ from .utils import (
     detect_encoding,
     dirsize,
     first_true,
-    rmdir,
     silent_context,
     whitespace_lines,
     xreverse,
@@ -311,6 +312,25 @@ def collect_python_files(filepaths: Iterable[Path]) -> Iterator[Path]:
             raise NotImplementedError
 
 
+def shrink_cache() -> None:
+    shrink_target_size = CACHE_MAX_SIZE - dirsize(CACHE_DIR)
+
+    backup_filename_pattern = r".*\.(?P<timestamp>\d{14})\.backup"
+
+    files = []
+    for f in CACHE_DIR.iterdir():
+        if m := re.fullmatch(backup_filename_pattern, f.name):
+            timestamp = m.group("timestamp")
+            files.append((timestamp, f))
+    sorted_files = sorted(files, key=itemgetter(0))
+    shrinked_size = 0
+    for _, f in sorted_files:
+        shrinked_size += f.stat().st_size
+        f.unlink()
+        if shrinked_size >= shrink_target_size:
+            break
+
+
 def backup_to_cache(file: Path) -> None:
     def generate_timestamp() -> str:
         now = str(datetime.now())
@@ -324,10 +344,8 @@ def backup_to_cache(file: Path) -> None:
     backup_file = CACHE_DIR / (file.name + "." + timestamp + ".backup")
     shutil.copy2(file, backup_file)
 
-    # TODO instead of brutally empty the whole cache, use more subtle cache replacement
-    # policy, eg. LRU, LFU, etc.
     if dirsize(CACHE_DIR) > CACHE_MAX_SIZE:
-        rmdir(CACHE_DIR)
+        shrink_cache()
 
 
 def absort_files(
