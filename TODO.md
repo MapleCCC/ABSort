@@ -28,6 +28,9 @@
 - Fill in requirements*.txt files.
 - Remove @profile, @add_profile_decorator_to_class_methods decorators.
 - Reorder functions in __main__.py by abstraction levels. From higher abstraction level to lower.
+- Fill more metadata in setup.py
+- Refactor absort_files(). Break larget function into multiple small functions.
+- Read about Python namespace and scope topics, read them crystal clear, then modify visitors.py.
 
 
 ## Medium Priority

@@ -106,7 +106,7 @@ Usage: absort [OPTIONS] <files or directories to search for Python files>
 
 Options:
   -d, --diff                      Specify whether to display diff view between
-                                  original source code and processed source
+                                  the original source code and the new source
                                   code.
 
   -i, --in-place                  Specify whether to modify file in-place.
@@ -130,7 +130,7 @@ Options:
                                   retains more original code layout, hence
                                   reducing diff size, if that is desirable.
 
-  -e, --encoding TEXT             The encoding scheme used to read and write
+  -e, --encoding ENCODING         The encoding scheme used to read and write
                                   Python files.  [default: utf-8]
 
   -c, --comment-strategy COMMENT_STRATEGY

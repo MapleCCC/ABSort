@@ -481,7 +481,7 @@ def check_args() -> None:
     "--diff",
     "display_diff",
     is_flag=True,
-    help="Specify whether to display diff view between original source code and processed source code.",
+    help="Specify whether to display diff view between the original source code and the new source code.",
 )
 @click.option(
     "-i",
@@ -513,6 +513,7 @@ def check_args() -> None:
 @click.option(
     "-e",
     "--encoding",
+    metavar="ENCODING",
     default="utf-8",
     show_default=True,
     help="The encoding scheme used to read and write Python files.",
