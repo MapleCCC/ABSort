@@ -36,6 +36,7 @@ __all__ = [
     "concat",
     "SingleThreadPoolExecutor",
     "compose",
+    "whitespace_lines",
 ]
 
 # Note: the name `profile` will be injected by line-profiler at run-time
@@ -257,3 +258,7 @@ def compose(fn1: Callable, fn2: Callable) -> Callable:
         return fn1(fn2(*args, **kwargs))
 
     return fn3
+
+
+def whitespace_lines(lines: List[str]) -> bool:
+    return all(not line.strip() for line in lines)

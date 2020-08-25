@@ -35,6 +35,7 @@ from .utils import (
     first_true,
     rmdir,
     silent_context,
+    whitespace_lines,
     xreverse,
 )
 from .visitors import GetUndefinedVariableVisitor
@@ -253,7 +254,7 @@ def get_related_source_lines_of_block(
         related_source_lines = get_related_source_lines_of_decl(source, decl)
         if args.no_aggressive:
             source_lines += related_source_lines
-        elif all(not line.strip() for line in related_source_lines):
+        elif whitespace_lines(related_source_lines):
             # A heuristic. If only whitespaces are present, compress to two blank lines.
             # Because it's visually bad to have zero or too many blank lines between
             # two declarations. So we explicitly add it. Two blank lines between
@@ -272,7 +273,7 @@ def get_related_source_lines_of_block(
         for decl in sorted_decls:
             comment_lines = ast_get_leading_comment_source_lines(source, decl)
             # A heuristic to return empty result if only whitespaces are present
-            if not all(not line.strip() for line in comment_lines):
+            if not whitespace_lines(comment_lines):
                 total_comment_lines += comment_lines
 
         source_lines = total_comment_lines + source_lines
