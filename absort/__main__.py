@@ -323,26 +323,26 @@ def absort_files(
         ans = click.confirm(
             f"Are you sure you want to in-place update the file {file}?", err=True
         )
-        if ans:
-
-            # TODO instead of empty the whole cache, use more subtle cache replacement
-            # policy, eg. LRU.
-            if dirsize(CACHE_DIR) > CACHE_MAX_SIZE:
-                for backup_file in CACHE_DIR.rglob("*.bak"):
-                    backup_file.unlink
-                CACHE_DIR.rmdir()
-
-            if not CACHE_DIR.is_dir():
-                os.makedirs(CACHE_DIR)
-            backup_file = CACHE_DIR / (file.name + ".bak")
-            shutil.copy2(file, backup_file)
-
-            file.write_text(new_source, args.encoding)
-            digest["modified"] += 1
-            if args.verbose:
-                print(f"Processed {file}")
-        else:
+        if not ans:
             digest["unmodified"] += 1
+            return
+
+        # TODO instead of empty the whole cache, use more subtle cache replacement
+        # policy, eg. LRU.
+        if dirsize(CACHE_DIR) > CACHE_MAX_SIZE:
+            for backup_file in CACHE_DIR.rglob("*.bak"):
+                backup_file.unlink
+            CACHE_DIR.rmdir()
+
+        if not CACHE_DIR.is_dir():
+            os.makedirs(CACHE_DIR)
+        backup_file = CACHE_DIR / (file.name + ".bak")
+        shutil.copy2(file, backup_file)
+
+        file.write_text(new_source, args.encoding)
+        digest["modified"] += 1
+        if args.verbose:
+            print(f"Processed {file}")
 
     # FIXME race condition on printing to console
     old_sources = list(executor.map(read_source, files))
