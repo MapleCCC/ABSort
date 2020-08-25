@@ -4,7 +4,7 @@ all:
 	python -m absort sample.py
 
 test:
-	pytest tests.
+	pytest tests
 
 stress-test:
 	time absort --quiet "D:/Program Files/Python38/Lib/site-packages"
