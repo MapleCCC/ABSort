@@ -122,9 +122,11 @@ Options:
                                   that the higher the abstraction level the
                                   topper it locates.
 
-  -a, --aggressive                Enable some aggressive transformations to
-                                  the source code, mostly for cosmetic
-                                  purpose.
+  --no-aggressive                 Disable some aggressive transformations to
+                                  the source code which are mostly for
+                                  cosmetic purpose. Setting this option
+                                  retains more original code layout, hence
+                                  reducing diff size, if that is desirable.
 
   -e, --encoding TEXT             The encoding scheme used to read and write
                                   Python files.  [default: utf-8]

@@ -231,7 +231,7 @@ def transform(old_source: str) -> str:
         sorted_decls = absort_decls(decls)
         for decl in sorted_decls:
             related_source_lines = get_related_source_lines(old_source, decl)
-            if not args.aggressive:
+            if args.no_aggressive:
                 source_lines += related_source_lines
             elif all(not line.strip() for line in related_source_lines):
                 # A heuristic. If only whitespaces are present, compress to two blank lines.
@@ -456,10 +456,10 @@ def check_args() -> None:
     "level the topper it locates.",
 )
 @click.option(
-    "-a",
-    "--aggressive",
+    "--no-aggressive",
     is_flag=True,
-    help="Enable some aggressive transformations to the source code, mostly for cosmetic purpose.",
+    help="Disable some aggressive transformations to the source code which are mostly for cosmetic purpose. "
+    "Setting this option retains more original code layout, hence reducing diff size, if that is desirable.",
 )
 @click.option(
     "-e",
@@ -495,7 +495,7 @@ def main(
     in_place: bool,
     no_fix_main_to_bottom: bool,
     reverse: bool,
-    aggressive: bool,
+    no_aggressive: bool,
     encoding: str,
     comment_strategy: CommentStrategy,
     quiet: bool,
