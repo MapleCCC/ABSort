@@ -29,7 +29,6 @@ from .utils import (
     bright_yellow,
     colored_unified_diff,
     compose,
-    concat,
     detect_encoding,
     dirsize,
     first_true,
@@ -353,7 +352,7 @@ def absort_files(
             digest["unmodified"] += 1
             return
 
-        # TODO instead of empty the whole cache, use more subtle cache replacement
+        # TODO instead of brutally empty the whole cache, use more subtle cache replacement
         # policy, eg. LRU, LFU, etc.
         if dirsize(CACHE_DIR) > CACHE_MAX_SIZE:
             rmdir(CACHE_DIR)

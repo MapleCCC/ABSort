@@ -17,7 +17,7 @@ class DummyCell:
 
     _singleton = None
 
-    def __new__(cls: Type[DummyCell])->DummyCell:
+    def __new__(cls: Type[DummyCell]) -> DummyCell:
         if cls._singleton is None:
             cls._singleton = object.__new__(cls)
         return cls._singleton
@@ -54,17 +54,17 @@ class LRU:
         self._indexer[key] = len(self._recency) - 1
         self._storage[key] = value
 
-        if len(self._storage) > self._maxsize:
-            target_key = None
-            for idx, key in enumerate(self._recency[self._offset:], self._offset):
+        if self.size > self._maxsize:
+            evicted = None
+            for idx, key in enumerate(self._recency[self._offset :], self._offset):
                 if key is not _DUMMY_CELL:
                     self._recency[idx] = _DUMMY_CELL
-                    self._offset =  idx + 1
-                    target_key = key
+                    self._offset = idx + 1
+                    evicted = key
                     break
 
-            del self._storage[target_key]
-            del self._indexer[target_key]
+            del self._storage[evicted]
+            del self._indexer[evicted]
 
         if len(self._recency) > MAXIMUM_RECENCY_LIST_SIZE:
             self._reconstruct()
@@ -78,7 +78,7 @@ class LRU:
         except KeyError:
             raise KeyError(f"Key {key} is not in LRU")
 
-    def _reconstruct(self)->None:
+    def _reconstruct(self) -> None:
         self._offset = 0
         self._indexer.clear()
         old_recency_list = self._recency
