@@ -3,7 +3,7 @@ from enum import Enum, auto
 from typing import Iterator, List, Sequence, Set, Union
 
 from .profile_tools import add_profile_decorator_to_class_methods
-from .utils import lru_cache_with_key
+from .utils import lfu_cache_with_key
 
 
 __all__ = ["GetUndefinedVariableVisitor"]
@@ -53,7 +53,7 @@ class ScopeContext(Enum):
     TryFinal = auto()
 
 
-@lru_cache_with_key(key=lambda nodes: tuple(map(id, nodes)), maxsize=None)
+@lfu_cache_with_key(key=lambda nodes: tuple(map(id, nodes)), maxsize=None)
 @profile  # type: ignore
 def collect_visible_declarations(nodes: List[ast.AST]) -> Iterator[str]:
     for node in nodes:

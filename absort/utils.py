@@ -7,12 +7,14 @@ import os
 import sys
 import tokenize
 from collections import namedtuple
+from functools import partial
 from pathlib import Path
 from types import SimpleNamespace
 from typing import IO, Any, Callable, Iterable, Iterator, List, Optional
 
 from colorama import Fore, Style
 
+from .lfu import LFU
 from .lru import LRU
 
 __all__ = [
@@ -27,6 +29,7 @@ __all__ = [
     "cached_splitlines",
     "silent_context",
     "lru_cache_with_key",
+    "lfu_cache_with_key",
     "detect_encoding",
     "apply",
     "first_true",
@@ -132,11 +135,17 @@ def silent_context() -> Iterator:
         sys.stdout = original_stdout
 
 
-def lru_cache_with_key(
-    key: Callable, maxsize: Optional[int] = 128
+def cache_with_key(
+    key: Callable, maxsize: Optional[int] = 128, policy: str = "LRU"
 ) -> Callable[[Callable], Callable]:
-    def lru_cache(fn: Callable) -> Callable:
-        lru = LRU(maxsize=maxsize)
+    def decorator(fn: Callable) -> Callable:
+        if policy == "LRU":
+            _cache = LRU(maxsize=maxsize)
+        elif policy == "LFU":
+            _cache = LFU(maxsize=maxsize)
+        else:
+            raise NotImplementedError
+
         CacheInfo = namedtuple("CacheInfo", ["hit", "miss", "maxsize", "currsize"])
         hit = miss = 0
 
@@ -144,24 +153,28 @@ def lru_cache_with_key(
         @profile  # type: ignore
         def wrapper(*args: Any, **kwargs: Any) -> Any:
             arg_key = key(*args, **kwargs)
-            if arg_key in lru:
+            if arg_key in _cache:
                 nonlocal hit
                 hit += 1
-                return lru[arg_key]
+                return _cache[arg_key]
             else:
                 nonlocal miss
                 miss += 1
                 result = fn(*args, **kwargs)
-                lru[arg_key] = result
+                _cache[arg_key] = result
                 return result
 
-        wrapper.__lru__ = lru
-        wrapper.cache_info = lambda: CacheInfo(hit, miss, maxsize, lru.size)
-        wrapper.clear_cache = lru.clear
+        wrapper.__cache__ = _cache
+        wrapper.cache_info = lambda: CacheInfo(hit, miss, maxsize, _cache.size)
+        wrapper.clear_cache = _cache.clear
 
         return wrapper
 
-    return lru_cache
+    return decorator
+
+
+lru_cache_with_key = partial(cache_with_key, policy="LRU")
+lfu_cache_with_key = partial(cache_with_key, policy="LFU")
 
 
 # The source code of open_with_encoding() is taken from autopep8 (https://github.com/hhatto/autopep8)

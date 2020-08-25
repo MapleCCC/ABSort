@@ -2,7 +2,7 @@ import ast
 from collections import deque
 from typing import Any, Deque, Iterator, List, Set
 
-from .utils import beginswith, cached_splitlines, ireverse, lru_cache_with_key
+from .utils import beginswith, cached_splitlines, ireverse, lfu_cache_with_key
 
 __all__ = [
     "ast_pretty_dump",
@@ -146,6 +146,6 @@ def ast_get_source_lines(source: str, node: ast.AST) -> List[str]:
     return source_lines
 
 
-@lru_cache_with_key(key=id, maxsize=None)
+@lfu_cache_with_key(key=id, maxsize=None)
 def cached_ast_iter_child_nodes(node: ast.AST) -> List[ast.AST]:
     return list(ast.iter_child_nodes(node))
