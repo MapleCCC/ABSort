@@ -7,6 +7,7 @@ import shutil
 import sys
 from collections import Counter
 from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime
 from enum import Enum
 from pathlib import Path
 from types import SimpleNamespace
@@ -359,7 +360,16 @@ def absort_files(
 
         if not CACHE_DIR.is_dir():
             os.makedirs(CACHE_DIR)
-        backup_file = CACHE_DIR / (file.name + ".bak")
+
+        def generate_timestamp() -> str:
+            now = str(datetime.now())
+            timestamp = ""
+            for char in now:
+                if char.isdigit():
+                    timestamp += char
+            return timestamp
+        timestamp = generate_timestamp()
+        backup_file = CACHE_DIR / (file.name + "." + timestamp + ".backup")
         shutil.copy2(file, backup_file)
 
         file.write_text(new_source, args.encoding)
