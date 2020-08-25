@@ -93,6 +93,28 @@ def get_dependency_of_decl(decl: DeclarationType) -> Set[str]:
     return visitor.visit(temp_module)
 
 
+def generate_dependency_graph(decls: List[DeclarationType]) -> Graph:
+    decl_names = [decl.name for decl in decls]
+
+    graph = Graph()
+
+    if len(decls) <= SINGLE_THREAD_APROACH_MAX_DECLNUM:
+        thread_pool_executor = SingleThreadPoolExecutor
+    else:
+        thread_pool_executor = ThreadPoolExecutor
+
+    with thread_pool_executor() as executor:
+        depses = executor.map(get_dependency_of_decl, decls)
+        for decl, deps in zip(decls, depses):
+            for dep in deps:
+                if dep in decl_names:
+                    graph.add_edge(dep, decl.name)
+            # Below line is necessary for adding node with zero out-degree to the graph.
+            graph.add_node(decl.name)
+
+    return graph
+
+
 @profile  # type: ignore
 def absort_decls(decls: List[DeclarationType]) -> Iterator[DeclarationType]:
     def same_abstract_level_sorter(names: List[str]) -> List[str]:
@@ -115,21 +137,7 @@ def absort_decls(decls: List[DeclarationType]) -> Iterator[DeclarationType]:
     if len(set(decl_names)) < len(decl_names):
         raise NameRedefinition("Name redefinition exists. Not supported yet.")
 
-    graph = Graph()
-
-    if len(decls) <= SINGLE_THREAD_APROACH_MAX_DECLNUM:
-        thread_pool_executor = SingleThreadPoolExecutor
-    else:
-        thread_pool_executor = ThreadPoolExecutor
-
-    with thread_pool_executor() as executor:
-        depses = executor.map(get_dependency_of_decl, decls)
-        for decl, deps in zip(decls, depses):
-            for dep in deps:
-                if dep in decl_names:
-                    graph.add_edge(dep, decl.name)
-            # Below line is necessary for adding node with zero out-degree to the graph.
-            graph.add_node(decl.name)
+    graph = generate_dependency_graph(decls)
 
     sorted_names = xreverse(
         graph.relaxed_topological_sort(
