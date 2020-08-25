@@ -338,7 +338,7 @@ def backup_to_cache(file: Path) -> None:
         for char in now:
             if char.isdigit():
                 timestamp += char
-        return timestamp
+        return timestamp[:14]
 
     timestamp = generate_timestamp()
     backup_file = CACHE_DIR / (file.name + "." + timestamp + ".backup")
