@@ -8,6 +8,7 @@ import sys
 import tokenize
 from collections import namedtuple
 from pathlib import Path
+from types import SimpleNamespace
 from typing import IO, Any, Callable, Iterable, Iterator, List, Optional
 
 from colorama import Fore, Style
@@ -33,6 +34,7 @@ __all__ = [
     "rmdir",
     "Logger",
     "concat",
+    "SingleThreadPoolExecutor",
 ]
 
 # Note: the name `profile` will be injected by line-profiler at run-time
@@ -243,3 +245,7 @@ class Logger:
 def concat(lists: Iterable[List]) -> List:
     """ Concatenate multiple lists into one list """
     return list(itertools.chain.from_iterable(lists))
+
+
+_single_thread_pool_executor = SimpleNamespace(map=map, submit=apply)
+SingleThreadPoolExecutor = lambda: _single_thread_pool_executor

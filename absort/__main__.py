@@ -25,7 +25,7 @@ from .ast_utils import (
 from .extra_typing import Declaration, DeclarationType
 from .graph import Graph
 from .utils import (
-    apply,
+    SingleThreadPoolExecutor,
     bright_yellow,
     colored_unified_diff,
     concat,
@@ -117,22 +117,18 @@ def absort_decls(decls: List[DeclarationType]) -> Iterator[DeclarationType]:
     graph = Graph()
 
     if len(decls) <= SINGLE_THREAD_APROACH_MAX_DECLNUM:
-        depses = map(get_dependency_of_decl, decls)
+        thread_pool_executor = SingleThreadPoolExecutor
+    else:
+        thread_pool_executor = ThreadPoolExecutor
+
+    with thread_pool_executor() as executor:
+        depses = executor.map(get_dependency_of_decl, decls)
         for decl, deps in zip(decls, depses):
             for dep in deps:
                 if dep in decl_names:
                     graph.add_edge(dep, decl.name)
             # Below line is necessary for adding node with zero out-degree to the graph.
             graph.add_node(decl.name)
-    else:
-        with ThreadPoolExecutor() as executor:
-            depses = executor.map(get_dependency_of_decl, decls)
-            for decl, deps in zip(decls, depses):
-                for dep in deps:
-                    if dep in decl_names:
-                        graph.add_edge(dep, decl.name)
-                # Below line is necessary for adding node with zero out-degree to the graph.
-                graph.add_node(decl.name)
 
     sorted_names = xreverse(
         graph.relaxed_topological_sort(
