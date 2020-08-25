@@ -311,6 +311,20 @@ def collect_python_files(filepaths: Iterable[Path]) -> Iterator[Path]:
             raise NotImplementedError
 
 
+def backup_to_cache(file: Path) -> None:
+    def generate_timestamp() -> str:
+        now = str(datetime.now())
+        timestamp = ""
+        for char in now:
+            if char.isdigit():
+                timestamp += char
+        return timestamp
+
+    timestamp = generate_timestamp()
+    backup_file = CACHE_DIR / (file.name + "." + timestamp + ".backup")
+    shutil.copy2(file, backup_file)
+
+
 def absort_files(
     files: List[Path], executor: ThreadPoolExecutor, digest: Counter
 ) -> None:
@@ -361,16 +375,7 @@ def absort_files(
         if not CACHE_DIR.is_dir():
             os.makedirs(CACHE_DIR)
 
-        def generate_timestamp() -> str:
-            now = str(datetime.now())
-            timestamp = ""
-            for char in now:
-                if char.isdigit():
-                    timestamp += char
-            return timestamp
-        timestamp = generate_timestamp()
-        backup_file = CACHE_DIR / (file.name + "." + timestamp + ".backup")
-        shutil.copy2(file, backup_file)
+        backup_to_cache(file)
 
         file.write_text(new_source, args.encoding)
         digest["modified"] += 1
