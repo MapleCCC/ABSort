@@ -108,9 +108,11 @@ def generate_dependency_graph(decls: List[DeclarationType]) -> Graph:
     with thread_pool_executor() as executor:
         depses = executor.map(get_dependency_of_decl, decls)
         for decl, deps in zip(decls, depses):
+
             for dep in deps:
                 if dep in decl_names:
                     graph.add_edge(dep, decl.name)
+
             # Below line is necessary for adding node with zero out-degree to the graph.
             graph.add_node(decl.name)
 
@@ -166,14 +168,11 @@ def get_related_source_lines_of_decl(source: str, node: ast.AST) -> List[str]:
     source_lines = []
 
     if args.comment_strategy is CommentStrategy.attr_follow_decl:
-        leading_comment_and_decorator_list_source_lines = ast_get_leading_comment_and_decorator_list_source_lines(
-            source, node
-        )
-        if leading_comment_and_decorator_list_source_lines:
-            source_lines += leading_comment_and_decorator_list_source_lines
+        source_lines += ast_get_leading_comment_and_decorator_list_source_lines( source, node)
+    elif args.comment_strategy in (CommentStrategy.push_top, CommentStrategy.ignore):
+        source_lines += ast_get_decorator_list_source_lines(source, node)
     else:
-        decorator_list_source_lines = ast_get_decorator_list_source_lines(source, node)
-        source_lines += decorator_list_source_lines
+        raise RuntimeError("Unreachable")
 
     source_lines += ast_get_source_lines(source, node)
 
@@ -251,21 +250,28 @@ def get_related_source_lines_of_block(
     source_lines = []
 
     sorted_decls = absort_decls(decls)
+
     for decl in sorted_decls:
+
         related_source_lines = get_related_source_lines_of_decl(source, decl)
+
         if args.no_aggressive:
             source_lines += related_source_lines
         elif whitespace_lines(related_source_lines):
+
             # A heuristic. If only whitespaces are present, compress to two blank lines.
             # Because it's visually bad to have zero or too many blank lines between
             # two declarations. So we explicitly add it. Two blank lines between
             # declarations are black style (https://github.com/psf/black.)
             source_lines += "\n\n".splitlines()
+
         elif related_source_lines[0].strip():
+
             # A heuristic. It's visually bad to have no blank lines
             # between two declarations. So we explicitly add it. Two blank lines between
             # declarations are black style (https://github.com/psf/black.)
             source_lines += "\n\n".splitlines() + related_source_lines
+
         else:
             source_lines += related_source_lines
 
@@ -273,6 +279,7 @@ def get_related_source_lines_of_block(
         total_comment_lines = []
         for decl in sorted_decls:
             comment_lines = ast_get_leading_comment_source_lines(source, decl)
+
             # A heuristic to return empty result if only whitespaces are present
             if not whitespace_lines(comment_lines):
                 total_comment_lines += comment_lines
@@ -287,11 +294,14 @@ def display_diff_with_filename(
 ) -> None:
     old_src_lines = old_src.splitlines(keepends=True)
     new_src_lines = new_src.splitlines(keepends=True)
+
     fromfile = "old/" + filename if filename else ""
     tofile = "new/" + filename if filename else ""
+
     diff_view_lines = colored_unified_diff(
         old_src_lines, new_src_lines, fromfile, tofile
     )
+
     print("".join(diff_view_lines), end="")
     print("\n", end="")
 
@@ -301,11 +311,13 @@ def collect_python_files(filepaths: Iterable[Path]) -> Iterator[Path]:
         if not filepath.exists():
             print(f'File "{filepath}" doesn\'t exist. Skipped.')
         elif filepath.is_file():
+
             # We don't test file suffix, because it's possible user explicitly enters an
             # input file that contains Python code but doesn't have `.py` extension.
             # If it doesn't contain Python code, a SyntaxError will be raised from other
             # part of the code and handled by exception handling routines anyway.
             yield filepath
+
         elif filepath.is_dir():
             yield from filepath.rglob("*.py")
         else:
@@ -357,12 +369,15 @@ def absort_files(
         try:
             return file.read_text(args.encoding)
         except UnicodeDecodeError:
+
             print(f"{file} is not decodable by {args.encoding}", file=sys.stderr)
             print(f"Try to automatically detect file encoding......", file=sys.stderr)
             detected_encoding = detect_encoding(str(file))
+
             try:
                 return file.read_text(detected_encoding)
             except UnicodeDecodeError:
+
                 print(f"{file} has unknown encoding.", file=sys.stderr)
                 return Fail  # type: ignore
 
@@ -373,11 +388,14 @@ def absort_files(
         try:
             return transform(old_source)
         except SyntaxError as exc:
+
             # if re.fullmatch(r"Missing parentheses in call to 'print'. Did you mean print(.*)\?", exc.msg):
             #     pass
             print(f"{file} has erroneous syntax: {exc.msg}", file=sys.stderr)
             return Fail  # type: ignore
+
         except NameRedefinition:
+
             print(
                 f"{file} contains duplicate name redefinitions. Not supported yet.",
                 file=sys.stderr,
@@ -416,13 +434,17 @@ def absort_files(
         # TODO add more styled output (e.g. colorized)
 
         if args.display_diff:
+
             digest["unmodified"] += 1
             display_diff_with_filename(old_source, new_source, str(file))
+
         elif args.in_place:
+
             if old_source == new_source:
                 digest["unmodified"] += 1
                 continue
             executor.submit(write_source, file, new_source)
+
         else:
             digest["unmodified"] += 1
             divider = bright_yellow("-" * 79)
