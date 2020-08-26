@@ -1,4 +1,5 @@
 import contextlib
+from contextlib import contextmanager
 import difflib
 import functools
 import io
@@ -285,11 +286,10 @@ def concat(lists: Iterable[List]) -> List:
     return list(itertools.chain.from_iterable(lists))
 
 
-_single_thread_pool_executor = SimpleNamespace(map=map, submit=apply)
-SingleThreadPoolExecutor = lambda: _single_thread_pool_executor
-SingleThreadPoolExecutor.__doc__ = (
+@contextlib.contextmanager
+def SingleThreadPoolExecutor() -> Iterator[SimpleNamespace]:
     "Return an equivalent to ThreadPoolExecutor(max_workers=1)"
-)
+    yield SimpleNamespace(map=map, submit=apply, shutdown=lambda: None)
 
 
 class compose:
