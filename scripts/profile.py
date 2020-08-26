@@ -37,9 +37,7 @@ class AddProfileDecoratorToClassMethodTransformer(ast.NodeTransformer):
                 node.decorator_list.append(ast.Name("profile", ast.Load()))
             return node
 
-        # TODO open issue in https://github.com/python/typeshed about
-        # NodeTransformer.generic_visit method's return type annotation
-        node = self.generic_visit(node)  # type: ignore
+        node = self.generic_visit(node)
 
         criteria = (
             lambda decorator: isinstance(decorator, ast.Name)

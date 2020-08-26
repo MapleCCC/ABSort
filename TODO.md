@@ -24,7 +24,6 @@
 - Instead of LRU, maybe we should use LFU?, or frecency? Investigate different cache replacement policy/strategy.
 - Pre-commit hook to update absort --help message in README
 - Try to use threading.lock or asyncio.lock to solve race condition on writing to stdout/stderr.
-- Open issue in https://github.com/python/typeshed about NodeTransformer.generic_visit method's return type annotation
 - Fill in requirements*.txt files.
 - Remove @profile, @add_profile_decorator_to_class_methods decorators.
 - Reorder functions in __main__.py by abstraction levels. From higher abstraction level to lower.
@@ -121,6 +120,7 @@
 - Retain as much original layout as possible to reduce diff size.
 - Add .pylintrc
 - Specify release version when installing, in README.
+- Open issue in https://github.com/python/typeshed about NodeTransformer.generic_visit method's return type annotation
 
 ## TIL
 
