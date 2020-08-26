@@ -7,7 +7,6 @@
   - astroid
 - Add unit tests
 - Release 1.0.0 version
-- Check whether ast.iter_child_nodes yield ordered results?
 - Deploy pre-commit.
   - Generate README TOC
   - Concatenate TODO.md to README.md
@@ -120,16 +119,18 @@
 - Retain as much original layout as possible to reduce diff size.
 - Add .pylintrc
 - Specify release version when installing, in README.
-- Open issue in https://github.com/python/typeshed about NodeTransformer.generic_visit method's return type annotation
-
-## TIL
-
-- Path.name is different from Path.__str__()
-  - Path.name is "A string representing the final path component, excluding the drive and root, if any"
-  - Path.__str__ is "The string representation of a path is the raw filesystem path itself (in native form, e.g. with backslashes under Windows), which you can pass to any function taking a file path as a string"
+- Open issue in https://github.com/python/typeshed about NodeTransformer.generic_visit method's return t
+- Check whether ast.iter_child_nodes yield ordered results?
+  - ANSWER: judging from source code, it does yield ordered results.
 - 完善 README
   - 添加 GitHub badges
     - use black code style
     - total line count
     - license
   - add examples to showcase
+
+## TIL
+
+- Path.name is different from Path.__str__()
+  - Path.name is "A string representing the final path component, excluding the drive and root, if any"
+  - Path.__str__ is "The string representation of a path is the raw filesystem path itself (in native form, e.g. with backslashes under Windows), which you can pass to any function taking a file path as a string"

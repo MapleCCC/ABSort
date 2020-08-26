@@ -67,6 +67,8 @@ def xreverse(iterable: Iterable) -> List:
 
 
 def beginswith(s: str, prefix: str) -> bool:
+    """ Inverse of the `str.endswith` method """
+
     if len(s) < len(prefix):
         return False
     else:
@@ -104,6 +106,8 @@ def bright_yellow(s: str) -> str:
 def colored_unified_diff(
     a: List[str], b: List[str], *args: Any, **kwargs: Any
 ) -> Iterator[str]:
+    """ Return unified diff view between a and b, with color """
+
     for line in difflib.unified_diff(a, b, *args, **kwargs):
         code = line[0]
         if line[:3] in ("---", "+++") or line[:2] == "@@":
@@ -121,11 +125,16 @@ def colored_unified_diff(
 
 @functools.lru_cache(maxsize=None)
 def cached_splitlines(s: str) -> List[str]:
+    """ A cached version of the `str.splitlines` method """
     return s.splitlines()
 
 
 @contextlib.contextmanager
 def silent_context() -> Iterator:
+    """
+    Return a context manager. Within the context, writting to `stdout` is discarded.
+    """
+
     original_stdout = sys.stdout
     sys.stdout = open(os.devnull, "a")
     # sys.stderr = open(os.devnull, "a")
@@ -139,6 +148,11 @@ def silent_context() -> Iterator:
 def cache_with_key(
     key: Callable, maxsize: Optional[int] = 128, policy: str = "LRU"
 ) -> Callable[[Callable], Callable]:
+    """
+    It's like the builtin `functools.lru_cache`, except that it provides customization
+    space for the key calculating method and the cache replacement policy.
+    """
+
     def decorator(fn: Callable) -> Callable:
         if policy == "LRU":
             _cache = LRU(maxsize=maxsize)
@@ -175,7 +189,10 @@ def cache_with_key(
 
 
 lru_cache_with_key = partial(cache_with_key, policy="LRU")
+lru_cache_with_key.__doc__ = "It's like the builtin `functools.lru_cache`, except that it provides customization space for the key calculating method."
+
 lfu_cache_with_key = partial(cache_with_key, policy="LFU")
+lfu_cache_with_key.__doc__ = "It's like the builtin `functools.lru_cache`, except that it provides customization space for the key calculating method, and it uses LFU, not LRU, as cache replacement policy."
 
 
 # The source code of open_with_encoding() is taken from autopep8 (https://github.com/hhatto/autopep8)
@@ -207,13 +224,15 @@ def detect_encoding(filename: str, limit_byte_check: int = -1) -> str:
 
 
 def apply(fn: Callable, *args: Any, **kwargs: Any) -> Any:
-    """ Equivalent to Haskell's $ function """
+    """ Equivalent to Haskell's $ operator """
     return fn(*args, **kwargs)
 
 
 def first_true(
     iterable: Iterable, *, default: Any = None, pred: Callable = None
 ) -> Any:
+    """ Equivalent to more-itertools library's `first_true` function """
+
     if pred is None:
         pred = bool
     for elem in iterable:
@@ -223,10 +242,13 @@ def first_true(
 
 
 def dirsize(path: Path) -> int:
+    """ Return the total size of a directory, in bytes """
     return sum(f.stat().st_size for f in path.rglob("*") if f.is_file)
 
 
 def rmdir(path: Path) -> None:
+    """ Remove a directory, also removing files and subdirectories inside. """
+
     if path.is_dir():
         raise NotADirectoryError(f"{path} is not a directory")
 
@@ -265,17 +287,24 @@ def concat(lists: Iterable[List]) -> List:
 
 _single_thread_pool_executor = SimpleNamespace(map=map, submit=apply)
 SingleThreadPoolExecutor = lambda: _single_thread_pool_executor
+SingleThreadPoolExecutor.__doc__ = (
+    "Return an equivalent to ThreadPoolExecutor(max_workers=1)"
+)
 
 
-# FIXME the problem is that the result object has a name called "fn3", which is confusing.
-# A workaround is to immitate behavior of builtin functions zip(), map(), partial(). We
-# return a "compose object".
-def compose(fn1: Callable, fn2: Callable) -> Callable:
-    def fn3(*args: Any, **kwargs: Any) -> Any:
-        return fn1(fn2(*args, **kwargs))
+class compose:
+    """ Equivalent to Haskell's . operator """
 
-    return fn3
+    def __init__(self, fn1: Callable, fn2: Callable) -> None:
+        self._fn1 = fn1
+        self._fn2 = fn2
+
+    __slots__ = ("_fn1", "_fn2")
+
+    def __call__(self, *args: Any, **kwargs: Any) -> Any:
+        return self._fn1(self._fn2(*args, **kwargs))
 
 
 def whitespace_lines(lines: List[str]) -> bool:
+    """ Return whether lines are all whitespaces """
     return all(not line.strip() for line in lines)

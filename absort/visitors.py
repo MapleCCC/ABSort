@@ -240,6 +240,9 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
         self._visit_new_scope(node.orelse, ScopeContext.WhileElse)
 
     def visit_If(self, node: ast.If) -> None:
+        # FIXME If block not a new scope, the symbols here are visible and live
+        # after the try block.
+
         self.visit(node.test)
 
         self._visit_new_scope(node.body, ScopeContext.If)

@@ -1,13 +1,14 @@
 import ast
+import copy
 from collections import deque
-from typing import Any, Deque, Iterator, List, Set
+from typing import Any, Deque, Iterator, List, Optional, Set
 
 from .utils import beginswith, cached_splitlines, ireverse, lfu_cache_with_key
 
 __all__ = [
     "ast_pretty_dump",
     "ast_ordered_walk",
-    "ast_remove_location_info",
+    "ast_strip_location_info",
     "ast_get_leading_comment_and_decorator_list_source_lines",
     "ast_get_leading_comment_source_lines",
     "ast_get_decorator_list_source_lines",
@@ -44,7 +45,6 @@ def ast_pretty_dump(node: ast.AST, *args: Any, **kwargs: Any) -> str:
     return prettied
 
 
-# FIXME are you sure that ast.iter_child_nodes() returned result is ordered?
 def ast_ordered_walk(node: ast.AST) -> Iterator[ast.AST]:
     """ Depth-First Traversal of the AST """
     children = ast.iter_child_nodes(node)
@@ -53,9 +53,14 @@ def ast_ordered_walk(node: ast.AST) -> Iterator[ast.AST]:
         yield from ast_ordered_walk(child)
 
 
-# TODO Alternatively, we can have a non-in-place version. Try to compare the benefits.
-def ast_remove_location_info(node: ast.AST) -> None:
-    """ in-place """
+def ast_strip_location_info(node: ast.AST, in_place: bool = True) -> Optional[ast.AST]:
+    """ Strip location info from AST nodes, recursively """
+
+    if not in_place:
+        new_node = copy.deepcopy(node)
+        ast_strip_location_info(new_node, in_place=True)
+        return new_node
+
     nodes = ast_ordered_walk(node)
     location_info_attrs = ("lineno", "col_offset", "end_lineno", "end_col_offset")
     for node in nodes:
@@ -148,4 +153,5 @@ def ast_get_source_lines(source: str, node: ast.AST) -> List[str]:
 
 @lfu_cache_with_key(key=id, maxsize=None)
 def cached_ast_iter_child_nodes(node: ast.AST) -> List[ast.AST]:
+    """ A cached version of the `ast.iter_child_nodes` method """
     return list(ast.iter_child_nodes(node))

@@ -4,7 +4,8 @@ from typing import Any, Dict, List, Optional
 __all__ = ["LFU"]
 
 
-sentinel = object()
+# A singleton object to denote an element with maximum priority in PriorityQueue
+max_priority_sentinel = object()
 
 
 class PriorityQueue:
@@ -13,7 +14,7 @@ class PriorityQueue:
     def __init__(self) -> None:
         self._storage: List = []
         self._priority_table: Dict[Any, int] = dict()
-        self._priority_table[sentinel] = math.inf  # type: ignore
+        self._priority_table[max_priority_sentinel] = math.inf  # type: ignore
 
     __slots__ = ("_storage", "_priority_table")
 
@@ -53,11 +54,11 @@ class PriorityQueue:
         left_idx = (index + 1) * 2 - 1
         right_idx = (index + 1) * 2
         if left_idx > len(self._storage) - 1:
-            left = sentinel
+            left = max_priority_sentinel
         else:
             left = self._storage[left_idx]
         if right_idx > len(self._storage) - 1:
-            right = sentinel
+            right = max_priority_sentinel
         else:
             right = self._storage[right_idx]
 
@@ -98,10 +99,12 @@ class PriorityQueue:
     def clear(self)->None:
         self._storage.clear()
         self._priority_table.clear()
-        self._priority_table[sentinel] = math.inf  # type: ignore
+        self._priority_table[max_priority_sentinel] = math.inf  # type: ignore
 
 
 class LFU:
+    """ A lightweight and efficient data structure that implement the LFU mechanism. """
+
     def __init__(self, maxsize: Optional[int] = 128) -> None:
         if maxsize is None:
             maxsize = math.inf  # type: ignore
