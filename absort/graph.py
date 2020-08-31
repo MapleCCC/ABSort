@@ -113,8 +113,14 @@ class Graph:
         return new_graph
 
     def topological_sort(
-        self, same_rank_sorter: Callable[[List[Node]], List[Node]] = None
+        self,
+        reverse: bool = False,
+        same_rank_sorter: Callable[[List[Node]], List[Node]] = None,
     ) -> Iterator[Node]:
+        """
+        Note that `reversed(topological_sort)` is not equivalent to `topological_sort(reverse=True)`
+        """
+
         def find_sources(graph: Graph) -> Set[Node]:
             adjlist = graph._adjacency_list
             sources = set(adjlist.keys())
@@ -127,6 +133,19 @@ class Graph:
                 )
             return sources
 
+        def find_sinks(graph: Graph) -> Set[Node]:
+            adjlist = graph._adjacency_list
+            sinks = set()
+            for node, children in adjlist.items():
+                if not children:
+                    sinks.add(node)
+            if not sinks and adjlist:
+                raise CircularDependencyError(
+                    "Circular dependency detected! "
+                    + "Try to run the method detect_back_edge() to find back edges."
+                )
+            return sinks
+
         def remove_sources(graph: Graph) -> Set[Node]:
             srcs = find_sources(graph)
             for src in srcs:
@@ -135,18 +154,33 @@ class Graph:
                 graph._adjacency_list[node] -= srcs
             return srcs
 
+        def remove_sinks(graph: Graph) -> Set[Node]:
+            sinks = find_sinks(graph)
+            for sink in sinks:
+                del graph._adjacency_list[sink]
+            for node in graph._adjacency_list:
+                graph._adjacency_list[node] -= sinks
+            return sinks
+
         if same_rank_sorter is None:
             same_rank_sorter = lambda x: x
 
         _graph = self.copy()
-        while srcs := remove_sources(_graph):
-            yield from same_rank_sorter(list(srcs))
+
+        if not reverse:
+            while srcs := remove_sources(_graph):
+                yield from same_rank_sorter(list(srcs))
+        else:
+            while sinks := remove_sinks(_graph):
+                yield from same_rank_sorter(list(sinks))
 
     def relaxed_topological_sort(
-        self, same_rank_sorter: Callable[[List[Node]], List[Node]] = None
+        self,
+        reverse: bool = False,
+        same_rank_sorter: Callable[[List[Node]], List[Node]] = None,
     ) -> Iterator[Node]:
         """
-        A more relaxed topological sort. When there are no more source node left, treat
+        A more relaxed topological sort. When there are no more source/sink node left, treat
         all leftover nodes as the same rank.
         """
 
@@ -162,6 +196,19 @@ class Graph:
                 return set(adjlist.keys())
             return sources
 
+        def find_sinks(graph: Graph) -> Set[Node]:
+            adjlist = graph._adjacency_list
+            sinks = set()
+            for node, children in adjlist.items():
+                if not children:
+                    sinks.add(node)
+            if not sinks and adjlist:
+                # Detected circular dependency
+                # When there are no more sink node left, treat all leftover nodes as
+                # the same rank.
+                return set(adjlist.keys())
+            return sinks
+
         def remove_sources(graph: Graph) -> Set[Node]:
             srcs = find_sources(graph)
             for src in srcs:
@@ -170,12 +217,25 @@ class Graph:
                 graph._adjacency_list[node] -= srcs
             return srcs
 
+        def remove_sinks(graph: Graph) -> Set[Node]:
+            sinks = find_sinks(graph)
+            for sink in sinks:
+                del graph._adjacency_list[sink]
+            for node in graph._adjacency_list:
+                graph._adjacency_list[node] -= sinks
+            return sinks
+
         if same_rank_sorter is None:
             same_rank_sorter = lambda x: x
 
         _graph = self.copy()
-        while srcs := remove_sources(_graph):
-            yield from same_rank_sorter(list(srcs))
+
+        if not reverse:
+            while srcs := remove_sources(_graph):
+                yield from same_rank_sorter(list(srcs))
+        else:
+            while sinks := remove_sinks(_graph):
+                yield from same_rank_sorter(list(sinks))
 
     def __str__(self) -> str:
         return "Graph({})".format(dict(self._adjacency_list))

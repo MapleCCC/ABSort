@@ -111,7 +111,7 @@ def generate_dependency_graph(decls: List[DeclarationType]) -> Graph:
 
             for dep in deps:
                 if dep in decl_names:
-                    graph.add_edge(dep, decl.name)
+                    graph.add_edge(decl.name, dep)
 
             # Below line is necessary for adding node with zero out-degree to the graph.
             graph.add_node(decl.name)
@@ -145,7 +145,7 @@ def absort_decls(decls: List[DeclarationType]) -> Iterator[DeclarationType]:
 
     sorted_names = xreverse(
         graph.relaxed_topological_sort(
-            same_rank_sorter=compose(xreverse, same_abstract_level_sorter)
+            reverse=True, same_rank_sorter=compose(xreverse, same_abstract_level_sorter)
         )
     )
 
