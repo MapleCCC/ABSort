@@ -232,7 +232,8 @@ def transform(old_source: str) -> str:
     new_source_lines = old_source.splitlines()
 
     for lineno, end_lineno, decls in blocks:
-        source_lines = get_related_source_lines_of_block(old_source, decls)
+        sorted_decls = list(absort_decls(decls))
+        source_lines = get_related_source_lines_of_block(old_source, sorted_decls)
         new_source_lines[lineno - 1 : end_lineno] = source_lines
 
     new_source = "\n".join(new_source_lines) + "\n"
@@ -249,9 +250,7 @@ def get_related_source_lines_of_block(
 ) -> List[str]:
     source_lines = []
 
-    sorted_decls = absort_decls(decls)
-
-    for decl in sorted_decls:
+    for decl in decls:
 
         related_source_lines = get_related_source_lines_of_decl(source, decl)
 
@@ -277,7 +276,7 @@ def get_related_source_lines_of_block(
 
     if args.comment_strategy is CommentStrategy.push_top:
         total_comment_lines = []
-        for decl in sorted_decls:
+        for decl in decls:
             comment_lines = ast_get_leading_comment_source_lines(source, decl)
 
             # A heuristic to return empty result if only whitespaces are present
