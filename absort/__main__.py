@@ -355,6 +355,9 @@ def backup_to_cache(file: Path) -> None:
 
     timestamp = generate_timestamp()
     backup_file = CACHE_DIR / (file.name + "." + timestamp + ".backup")
+
+    if not CACHE_DIR.is_dir():
+        os.makedirs(CACHE_DIR)
     shutil.copy2(file, backup_file)
 
     if dirsize(CACHE_DIR) > CACHE_MAX_SIZE:
@@ -408,9 +411,6 @@ def absort_files(
         if not ans:
             digest["unmodified"] += 1
             return
-
-        if not CACHE_DIR.is_dir():
-            os.makedirs(CACHE_DIR)
 
         backup_to_cache(file)
 
