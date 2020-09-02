@@ -28,10 +28,6 @@
 - Reorder functions in __main__.py by abstraction levels. From higher abstraction level to lower.
 - Fill more metadata in setup.py
 - Refactor absort_files(). Break larget function into multiple small functions.
-- Read about Python namespace and scope topics, read them crystal clear, then modify visitors.py.
-  - Sample read: https://realpython.com/python-namespaces-scope/
-- Critical bugs: visitors.py implementation is severely buggy.
-
 
 ## Medium Priority
 
@@ -52,8 +48,6 @@
 - 用 line-profiler 测试 absort 项目中多线程 get_dependency_of_decl 是否有助于提升性能，看性能热点占比百分比来定值确定
 - Entries from running `rg TODO` across the whole repo.
 - Entries from running `rg FIXME` across the whole repo.
-- The whole implementation in visitors.py is a mess and catastrophic! We need REWRITE IT!!!
-  - Read Pylint source code to figure out how to properly detect undefined variables.
 
 ## Low Priority
 
@@ -130,6 +124,12 @@
     - total line count
     - license
   - add examples to showcase
+- Read about Python namespace and scope topics, read them crystal clear, then modify visitors.py.
+  - Sample read: https://realpython.com/python-namespaces-scope/
+- Critical bugs: visitors.py implementation is severely buggy.
+- The whole implementation in visitors.py is a mess and catastrophic! We need REWRITE IT!!!
+  - Read Pylint source code to figure out how to properly detect undefined variables.
+
 
 ## TIL
 

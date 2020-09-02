@@ -90,7 +90,26 @@ class CommentStrategyParamType(click.ParamType):
 
 
 def get_dependency_of_decl(decl: DeclarationType) -> Set[str]:
-    temp_module = ast.Module(body=[decl])
+    temp_module = ast.Module(
+        body=[
+            decl,
+            ast.Expr(
+                value=ast.Call(
+                    func=ast.Name(id=decl.name, ctx=ast.Load()), args=[], keywords=[]
+                )
+            ),
+        ],
+        type_ignores=[],
+    )
+
+    # temp_module = ast.Module()
+    # temp_module.body = []
+    # temp_module.body.append(decl)
+    # name = ast.Name(id=decl.name, ctx=ast.Load())
+    # call_stmt = ast.Expr(value=ast.Call(func=name, args=[], keywords=[]))
+    # temp_module.body.append(call_stmt)
+    # temp_module.type_ignores = []
+
     visitor = GetUndefinedVariableVisitor()
     return visitor.visit(temp_module)
 
