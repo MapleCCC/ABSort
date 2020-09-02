@@ -282,22 +282,6 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
     # Handle stmts that introduce new symbols, or access/delete existing symbols
     ########################################################################
 
-    # FIXME no need to have visit_Delete, simpley visit_Name and test isinstance(ctx, ast.Del) is good.
-    def visit_Delete(self, node: ast.Delete) -> None:
-        # FIXME I am not sure this is correct
-        # WARNING: this is not correct. This code currently can't handle the case of
-        # deleting attribute references, subscriptions, slicing, etc.
-        # e.g. `del a.b, a[1], a[1:2]`
-        to_delete_names = get_descendant_names(node)
-        for name in to_delete_names:
-            # FIXME we need to change the lookup scope to the scopes that are
-            # allowed by the `del` keyword, as per the Python language grammar.
-            if name in self._symbol_table_stack[-1]:
-                self._symbol_table_stack[-1].remove(name)
-            else:
-                # there is no corresponding name in local scope
-                self._undefined_vars.add(name)
-
     def visit_Import(self, node: ast.Import) -> None:
         aliases = node.names
         for alias in aliases:
@@ -345,6 +329,14 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
                 self._symbol_table_stack[-1].add(node.id)
         elif isinstance(node.ctx, ast.Load):
             if not self._symbol_lookup(node.id):
+                self._undefined_vars.add(node.id)
+        elif isinstance(node.ctx, ast.Del):
+            # FIXME we need to change the lookup scope to the scopes that are
+            # allowed by the `del` keyword, as per the Python language grammar.
+            if node.id in self._symbol_table_stack[-1]:
+                self._symbol_table_stack[-1].remove(node.id)
+            else:
+                # there is no corresponding name in local scope
                 self._undefined_vars.add(node.id)
         else:
             # TODO fill in cases for contexts Del, AugLoad, AugStore, Param
