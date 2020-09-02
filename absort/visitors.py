@@ -215,7 +215,7 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
     def visit_ListComp(self, node: ast.ListComp) -> None:
         # Bottom-up building new tree
         new_tree: ast.stmt = ast.Expr(value=node.elt)
-        for generator in node.generators:
+        for generator in reversed(node.generators):
             for if_test in generator.ifs:
                 new_tree = ast.If(test=if_test, body=[new_tree], orelse=[])
             new_tree = ast.For(
@@ -231,7 +231,7 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
     def visit_SetComp(self, node: ast.SetComp) -> None:
         # Bottom-up building new tree
         new_tree: ast.stmt = ast.Expr(value=node.elt)
-        for generator in node.generators:
+        for generator in reversed(node.generators):
             for if_test in generator.ifs:
                 new_tree = ast.If(test=if_test, body=[new_tree], orelse=[])
             new_tree = ast.For(
@@ -249,7 +249,7 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
         new_tree: ast.stmt = ast.Expr(
             value=ast.Tuple(elts=[node.key, node.value], ctx=ast.Load())
         )
-        for generator in node.generators:
+        for generator in reversed(node.generators):
             for if_test in generator.ifs:
                 new_tree = ast.If(test=if_test, body=[new_tree], orelse=[])
             new_tree = ast.For(
@@ -265,7 +265,7 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
     def visit_GeneratorExp(self, node: ast.GeneratorExp) -> None:
         # Bottom-up building new tree
         new_tree: ast.stmt = ast.Expr(value=node.elt)
-        for generator in node.generators:
+        for generator in reversed(node.generators):
             for if_test in generator.ifs:
                 new_tree = ast.If(test=if_test, body=[new_tree], orelse=[])
             new_tree = ast.For(
