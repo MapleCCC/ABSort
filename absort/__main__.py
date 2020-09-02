@@ -168,7 +168,9 @@ def get_related_source_lines_of_decl(source: str, node: ast.AST) -> List[str]:
     source_lines = []
 
     if args.comment_strategy is CommentStrategy.attr_follow_decl:
-        source_lines += ast_get_leading_comment_and_decorator_list_source_lines( source, node)
+        source_lines += ast_get_leading_comment_and_decorator_list_source_lines(
+            source, node
+        )
     elif args.comment_strategy in (CommentStrategy.push_top, CommentStrategy.ignore):
         source_lines += ast_get_decorator_list_source_lines(source, node)
     else:

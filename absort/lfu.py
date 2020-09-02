@@ -103,7 +103,7 @@ class PriorityQueue:
 
 
 class LFU:
-    """ A lightweight and efficient data structure that implement the LFU mechanism. """
+    """ A lightweight and efficient data structure that implements the LFU mechanism. """
 
     def __init__(self, maxsize: Optional[int] = 128) -> None:
         if maxsize is None:

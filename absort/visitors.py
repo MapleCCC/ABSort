@@ -282,6 +282,7 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
     # Handle stmts that introduce new symbols, or access/delete existing symbols
     ########################################################################
 
+    # FIXME no need to have visit_Delete, simpley visit_Name and test isinstance(ctx, ast.Del) is good.
     def visit_Delete(self, node: ast.Delete) -> None:
         # FIXME I am not sure this is correct
         # WARNING: this is not correct. This code currently can't handle the case of

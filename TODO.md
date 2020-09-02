@@ -29,6 +29,8 @@
 - Fill more metadata in setup.py
 - Refactor absort_files(). Break larget function into multiple small functions.
 - Read about Python namespace and scope topics, read them crystal clear, then modify visitors.py.
+  - Sample read: https://realpython.com/python-namespaces-scope/
+- Critical bugs: visitors.py implementation is severely buggy.
 
 
 ## Medium Priority
