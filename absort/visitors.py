@@ -133,7 +133,7 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
         # Bottom-up building new tree
         new_tree: ast.stmt = ast.Expr(value=elt)
         for generator in reversed(node.generators):
-            for if_test in generator.ifs:
+            for if_test in reversed(generator.ifs):
                 new_tree = ast.If(test=if_test, body=[new_tree], orelse=[])
             new_tree = ast.For(
                 target=generator.target,
