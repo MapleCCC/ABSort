@@ -1,8 +1,17 @@
 import ast
 from typing import Dict, List, Optional, Set, Sequence, Union
 
+from .profile_tools import add_profile_decorator_to_class_methods
+
 
 __all__ = ["GetUndefinedVariableVisitor"]
+
+
+# Note: the name `profile` will be injected by line-profiler at run-time
+try:
+    profile  # type: ignore
+except NameError:
+    profile = lambda x: x
 
 
 def retrieve_names_from_args(args: ast.arguments) -> Set[str]:
@@ -17,11 +26,17 @@ def retrieve_names_from_args(args: ast.arguments) -> Set[str]:
     return names
 
 
-class DummyNode(ast.AST):
+class _DummyNode(ast.AST):
     pass
 
 
+# TODO fill in docstring to elaborate on details
+# Class methods are ordered by their appearance order in https://docs.python.org/3/library/ast.html#abstract-grammar
+@add_profile_decorator_to_class_methods
 class GetUndefinedVariableVisitor(ast.NodeVisitor):
+    """
+    """
+
     def __init__(self) -> None:
         self._undefined_vars: Set[str] = set()
         self._namespaces: List[Dict[str, ast.AST]] = []
@@ -73,24 +88,24 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
     def visit_Import(self, node: ast.Import) -> None:
         for name in node.names:
             if name.asname:
-                self._namespaces[-1][name.asname] = DummyNode()
+                self._namespaces[-1][name.asname] = _DummyNode()
             else:
-                self._namespaces[-1][name.name] = DummyNode()
+                self._namespaces[-1][name.name] = _DummyNode()
 
     def visit_ImportFrom(self, node: ast.ImportFrom) -> None:
         for name in node.names:
             if name.asname:
-                self._namespaces[-1][name.asname] = DummyNode()
+                self._namespaces[-1][name.asname] = _DummyNode()
             else:
-                self._namespaces[-1][name.name] = DummyNode()
+                self._namespaces[-1][name.name] = _DummyNode()
 
     def visit_Global(self, node: ast.Global) -> None:
         for name in node.names:
-            self._namespaces[-1][name] = DummyNode()
+            self._namespaces[-1][name] = _DummyNode()
 
     def visit_Nonlocal(self, node: ast.Nonlocal) -> None:
         for name in node.names:
-            self._namespaces[-1][name] = DummyNode()
+            self._namespaces[-1][name] = _DummyNode()
 
     def _visit_comprehension(
         self,
@@ -141,7 +156,7 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
         if isinstance(_node, (ast.FunctionDef, ast.AsyncFunctionDef)):
             self._namespaces.append({})
             for name in retrieve_names_from_args(_node.args):
-                self._namespaces[-1][name] = DummyNode()
+                self._namespaces[-1][name] = _DummyNode()
             self._visit(_node.body)
             self._namespaces.pop()
         elif isinstance(_node, ast.ClassDef):
@@ -149,11 +164,14 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
             self._visit(_node.body)
             self._namespaces.pop()
         else:
-            # Encounter a supposedly runtime error, we as a static tool,
-            # should not alert about it.
+            # As a static analysis tool, we can't handle heavily dynamic behavior.
+            # So just skipping here should be a good decision.
             return
 
     def visit_Name(self, node: ast.Name) -> None:
+        # Expression context AugLoad and AugStore are never exposed. (https://bugs.python.org/issue39988)
+        # We only need to deal with Load, Store, Del, and Param.
+
         if isinstance(node.ctx, ast.Load):
             if not self._symbol_lookup(node.id):
                 self._undefined_vars.add(node.id)
@@ -165,7 +183,5 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
                 if node.id in namespace:
                     del namespace[node.id]
                     break
-        else:
-            # Read Green Tree Snakes docs.
-            # AugLoad, AugStore, Param
-            raise NotImplementedError
+        elif isinstance(node.ctx, ast.Param):
+            self._namespaces[-1][node.id] = node
