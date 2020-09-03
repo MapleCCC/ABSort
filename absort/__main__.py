@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import ast
+import asyncio
 import contextlib
 import os
 import re
@@ -13,7 +14,7 @@ from enum import Enum
 from operator import itemgetter
 from pathlib import Path
 from types import SimpleNamespace
-from typing import Any, ContextManager, Iterable, Iterator, List, Set, Tuple
+from typing import Any, Iterable, Iterator, List, Set, Tuple
 
 import click
 from colorama import colorama_text
@@ -45,7 +46,6 @@ from .visitors import GetUndefinedVariableVisitor
 CACHE_DIR = Path.home() / ".absort_cache"
 CACHE_MAX_SIZE = 400000  # unit is byte
 
-SINGLE_THREAD_APROACH_MAX_FILENUM = 3
 SINGLE_THREAD_APROACH_MAX_DECLNUM = 3
 
 # Note: the name `profile` will be injected by line-profiler at run-time
@@ -401,10 +401,10 @@ def backup_to_cache(file: Path) -> None:
         shrink_cache()
 
 
-def absort_files(
-    files: List[Path], executor: ThreadPoolExecutor, digest: Counter
-) -> None:
-    def read_source(file: Path) -> str:
+# FIXME race condition on printing to console
+# FIXME race condition on digest variable
+def absort_files(files: List[Path], digest: Counter) -> None:
+    async def read_source(file: Path) -> str:
         try:
             return file.read_text(args.encoding)
         except UnicodeDecodeError:
@@ -420,7 +420,7 @@ def absort_files(
                 print(f"{file} has unknown encoding.", file=sys.stderr)
                 return Fail  # type: ignore
 
-    def transform_source(old_source: str) -> str:
+    async def transform_source(old_source: str) -> str:
         if old_source is Fail:
             return Fail  # type: ignore
 
@@ -441,7 +441,7 @@ def absort_files(
             )
             return Fail  # type: ignore
 
-    def write_source(file: Path, new_source: str) -> None:
+    async def write_source(file: Path, new_source: str) -> None:
         ans = click.confirm(
             f"Are you sure you want to in-place update the file {file}?", err=True
         )
@@ -456,16 +456,10 @@ def absort_files(
         if args.verbose:
             print(f"Processed {file}")
 
-    # FIXME race condition on printing to console
-    old_sources = list(executor.map(read_source, files))
-
-    # FIXME race condition on printing to console
-    new_sources = executor.map(transform_source, old_sources)
-
-    for file, old_source, new_source in zip(files, old_sources, new_sources):
+    async def process_new_source(new_source: str, old_source: str) -> None:
         if new_source is Fail:
             digest["failed"] += 1
-            continue
+            return
 
         # TODO add more styled output (e.g. colorized)
 
@@ -478,8 +472,8 @@ def absort_files(
 
             if old_source == new_source:
                 digest["unmodified"] += 1
-                continue
-            executor.submit(write_source, file, new_source)
+                return
+            await write_source(file, new_source)
 
         else:
             digest["unmodified"] += 1
@@ -490,6 +484,14 @@ def absort_files(
             print(new_source)
             print(divider)
             print("\n", end="")
+
+    async def absort_file(file: Path) -> None:
+        old_source = await read_source(file)
+        new_source = await transform_source(old_source)
+        await process_new_source(new_source, old_source)
+
+    for file in files:
+        asyncio.run(absort_file(file))
 
 
 def display_summary(digest: Counter) -> None:
@@ -634,18 +636,9 @@ def main(
 
     verboseness_context_manager = silent_context() if quiet else contextlib.nullcontext()
 
-    thread_pool_context_manager: ContextManager
-    if len(files) <= SINGLE_THREAD_APROACH_MAX_FILENUM:
-        dummy_executor = SimpleNamespace(map=map, submit=apply)
-        thread_pool_context_manager = contextlib.nullcontext(
-            enter_result=dummy_executor
-        )
-    else:
-        thread_pool_context_manager = ThreadPoolExecutor()
+    with verboseness_context_manager, colorama_text():
 
-    with verboseness_context_manager, colorama_text(), thread_pool_context_manager as executor:
-
-        absort_files(files, executor, digest)
+        absort_files(files, digest)
 
         display_summary(digest)
 

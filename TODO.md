@@ -16,8 +16,6 @@
 - Release 1.0.0rc1 release candidate version.
 - Fill in unit tests, then deploy Travis-CI and codecov.io
 - GetUndefinedVariableVisitor __slots__ doesn't seem to work?
-- Rewrite, refactor main function. The body code of main function is right now a bunch of mess. Go beyond executor.map/submit. There are more freedom in interface to use. Examine the async/await keyword, Future, Promise, etc.
-  - Take inspiration from black tool's source code.
 - 完善 README
 - Fix race condition on writing to stdout/stderr in absort_files()
 - Instead of LRU, maybe we should use LFU?, or frecency? Investigate different cache replacement policy/strategy.
@@ -129,6 +127,8 @@
 - Critical bugs: visitors.py implementation is severely buggy.
 - The whole implementation in visitors.py is a mess and catastrophic! We need REWRITE IT!!!
   - Read Pylint source code to figure out how to properly detect undefined variables.
+- Rewrite, refactor main function. The body code of main function is right now a bunch of mess. Go beyond executor.map/submit. There are more freedom in interface to use. Examine the async/await keyword, Future, Promise, etc.
+  - Take inspiration from black tool's source code.
 
 
 ## TIL
