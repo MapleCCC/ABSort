@@ -35,6 +35,12 @@ class _DummyNode(ast.AST):
 @add_profile_decorator_to_class_methods
 class GetUndefinedVariableVisitor(ast.NodeVisitor):
     """
+    An ast node visitor that implements the logic to retrieve undefined variables.
+
+    Usage:
+    ```
+    undefined_vars = GetUndefinedVariableVisitor().visit(some_ast_node)
+    ```
     """
 
     def __init__(self, py_version: Tuple[int, int]) -> None:
@@ -56,6 +62,11 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
         return self._undefined_vars
 
     def _visit(self, obj: Union[Sequence[ast.AST], Optional[ast.AST]]) -> None:
+        """
+        A handy helper method that can accept either an ast node, or None, or a list of ast nodes.
+        This method is aimed to simplify programming, relieving wordy code.
+        """
+
         if isinstance(obj, list):
             for node in obj:
                 self.visit(node)
@@ -114,6 +125,11 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
         node: Union[ast.ListComp, ast.SetComp, ast.DictComp, ast.GeneratorExp],
         elt: ast.expr,
     ) -> None:
+        """
+        A helper method to implement shared logic among visit_ListComp, visit_SetComp,
+        visit_DictComp, and visit_GeneratorExp.
+        """
+
         # Bottom-up building new tree
         new_tree: ast.stmt = ast.Expr(value=elt)
         for generator in reversed(node.generators):

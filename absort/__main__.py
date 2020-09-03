@@ -118,17 +118,12 @@ class PyVersionParamType(click.ParamType):
 
 
 def get_dependency_of_decl(decl: DeclarationType) -> Set[str]:
-    temp_module = ast.Module(
-        body=[
-            decl,
-            ast.Expr(
-                value=ast.Call(
-                    func=ast.Name(id=decl.name, ctx=ast.Load()), args=[], keywords=[]
-                )
-            ),
-        ],
-        type_ignores=[],
+    call_stmt = ast.Expr(
+        value=ast.Call(
+            func=ast.Name(id=decl.name, ctx=ast.Load()), args=[], keywords=[]
+        )
     )
+    temp_module = ast.Module(body=[decl, call_stmt], type_ignores=[])
 
     # temp_module = ast.Module()
     # temp_module.body = []
@@ -518,6 +513,8 @@ def display_summary(digest: Counter) -> None:
 
 
 def check_args() -> None:
+    # FIXME use click library's builtin mechanism to specify mutually exclusive options
+
     if args.display_diff and args.in_place:
         raise ValueError("Can't specify both `--diff` and `--in-place` options")
 
@@ -525,7 +522,7 @@ def check_args() -> None:
         raise ValueError("Can't specify both `--quiet` and `--verbose` options")
 
 
-# TODO provide a programmatical interface
+# TODO provide a programmatical interface. Check if click library provides such a functionality, to turn a CLI interface to programmatical interface.
 
 # TODO add -h option
 # TODO add -V as short option of --version
