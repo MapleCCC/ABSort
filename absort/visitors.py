@@ -143,45 +143,56 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
         self._visit_comprehension(node, node.elt)
 
     def visit_Call(self, node: ast.Call) -> None:
-        if not isinstance(node.func, ast.Name):
-            self.generic_visit(node)
-            return
+        def visit_name_call(node: ast.Call) -> None:
+            assert isinstance(node.func, ast.Name)
 
-        self._visit(node.args)
-        self._visit(node.keywords)
+            self._visit(node.args)
+            self._visit(node.keywords)
 
-        _node = self._symbol_lookup(node.func.id)
-        if _node is None:
-            self._undefined_vars.add(node.func.id)
-            return
-
-        if isinstance(_node, (ast.FunctionDef, ast.AsyncFunctionDef)):
-            if _node.name in self._call_stack:
-                # Break out from recursion
+            _node = self._symbol_lookup(node.func.id)
+            if _node is None:
+                self._undefined_vars.add(node.func.id)
                 return
-            self._call_stack.append(_node.name)
-            self._namespaces.append({})
-            if self._py_version >= (3, 9):
-                self._visit(_node.args)
+
+            if isinstance(_node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                if _node.name in self._call_stack:
+                    # Break out from recursion
+                    return
+                self._call_stack.append(_node.name)
+                self._namespaces.append({})
+                if self._py_version >= (3, 9):
+                    self._visit(_node.args)
+                else:
+                    for name in retrieve_names_from_args(_node.args):
+                        self._namespaces[-1][name] = _DummyNode()
+                self._visit(_node.body)
+                self._namespaces.pop()
+                self._call_stack.pop()
+            elif isinstance(_node, ast.ClassDef):
+                if _node.name in self._call_stack:
+                    # Break out from recursion
+                    return
+                self._call_stack.append(_node.name)
+                self._namespaces.append({})
+                self._visit(_node.body)
+                self._namespaces.pop()
+                self._call_stack.pop()
             else:
-                for name in retrieve_names_from_args(_node.args):
-                    self._namespaces[-1][name] = _DummyNode()
-            self._visit(_node.body)
-            self._namespaces.pop()
-            self._call_stack.pop()
-        elif isinstance(_node, ast.ClassDef):
-            if _node.name in self._call_stack:
-                # Break out from recursion
+                # As a static analysis tool, we can't handle heavily dynamic behavior.
+                # So just skipping here should be a good decision.
                 return
-            self._call_stack.append(_node.name)
-            self._namespaces.append({})
-            self._visit(_node.body)
-            self._namespaces.pop()
-            self._call_stack.pop()
+
+        def visit_attr_call(node: ast.Call) -> None:
+            assert isinstance(node.func, ast.Attribute)
+
+            raise NotImplementedError
+
+        if isinstance(node.func, ast.Name):
+            visit_name_call(node)
+        elif isinstance(node.func, ast.Attribute):
+            visit_attr_call(node)
         else:
-            # As a static analysis tool, we can't handle heavily dynamic behavior.
-            # So just skipping here should be a good decision.
-            return
+            self.generic_visit(node)
 
     def visit_Name(self, node: ast.Name) -> None:
         # Expression context AugLoad and AugStore are never exposed. (https://bugs.python.org/issue39988)
