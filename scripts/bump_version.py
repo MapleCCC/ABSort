@@ -5,7 +5,7 @@ import re
 import subprocess
 import sys
 from pathlib import Path
-from typing import Sequence
+from typing import Any, Callable, Sequence
 
 import click
 import semver
@@ -23,7 +23,10 @@ logger = Logger()
 def bump_file(file: str, pattern: str, repl: str) -> None:
     p = Path(file)
     old_content = p.read_text(encoding="utf-8")
-    new_content = re.sub(pattern, repl, old_content)
+    new_content, num_of_sub = re.subn(pattern, repl, old_content)
+    if not num_of_sub:
+        print(f"Can't find match of pattern {pattern} in file {file}", file=sys.stderr)
+        return
     p.write_text(new_content, encoding="utf-8")
 
 
@@ -66,6 +69,15 @@ def contains_uncommitted_change(filepath: str):
     return len(cmpl_proc.stdout) != 0
 
 
+# FIXME add backoff factor
+def retry(fn: Callable, *args: Any, **kwargs: Any) -> Any:
+    while True:
+        try:
+            return fn(*args, **kwargs)
+        except BaseException:
+            continue
+
+
 @click.command()
 @click.argument("component")
 @click.option("--no-release", is_flag=True)
@@ -104,12 +116,13 @@ def main(component: str, no_release: bool) -> None:
     run(["git", "commit", "-m", f"Bump version to {new_version}"])
 
     logger.log("Creating tag for new version......")
+    run(["git", "tag", "-d", new_version])
     run(["git", "tag", new_version])
 
     # TODO if we change from using subprocess.run to using PyGithub,
     # will the time cost be shorter?
     logger.log("Pushing tag to remote......")
-    run(["git", "push", "origin", new_version])
+    retry(run, ["git", "push", "origin", new_version])
 
     if not no_release:
         logger.log("Creating release in GitHub repo......")
@@ -120,7 +133,8 @@ def main(component: str, no_release: bool) -> None:
         # Create release in GitHub. Upload the zip archive as release asset.
         g = Github(github_account_access_token)
         repo = g.get_repo("MapleCCC/ABSort")
-        repo.create_git_release(
+        retry(
+            repo.create_git_release,
             tag=new_version,
             name=new_version,
             message="For detail changelog, please consult commit history, and commit messages.",
