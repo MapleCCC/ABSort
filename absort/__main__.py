@@ -93,13 +93,25 @@ class PyVersionParamType(click.ParamType):
     name = "py_version"
 
     def convert(self, value: str, param: Any, ctx: Any) -> Tuple[int, int]:
+        # Reference: "Currently major must equal to 3." from https://docs.python.org/3/library/ast.html#ast.parse
+        valid_majors = [3]
+        # Reference: "The lowest supported version is (3, 4); the highest is sys.version_info[0:2]." from https://docs.python.org/3/library/ast.html#ast.parse
+        valid_minors = range(4, sys.version_info[1] + 1)
+        valid_py_versions = [(x, y) for x in valid_majors for y in valid_minors]
+
         try:
             m = re.fullmatch(r"(?P<major>\d+)\.(?P<minor>\d+)", value)
-            return int(m.group("major")), int(m.group("minor"))
-        except AttributeError:
+            version = int(m.group("major")), int(m.group("minor"))
+            if version not in valid_py_versions:
+                raise ValueError
+            return version
+        except (AttributeError, ValueError):
+            stringfy_valid_py_versions = ", ".join(
+                f"{x}.{y}" for x, y in valid_py_versions
+            )
             self.fail(
                 "--py argument has invalid value. "
-                "Possible values are 3.4, 3.5, 3.6, 3.7 and 3.8.",
+                f"Possible values are {stringfy_valid_py_versions}.",
                 param,
                 ctx,
             )
