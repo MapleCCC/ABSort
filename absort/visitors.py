@@ -40,9 +40,10 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
     def __init__(self, py_version: Tuple[int, int]) -> None:
         self._undefined_vars: Set[str] = set()
         self._namespaces: List[Dict[str, ast.AST]] = []
+        self._call_stack: List[str] = []
         self._py_version: Tuple[int, int] = py_version
 
-    __slots__ = ("_undefined_vars", "_namespaces", "_py_version")
+    __slots__ = ("_undefined_vars", "_namespaces", "_call_stack", "_py_version")
 
     def _symbol_lookup(self, name: str) -> Optional[ast.AST]:
         for namespace in reversed(self._namespaces):
@@ -155,6 +156,10 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
             return
 
         if isinstance(_node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            if _node.name in self._call_stack:
+                # Break out from recursion
+                return
+            self._call_stack.append(_node.name)
             self._namespaces.append({})
             if self._py_version >= (3, 9):
                 self._visit(_node.args)
@@ -163,10 +168,16 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
                     self._namespaces[-1][name] = _DummyNode()
             self._visit(_node.body)
             self._namespaces.pop()
+            self._call_stack.pop()
         elif isinstance(_node, ast.ClassDef):
+            if _node.name in self._call_stack:
+                # Break out from recursion
+                return
+            self._call_stack.append(_node.name)
             self._namespaces.append({})
             self._visit(_node.body)
             self._namespaces.pop()
+            self._call_stack.pop()
         else:
             # As a static analysis tool, we can't handle heavily dynamic behavior.
             # So just skipping here should be a good decision.
