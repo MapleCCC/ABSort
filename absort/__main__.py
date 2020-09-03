@@ -89,6 +89,22 @@ class CommentStrategyParamType(click.ParamType):
             )
 
 
+class PyVersionParamType(click.ParamType):
+    name = "py_version"
+
+    def convert(self, value: str, param: Any, ctx: Any) -> Tuple[int, int]:
+        try:
+            m = re.fullmatch(r"(?P<major>\d+)\.(?P<minor>\d+)", value)
+            return int(m.group("major")), int(m.group("minor"))
+        except AttributeError:
+            self.fail(
+                "--py argument has invalid value. "
+                "Possible values are 3.4, 3.5, 3.6, 3.7 and 3.8.",
+                param,
+                ctx,
+            )
+
+
 def get_dependency_of_decl(decl: DeclarationType) -> Set[str]:
     temp_module = ast.Module(
         body=[
@@ -110,7 +126,7 @@ def get_dependency_of_decl(decl: DeclarationType) -> Set[str]:
     # temp_module.body.append(call_stmt)
     # temp_module.type_ignores = []
 
-    visitor = GetUndefinedVariableVisitor()
+    visitor = GetUndefinedVariableVisitor(py_version=args.py_version)
     return visitor.visit(temp_module)
 
 
@@ -242,7 +258,7 @@ def transform(old_source: str) -> str:
         if len(set(decl_names)) < len(decl_names):
             raise NameRedefinition("Name redefinition exists. Not supported yet.")
 
-    module_tree = ast.parse(old_source)
+    module_tree = ast.parse(old_source, feature_version=args.py_version)
 
     top_level_stmts = module_tree.body
 
@@ -573,6 +589,14 @@ def check_args() -> None:
     "declaration. `ignore` specifies that comments are ignored and removed.",
 )
 @click.option(
+    "--py",
+    "py_version",
+    default="3.8",
+    show_default=True,
+    type=PyVersionParamType(),
+    help="Specify the version of Python abstract grammar being used in parsing input files.",
+)
+@click.option(
     "-q", "--quiet", is_flag=True, help="Suppress all output except the error channel."
 )
 @click.option("-v", "--verbose", is_flag=True, help="Increase verboseness.")
@@ -590,6 +614,7 @@ def main(
     no_aggressive: bool,
     encoding: str,
     comment_strategy: CommentStrategy,
+    py_version: Tuple[int, int],
     quiet: bool,
     verbose: bool,
 ) -> None:

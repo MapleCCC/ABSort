@@ -1,5 +1,5 @@
 import ast
-from typing import Dict, List, Optional, Set, Sequence, Union
+from typing import Dict, List, Optional, Set, Sequence, Tuple, Union
 
 from .profile_tools import add_profile_decorator_to_class_methods
 
@@ -37,11 +37,12 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
     """
     """
 
-    def __init__(self) -> None:
+    def __init__(self, py_version: Tuple[int, int]) -> None:
         self._undefined_vars: Set[str] = set()
         self._namespaces: List[Dict[str, ast.AST]] = []
+        self._py_version: Tuple[int, int] = py_version
 
-    __slots__ = ("_undefined_vars", "_namespaces")
+    __slots__ = ("_undefined_vars", "_namespaces", "_py_version")
 
     def _symbol_lookup(self, name: str) -> Optional[ast.AST]:
         for namespace in reversed(self._namespaces):
@@ -155,8 +156,11 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
 
         if isinstance(_node, (ast.FunctionDef, ast.AsyncFunctionDef)):
             self._namespaces.append({})
-            for name in retrieve_names_from_args(_node.args):
-                self._namespaces[-1][name] = _DummyNode()
+            if self._py_version >= (3, 9):
+                self._visit(_node.args)
+            else:
+                for name in retrieve_names_from_args(_node.args):
+                    self._namespaces[-1][name] = _DummyNode()
             self._visit(_node.body)
             self._namespaces.pop()
         elif isinstance(_node, ast.ClassDef):
