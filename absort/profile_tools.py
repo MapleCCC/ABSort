@@ -1,12 +1,9 @@
-from typing import TypeVar
+from typing import Type
 
 __all__ = ["add_profile_decorator_to_class_methods"]
 
 
-T = TypeVar("T")
-
-
-def add_profile_decorator_to_class_methods(cls: T) -> T:
+def add_profile_decorator_to_class_methods(cls: Type) -> Type:
     """
     A dummy function. The actual function body will be injected by profile.py script at
     runtime.

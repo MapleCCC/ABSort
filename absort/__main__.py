@@ -617,7 +617,7 @@ def check_args() -> None:
 @profile  # type: ignore
 def main(
     ctx: click.Context,
-    filepaths: Tuple[str],
+    filepaths: Tuple[str, ...],
     display_diff: bool,
     in_place: bool,
     no_fix_main_to_bottom: bool,

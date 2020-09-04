@@ -50,6 +50,15 @@ except NameError:
     profile = lambda x: x
 
 
+_T = TypeVar("_T")
+_S = TypeVar("_S")
+
+
+@overload
+def ireverse(iterable: Iterable[_T]) -> Iterator[_T]:
+    ...
+
+
 def ireverse(iterable: Iterable) -> Iterator:
     """
     Similar to the builtin function reversed(), except accept iterable objects as input
@@ -57,6 +66,11 @@ def ireverse(iterable: Iterable) -> Iterator:
     l = list(iterable)
     for i in range(len(l)):
         yield l[~i]
+
+
+@overload
+def xreverse(iterable: Iterable[_T]) -> List[_T]:
+    ...
 
 
 def xreverse(iterable: Iterable) -> List:
@@ -147,14 +161,14 @@ def silent_context() -> Iterator:
 
 # TODO Add more cache replacement policy implementation
 def cache_with_key(
-    key: Callable, maxsize: Optional[int] = 128, policy: str = "LRU"
-) -> Callable[[Callable], Callable]:
+    key: Callable[..., Hashable], maxsize: Optional[int] = 128, policy: str = "LRU"
+) -> Callable[[Callable[..., _T]], Callable[..., _T]]:
     """
     It's like the builtin `functools.lru_cache`, except that it provides customization
     space for the key calculating method and the cache replacement policy.
     """
 
-    def decorator(fn: Callable) -> Callable:
+    def decorator(fn: Callable[...,_T]) -> Callable[...,_T]:
         if policy == "LRU":
             _cache = LRU(maxsize=maxsize)
         elif policy == "LFU":
@@ -167,7 +181,7 @@ def cache_with_key(
 
         @functools.wraps(fn)
         @profile  # type: ignore
-        def wrapper(*args: Any, **kwargs: Any) -> Any:
+        def wrapper(*args: Any, **kwargs: Any) -> _T:
             arg_key = key(*args, **kwargs)
             if arg_key in _cache:
                 nonlocal hit
@@ -224,13 +238,20 @@ def detect_encoding(filename: str, limit_byte_check: int = -1) -> str:
         return "latin-1"
 
 
-def apply(fn: Callable, *args: Any, **kwargs: Any) -> Any:
+def apply(fn: Callable[..., _T], *args: Any, **kwargs: Any) -> _T:
     """ Equivalent to Haskell's $ operator """
     return fn(*args, **kwargs)
 
 
+@overload
 def first_true(
-    iterable: Iterable, *, default: Any = None, pred: Callable = None
+    iterable: Iterable[_T], *, default: Any = None, pred: Callable[[_T], bool] = None
+) -> Any:
+    ...
+
+
+def first_true(
+    iterable: Iterable, *, default: Any = None, pred: Callable[..., bool] = None
 ) -> Any:
     """ Equivalent to more-itertools library's `first_true` function """
 
@@ -281,6 +302,11 @@ class Logger:
         self._count += 1
 
 
+@overload
+def concat(lists: Iterable[List[_T]]) -> List[_T]:
+    ...
+
+
 def concat(lists: Iterable[List]) -> List:
     """ Concatenate multiple lists into one list """
     return list(itertools.chain.from_iterable(lists))
@@ -295,13 +321,13 @@ def SingleThreadPoolExecutor() -> Iterator[SimpleNamespace]:
 class compose:
     """ Equivalent to Haskell's . operator """
 
-    def __init__(self, fn1: Callable, fn2: Callable) -> None:
+    def __init__(self, fn1: Callable[[_T], _S], fn2: Callable[..., _T]) -> None:
         self._fn1 = fn1
         self._fn2 = fn2
 
     __slots__ = ("_fn1", "_fn2")
 
-    def __call__(self, *args: Any, **kwargs: Any) -> Any:
+    def __call__(self, *args: Any, **kwargs: Any) -> _S:
         return self._fn1(self._fn2(*args, **kwargs))
 
 
