@@ -124,15 +124,6 @@ def get_dependency_of_decl(decl: DeclarationType) -> Set[str]:
         )
     )
     temp_module = ast.Module(body=[decl, call_stmt], type_ignores=[])
-
-    # temp_module = ast.Module()
-    # temp_module.body = []
-    # temp_module.body.append(decl)
-    # name = ast.Name(id=decl.name, ctx=ast.Load())
-    # call_stmt = ast.Expr(value=ast.Call(func=name, args=[], keywords=[]))
-    # temp_module.body.append(call_stmt)
-    # temp_module.type_ignores = []
-
     visitor = GetUndefinedVariableVisitor(py_version=args.py_version)
     return visitor.visit(temp_module)
 
@@ -614,6 +605,7 @@ def check_args() -> None:
 @click.version_option(__version__)
 @click.pass_context
 # TODO add command line option --yes to bypass all confirmation prompts
+# TODO add command line option to ignore files specified by .gitignore
 @profile  # type: ignore
 def main(
     ctx: click.Context,
