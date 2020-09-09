@@ -1,6 +1,8 @@
 import ast
+from collections import deque
 from typing import Dict, List, Optional, Set, Sequence, Tuple, Union
 
+from .extra_exceptions import NameRedefinition
 from .profile_tools import add_profile_decorator_to_class_methods
 
 
@@ -26,6 +28,21 @@ def retrieve_names_from_args(args: ast.arguments) -> Set[str]:
     return names
 
 
+# FIXME Can class __init__ method be async function?
+def retrieve_init_method(cls: ast.ClassDef) -> Optional[ast.FunctionDef]:
+    candidates = [
+        stmt
+        for stmt in cls.body
+        if isinstance(stmt, ast.FunctionDef) and stmt.name == "__init__"
+    ]
+    if not candidates:
+        return None
+    if len(candidates) > 1:
+        raise SyntaxError("Class definition contains duplicate __init__ methods")
+    init_method = candidates[0]
+    return init_method
+
+
 class _DummyNode(ast.AST):
     pass
 
@@ -46,7 +63,7 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
     def __init__(self, py_version: Tuple[int, int]) -> None:
         self._undefined_vars: Set[str] = set()
         self._namespaces: List[Dict[str, ast.AST]] = []
-        self._call_stack: List[ast.AST] = []
+        self._call_stack: List[Union[ast.FunctionDef, ast.AsyncFunctionDef]] = []
         self._py_version: Tuple[int, int] = py_version
 
     __slots__ = ("_undefined_vars", "_namespaces", "_call_stack", "_py_version")
@@ -96,7 +113,12 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
         self._visit(node.bases)
         self._visit(node.keywords)
         self._visit(node.decorator_list)
+        # WARNING: inject class name before proceeding to visit class body, because it's
+        # possible the class name is accessed inside the class body.
         self._namespaces[-1][node.name] = node
+        self._namespaces.append({})
+        self._visit(node.body)
+        self._namespaces.pop()
 
     def visit_Import(self, node: ast.Import) -> None:
         for name in node.names:
@@ -171,37 +193,115 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
                 return
 
             if isinstance(_node, (ast.FunctionDef, ast.AsyncFunctionDef)):
-                if _node in self._call_stack:
-                    # Break out from recursion
-                    return
-                self._call_stack.append(_node)
-                self._namespaces.append({})
-                if self._py_version >= (3, 9):
-                    self._visit(_node.args)
-                else:
-                    for name in retrieve_names_from_args(_node.args):
-                        self._namespaces[-1][name] = _DummyNode()
-                self._visit(_node.body)
-                self._namespaces.pop()
-                self._call_stack.pop()
+                function = _node
             elif isinstance(_node, ast.ClassDef):
-                if _node in self._call_stack:
-                    # Break out from recursion
+                function = retrieve_init_method(_node)
+                if function is None:
+                    # As a static analysis tool, we can't handle heavily dynamic behavior.
+                    # So just skipping here should be a good decision.
                     return
-                self._call_stack.append(_node)
-                self._namespaces.append({})
-                self._visit(_node.body)
-                self._namespaces.pop()
-                self._call_stack.pop()
             else:
                 # As a static analysis tool, we can't handle heavily dynamic behavior.
                 # So just skipping here should be a good decision.
                 return
 
+            if function in self._call_stack:
+                # Break out from recursion
+                return
+
+            self._call_stack.append(function)
+            self._namespaces.append({})
+
+            if self._py_version >= (3, 9):
+                self._visit(function.args)
+            else:
+                for name in retrieve_names_from_args(function.args):
+                    self._namespaces[-1][name] = _DummyNode()
+
+            self._visit(function.body)
+
+            self._namespaces.pop()
+            self._call_stack.pop()
+
         def visit_attr_call(node: ast.Call) -> None:
+            def ast_get_attr_node(node: ast.AST, target_attr: str)->ast.AST:
+                if not isinstance(node, ast.ClassDef):
+                    raise NotImplementedError
+
+                attrs = {}
+                for stmt in node.body:
+                    if isinstance(stmt, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+                        if stmt.name in attrs:
+                            raise NameRedefinition
+                        attrs[stmt.name] = stmt
+                    elif isinstance(stmt, ast.Assign):
+                        for target in stmt.targets:
+                            if isinstance(target, ast.Name):
+                                if target.id in attrs:
+                                    raise NameRedefinition
+                                attrs[target.id] = target
+                            else:
+                                raise NotImplementedError
+                    else:
+                        raise NotImplementedError
+
+                return attrs[target_attr]
+
             assert isinstance(node.func, ast.Attribute)
 
-            raise NotImplementedError
+            self._visit(node.args)
+            self._visit(node.keywords)
+
+            top_level = node.func.value
+            attrs = deque()
+
+            while isinstance(top_level, ast.Attribute):
+                attrs.appendleft(top_level.attr)
+                top_level = top_level.value
+
+            if isinstance(top_level, ast.Name):
+                _node = self._symbol_lookup(top_level.id)
+                if _node is None:
+                    self._undefined_vars.add(top_level.id)
+
+                if isinstance(_node, ast.ClassDef):
+                    attribute = _node
+                    for attr in attrs:
+                        if not isinstance(attribute, ast.ClassDef):
+                            # As a static analysis tool, we can't handle heavily dynamic behavior.
+                            # So just skipping here should be a good decision.
+                            return
+                        attribute = ast_get_attr_node(attribute, attr)
+
+                    if not isinstance(attribute, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                        # As a static analysis tool, we can't handle heavily dynamic behavior.
+                        # So just skipping here should be a good decision.
+                        return
+
+                    if attribute in self._call_stack:
+                        # Break out from recursion
+                        return
+
+                    self._call_stack.append(attribute)
+                    self._namespaces.append({})
+
+                    if self._py_version >= (3, 9):
+                        self._visit(attribute.args)
+                    else:
+                        for name in retrieve_names_from_args(attribute.args):
+                            self._namespaces[-1][name] = _DummyNode()
+
+                    self._visit(attribute.body)
+
+                    self._namespaces.pop()
+                    self._call_stack.pop()
+
+                else:
+                    # As a static analysis tool, we can't handle heavily dynamic behavior.
+                    # So just skipping here should be a good decision.
+                    return
+            else:
+                self._visit(node.func.value)
 
         if isinstance(node.func, ast.Name):
             visit_name_call(node)
