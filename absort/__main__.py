@@ -26,7 +26,6 @@ from .ast_utils import (
     ast_get_leading_comment_source_lines,
     ast_get_source_lines,
 )
-from .extra_exceptions import NameRedefinition
 from .extra_typing import Declaration, DeclarationType
 from .graph import Graph
 from .utils import (
@@ -62,6 +61,11 @@ args = SimpleNamespace()
 
 # A singleton object to signal failure
 Fail = object()
+
+
+# Alternative name: DuplicateNames
+class NameRedefinition(Exception):
+    pass
 
 
 class CommentStrategy(Enum):
@@ -114,30 +118,7 @@ class PyVersionParamType(click.ParamType):
 
 
 def get_dependency_of_decl(decl: DeclarationType) -> Set[str]:
-    if isinstance(decl, (ast.FunctionDef, ast.AsyncFunctionDef)):
-        call_stmt = ast.Expr(
-            value=ast.Call(
-                func=ast.Name(id=decl.name, ctx=ast.Load()), args=[], keywords=[]
-            )
-        )
-        temp_module = ast.Module(body=[decl, call_stmt], type_ignores=[])
-    elif isinstance(decl, ast.ClassDef):
-        call_stmts = []
-        for stmt in decl.body:
-            if isinstance(stmt, (ast.FunctionDef, ast.AsyncFunctionDef)):
-                func = ast.Attribute(
-                    value=ast.Name(id=decl.name, ctx=ast.Load()),
-                    attr=stmt.name,
-                    ctx=ast.Load(),
-                )
-                call_stmts.append(
-                    ast.Expr(value=ast.Call(func=func, args=[], keywords=[],))
-                )
-            elif isinstance(stmt, ast.ClassDef):
-                raise NotImplementedError
-        temp_module = ast.Module(body=[decl] + call_stmts, type_ignores=[])
-    else:
-        raise RuntimeError("Unreachable")
+    temp_module = ast.Module(body=[decl], type_ignores=[])
     visitor = GetUndefinedVariableVisitor(py_version=args.py_version)
     return visitor.visit(temp_module)
 
