@@ -43,7 +43,7 @@ def retrieve_init_method(cls: ast.ClassDef) -> Optional[ast.FunctionDef]:
     return init_method
 
 
-class _DummyNode(ast.AST):
+class BogusNode(ast.AST):
     pass
 
 
@@ -123,24 +123,24 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
     def visit_Import(self, node: ast.Import) -> None:
         for name in node.names:
             if name.asname:
-                self._namespaces[-1][name.asname] = _DummyNode()
+                self._namespaces[-1][name.asname] = BogusNode()
             else:
-                self._namespaces[-1][name.name] = _DummyNode()
+                self._namespaces[-1][name.name] = BogusNode()
 
     def visit_ImportFrom(self, node: ast.ImportFrom) -> None:
         for name in node.names:
             if name.asname:
-                self._namespaces[-1][name.asname] = _DummyNode()
+                self._namespaces[-1][name.asname] = BogusNode()
             else:
-                self._namespaces[-1][name.name] = _DummyNode()
+                self._namespaces[-1][name.name] = BogusNode()
 
     def visit_Global(self, node: ast.Global) -> None:
         for name in node.names:
-            self._namespaces[-1][name] = _DummyNode()
+            self._namespaces[-1][name] = BogusNode()
 
     def visit_Nonlocal(self, node: ast.Nonlocal) -> None:
         for name in node.names:
-            self._namespaces[-1][name] = _DummyNode()
+            self._namespaces[-1][name] = BogusNode()
 
     def _visit_comprehension(
         self,
@@ -216,7 +216,7 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
                 self._visit(function.args)
             else:
                 for name in retrieve_names_from_args(function.args):
-                    self._namespaces[-1][name] = _DummyNode()
+                    self._namespaces[-1][name] = BogusNode()
 
             self._visit(function.body)
 
@@ -289,7 +289,7 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
                         self._visit(attribute.args)
                     else:
                         for name in retrieve_names_from_args(attribute.args):
-                            self._namespaces[-1][name] = _DummyNode()
+                            self._namespaces[-1][name] = BogusNode()
 
                     self._visit(attribute.body)
 
