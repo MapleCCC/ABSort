@@ -200,6 +200,7 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
             if not self._symbol_lookup(node.id):
                 self._undefined_vars.add(node.id)
         elif isinstance(node.ctx, ast.Store):
+            # TODO if we found the symbol, should we update it in the namespace?
             if not self._symbol_lookup(node.id):
                 self._namespaces[-1][node.id] = node
         elif isinstance(node.ctx, ast.Del):
@@ -209,3 +210,5 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
                     break
         elif isinstance(node.ctx, ast.Param):
             self._namespaces[-1][node.id] = node
+        else:
+            raise ValueError("Unknown name context")

@@ -1,5 +1,4 @@
 import contextlib
-from contextlib import contextmanager
 import difflib
 import functools
 import io
@@ -11,7 +10,18 @@ from collections import namedtuple
 from functools import partial
 from pathlib import Path
 from types import SimpleNamespace
-from typing import IO, Any, Callable, Iterable, Iterator, List, Optional
+from typing import (
+    IO,
+    Any,
+    Callable,
+    Hashable,
+    Iterable,
+    Iterator,
+    List,
+    Optional,
+    TypeVar,
+    overload,
+)
 
 from colorama import Fore, Style
 
@@ -168,7 +178,7 @@ def cache_with_key(
     space for the key calculating method and the cache replacement policy.
     """
 
-    def decorator(fn: Callable[...,_T]) -> Callable[...,_T]:
+    def decorator(fn: Callable[..., _T]) -> Callable[..., _T]:
         if policy == "LRU":
             _cache = LRU(maxsize=maxsize)
         elif policy == "LFU":

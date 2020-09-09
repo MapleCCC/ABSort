@@ -12,23 +12,25 @@ __all__ = ["LRU"]
 MAXIMUM_RECENCY_LIST_SIZE = 1000
 
 
-class DummyCell:
+class BogusCell:
     """ A singleton to signal lack of value """
 
     _singleton = None
 
-    def __new__(cls: Type[DummyCell]) -> DummyCell:
+    def __new__(cls: Type[BogusCell]) -> BogusCell:
         if cls._singleton is None:
             cls._singleton = object.__new__(cls)
         return cls._singleton
 
 
 # A singleton to signal lack of value
-_DUMMY_CELL = DummyCell()
+_BOGUS_CELL = BogusCell()
 
 
 @add_profile_decorator_to_class_methods
 class LRU:
+    """ An lightweight and efficient data structure that implements the LRU mechanims """
+
     def __init__(self, maxsize: Optional[int] = 128) -> None:
         if maxsize is None:
             maxsize = math.inf  # type: ignore
@@ -49,7 +51,7 @@ class LRU:
     def __setitem__(self, key: Any, value: Any) -> None:
         if key in self._indexer:
             index = self._indexer[key]
-            self._recency[index] = _DUMMY_CELL
+            self._recency[index] = _BOGUS_CELL
         self._recency.append(key)
         self._indexer[key] = len(self._recency) - 1
         self._storage[key] = value
@@ -57,8 +59,8 @@ class LRU:
         if self.size > self._maxsize:
             evicted = None
             for idx, key in enumerate(self._recency[self._offset :], self._offset):
-                if key is not _DUMMY_CELL:
-                    self._recency[idx] = _DUMMY_CELL
+                if key is not _BOGUS_CELL:
+                    self._recency[idx] = _BOGUS_CELL
                     self._offset = idx + 1
                     evicted = key
                     break
@@ -85,7 +87,7 @@ class LRU:
         self._recency.clear()
 
         for key in old_recency_list:
-            if key is not _DUMMY_CELL:
+            if key is not _BOGUS_CELL:
                 self._recency.append(key)
                 self._indexer[key] = len(self._recency) - 1
 

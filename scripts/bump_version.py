@@ -25,7 +25,9 @@ def bump_file(file: str, pattern: str, repl: str) -> None:
     old_content = p.read_text(encoding="utf-8")
     new_content, num_of_sub = re.subn(pattern, repl, old_content)
     if not num_of_sub:
-        print(f"Can't find match of pattern {pattern} in file {file}", file=sys.stderr)
+        logger.log(
+            f"Can't find match of pattern {pattern} in file {file}", file=sys.stderr
+        )
         return
     p.write_text(new_content, encoding="utf-8")
 
