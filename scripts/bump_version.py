@@ -4,8 +4,10 @@ import os
 import re
 import subprocess
 import sys
+import time
+from functools import singledispatch
 from pathlib import Path
-from typing import Any, Callable, Sequence
+from typing import Any, Callable, List, Sequence, Type, TypeVar
 
 import click
 import semver
@@ -71,13 +73,51 @@ def contains_uncommitted_change(filepath: str):
     return len(cmpl_proc.stdout) != 0
 
 
-# FIXME add backoff factor
-def retry(fn: Callable, *args: Any, **kwargs: Any) -> Any:
-    while True:
-        try:
-            return fn(*args, **kwargs)
-        except BaseException:
-            continue
+class MaxRetryError(Exception):
+    pass
+
+
+_T = TypeVar("_T")
+
+
+@singledispatch
+def retry(
+    total: int = 3, backoff_factor: float = 0.1, on_except: List[Type[Exception]] = None
+) -> Callable[..., _T]:
+    """
+    The `total` and `backoff_factor` parameters has same meaning with that of
+    `urllib3.util.Retry` (https://urllib3.readthedocs.io/en/latest/reference/urllib3.util.html#urllib3.util.Retry)
+    """
+
+    if total < 0 or backoff_factor < 0:
+        raise ValueError(
+            "`total` and `backoff_factor` parameters should have values that are non-negative number."
+        )
+
+    if on_except is None:
+        exceptions = Exception
+    else:
+        exceptions = tuple(on_except)
+
+    def apply(fn: Callable[..., _T], *args: Any, **kwargs: Any) -> _T:
+        for i in range(total + 1):
+            if i >= 2:
+                time.sleep(backoff_factor * (2 ** (i - 1)))
+            try:
+                return fn(*args, **kwargs)
+            except exceptions:
+                continue
+        raise MaxRetryError(
+            f"Reached maximum retries on applying function {fn} to arguments {args}, {kwargs}"
+        )
+
+    return apply
+
+
+@retry.register
+def _(fn: Callable[..., _T], *args: Any, **kwargs: Any) -> _T:
+    base = retry.registry[object]
+    return base()(fn, *args, **kwargs)
 
 
 @click.command()
