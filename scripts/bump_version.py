@@ -38,7 +38,9 @@ def bump_file(file: str, new_version: str) -> None:
     for pattern, repl in substitues:
         new_content, num_of_sub = re.subn(pattern, repl, new_content)
         if not num_of_sub:
-            logger.log(f"Can't find match of pattern {pattern} in file {file}")
+            logger.log(
+                f"Can't find match of pattern {pattern} in file {file}", file=sys.stderr
+            )
 
     p.write_text(new_content, encoding="utf-8")
 
