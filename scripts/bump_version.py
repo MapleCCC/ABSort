@@ -120,18 +120,7 @@ def _(fn: Callable[..., _T], *args: Any, **kwargs: Any) -> _T:
     return base()(fn, *args, **kwargs)
 
 
-@click.command()
-@click.argument("component")
-@click.option("--no-release", is_flag=True)
-def main(component: str, no_release: bool) -> None:
-    if contains_uncommitted_change("README.md"):
-        raise RuntimeError(
-            "README.md contains uncommitted change. "
-            "Please clean it up before rerun the script."
-        )
-
-    logger.log("Calculating new version......")
-
+def calculate_new_version(component) -> str:
     old_version_info = semver.VersionInfo.parse(current_version.lstrip("v"))
 
     method = getattr(old_version_info, f"bump_{component}", None)
@@ -144,11 +133,31 @@ def main(component: str, no_release: bool) -> None:
 
     new_version = "v" + str(new_version_info)
 
+    return new_version
+
+
+def bump_files(new_version: str) -> None:
     logger.log("Bump the __version__ variable in __version__.py ......")
     bump_file___version__(new_version)
 
     logger.log("Bump version-related information in README.md ......")
     bump_file_README(new_version)
+
+
+@click.command()
+@click.argument("component")
+@click.option("--no-release", is_flag=True)
+def main(component: str, no_release: bool) -> None:
+    if contains_uncommitted_change("README.md"):
+        raise RuntimeError(
+            "README.md contains uncommitted change. "
+            "Please clean it up before rerun the script."
+        )
+
+    logger.log("Calculating new version......")
+    new_version = calculate_new_version(component)
+
+    bump_files(new_version)
 
     run(["git", "add", "absort/__version__.py"])
 
