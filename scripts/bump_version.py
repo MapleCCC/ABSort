@@ -141,11 +141,13 @@ def bump_files(new_version: str) -> None:
 @click.argument("component")
 @click.option("--no-release", is_flag=True)
 def main(component: str, no_release: bool) -> None:
-    if any(map(contains_uncommitted_change, FILES_TO_UPDATE)):
-        raise RuntimeError(
-            "Some files contains uncommitted change. "
-            "Please clean it up before rerun the script."
-        )
+
+    for file in FILES_TO_UPDATE:
+        if contains_uncommitted_change(file):
+            raise RuntimeError(
+                f"{file} contains uncommitted change. "
+                "Please clean it up before rerun the script."
+            )
 
     logger.log("Calculating new version......")
     new_version = calculate_new_version(component)
