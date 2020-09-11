@@ -69,9 +69,9 @@ class NameRedefinition(Exception):
 
 
 class CommentStrategy(Enum):
-    push_top = "push-top"
-    attr_follow_decl = "attr-follow-decl"
-    ignore = "ignore"
+    PUSH_TOP = "push-top"
+    ATTR_FOLLOW_DECL = "attr-follow-decl"
+    IGNORE = "ignore"
 
 
 class CommentStrategyParamType(click.ParamType):
@@ -195,11 +195,11 @@ def absort_decls(decls: List[DeclarationType]) -> Iterator[DeclarationType]:
 def get_related_source_lines_of_decl(source: str, node: ast.AST) -> List[str]:
     source_lines = []
 
-    if args.comment_strategy is CommentStrategy.attr_follow_decl:
+    if args.comment_strategy is CommentStrategy.ATTR_FOLLOW_DECL:
         source_lines += ast_get_leading_comment_and_decorator_list_source_lines(
             source, node
         )
-    elif args.comment_strategy in (CommentStrategy.push_top, CommentStrategy.ignore):
+    elif args.comment_strategy in (CommentStrategy.PUSH_TOP, CommentStrategy.IGNORE):
         source_lines += ast_get_decorator_list_source_lines(source, node)
     else:
         raise RuntimeError("Unreachable")
@@ -304,7 +304,7 @@ def get_related_source_lines_of_block(
         else:
             source_lines += related_source_lines
 
-    if args.comment_strategy is CommentStrategy.push_top:
+    if args.comment_strategy is CommentStrategy.PUSH_TOP:
         total_comment_lines = []
         for decl in decls:
             comment_lines = ast_get_leading_comment_source_lines(source, decl)
