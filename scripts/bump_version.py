@@ -137,17 +137,22 @@ def bump_files(new_version: str) -> None:
         bump_file(file, new_version)
 
 
-@click.command()
-@click.argument("component")
-@click.option("--no-release", is_flag=True)
-def main(component: str, no_release: bool) -> None:
-
+def preliminary_check() -> None:
     for file in FILES_TO_UPDATE:
         if contains_uncommitted_change(file):
             raise RuntimeError(
                 f"{file} contains uncommitted change. "
                 "Please clean it up before rerun the script."
             )
+
+
+@click.command()
+@click.argument("component")
+@click.option("--no-release", is_flag=True)
+def main(component: str, no_release: bool) -> None:
+
+    logger.log("Conducting preliminary check ...")
+    preliminary_check()
 
     logger.log("Calculating new version......")
     new_version = calculate_new_version(component)
