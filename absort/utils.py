@@ -15,11 +15,11 @@ from typing import (
     Any,
     Callable,
     Hashable,
+    IO,
     Iterable,
     Iterator,
     List,
     Optional,
-    SupportsWrite,  # type: ignore
     TypeVar,
     overload,
 )
@@ -304,7 +304,7 @@ class Logger:
 
     __slots__ = "_count"
 
-    def log(self, s: str, file: SupportsWrite[str] = sys.stdout) -> None:
+    def log(self, s: str, file: IO = sys.stdout) -> None:
         """
         It's just a thin wrapper over the builtin print function, except that it prints
         strings with order numbers prepended.
