@@ -597,6 +597,11 @@ def check_args() -> None:
     "-q", "--quiet", is_flag=True, help="Suppress all output except the error channel."
 )
 @click.option("-v", "--verbose", is_flag=True, help="Increase verboseness.")
+@click.option(
+    "--color-off",
+    is_flag=True,
+    help="Turn off color output, for compatibility with environment without color code support.",
+)
 @click.version_option(__version__)
 @click.pass_context
 # TODO add command line option --yes to bypass all confirmation prompts
@@ -615,6 +620,7 @@ def main(
     py_version: Tuple[int, int],
     quiet: bool,
     verbose: bool,
+    color_off: bool,
 ) -> None:
 
     # A global variable to store CLI arguments.
@@ -632,7 +638,9 @@ def main(
 
     verboseness_context_manager = silent_context() if quiet else contextlib.nullcontext()
 
-    with verboseness_context_manager, colorama_text():
+    colorness_context_manager = contextlib.nullcontext() if color_off else colorama_text()
+
+    with verboseness_context_manager, colorness_context_manager:
 
         absort_files(files, digest)
 
