@@ -638,7 +638,8 @@ def main(
 
     verboseness_context_manager = silent_context() if quiet else contextlib.nullcontext()
 
-    colorness_context_manager = contextlib.nullcontext() if color_off else colorama_text()
+    # TODO test --color-off under different environments, eg. Linux, macOS, ...
+    colorness_context_manager = colorama_text(strip=True, convert=False, wrap=True) if color_off else colorama_text()
 
     with verboseness_context_manager, colorness_context_manager:
 
