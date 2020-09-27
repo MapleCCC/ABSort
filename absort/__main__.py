@@ -417,7 +417,6 @@ async def absort_file(file: Path) -> Digest:
             except UnicodeDecodeError:
 
                 print(f"{file} has unknown encoding.", file=sys.stderr)
-                digest["failed"] += 1
                 raise ABSortFail
 
     def transform_source(old_source: str) -> str:
@@ -427,7 +426,6 @@ async def absort_file(file: Path) -> Digest:
             # if re.fullmatch(r"Missing parentheses in call to 'print'. Did you mean print(.*)\?", exc.msg):
             #     pass
             print(f"{file} has erroneous syntax: {exc.msg}", file=sys.stderr)
-            digest["failed"] += 1
             raise ABSortFail
 
         except NameRedefinition:
@@ -435,7 +433,6 @@ async def absort_file(file: Path) -> Digest:
                 f"{file} contains duplicate name redefinitions. Not supported yet.",
                 file=sys.stderr,
             )
-            digest["failed"] += 1
             raise ABSortFail
 
     async def write_source(file: Path, new_source: str) -> None:
@@ -492,7 +489,7 @@ async def absort_file(file: Path) -> Digest:
         await process_new_source(new_source)
         return digest
     except ABSortFail:
-        return Counter()
+        return Counter(failed=1)
 
 
 def absort_files(files: List[Path]) -> Digest:
