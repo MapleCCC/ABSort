@@ -412,22 +412,12 @@ class Digest:
     def __getitem__(self, key: str) -> int:
         return attr.asdict(self)[key]
 
-    def __setitem__(self, key: str, value: int) -> int:
-        setattr(self, key, value)
-
     def __add__(self, other: Any) -> Digest:
         if not isinstance(other, Digest):
             return NotImplemented
         c1 = Counter(attr.asdict(self))
         c2 = Counter(attr.asdict(other))
-        return Digest(**(c1 + c2))
-
-    def __iadd__(self, other: Any) -> Digest:
-        if not isinstance(other, Digest):
-            return NotImplemented
-        for field in attr.fields(Digest):
-            self[field.name] += other[field.name]
-        return self
+        return Digest(**(c1 + c2))  # type: ignore
 
 
 async def absort_file(file: Path) -> Digest:
@@ -516,7 +506,7 @@ async def absort_file(file: Path) -> Digest:
         await process_new_source(new_source)
         return digest
     except ABSortFail:
-        return Digest(failed=1)
+        return Digest(failed=1)  # type: ignore
 
 
 def absort_files(files: List[Path]) -> Digest:
@@ -578,7 +568,7 @@ def check_args() -> None:
     help="A command line utility to sort Python source code by abstraction levels",
     no_args_is_help=True,  # type: ignore
     context_settings=dict(help_option_names=["-h", "--help", "/?"]),
-    epilog="While the tool is on experimental stage, all files are backuped to a local cache before processing. "
+    epilog="While the tool is in the experimental stage, all files are backuped to a local cache before processing. "
     "If something goes wrong or regret hits you, it's always possible to safely recover the original files. "
     f"The location of the backup cache is {CACHE_DIR}.",
 )
@@ -597,26 +587,26 @@ def check_args() -> None:
     ),
 )
 @click.option(
-    "-c", "--check", is_flag=True, help="Check if file is already well-formatted."
+    "-c", "--check", is_flag=True, help="Check if the file is already well-formatted."
 )
 @click.option(
     "-d",
     "--diff",
     "display_diff",
     is_flag=True,
-    help="Specify whether to display diff view between the original source code and the new source code.",
+    help="Specify whether to display the diff view between the original source code and the new source code.",
 )
 @click.option(
     "-i",
     "--in-place",
     is_flag=True,
-    help="Specify whether to modify file in-place. This is a dangerous option. Use to "
+    help="Specify whether to modify the file in-place. This is a dangerous option. Use to "
     "your own risk. A confirmation prompt shows up to give you second chance to think over.",
 )
 @click.option(
     "--no-fix-main-to-bottom",
     is_flag=True,
-    help="Specify that main function doesn't need to be fixed to the bottom-most. "
+    help="Specify that the main function doesn't need to be fixed to the bottom-most. "
     "The default behavior of the program is to fix the main function to the bottom-most, "
     "unless the `--no-fix-main-to-bottom` option is set.",
 )
@@ -661,7 +651,7 @@ def check_args() -> None:
     help="Specify the version of Python abstract grammar being used in parsing input files.",
 )
 @click.option(
-    "-q", "--quiet", is_flag=True, help="Suppress all output except the error channel."
+    "-q", "--quiet", is_flag=True, help="Suppress all output except the error channel. To also suppress error channel please use `2>/dev/null`."
 )
 @click.option("-v", "--verbose", is_flag=True, help="Increase verboseness.")
 @click.option(

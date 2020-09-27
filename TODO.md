@@ -18,6 +18,7 @@
 - 完善 README
 - Instead of LRU, maybe we should use LFU?, or frecency? Investigate different cache replacement policy/strategy.
 - Pre-commit hook to update absort --help message in README
+  - 记得脱敏
 - Fill in requirements*.txt files.
 - Remove @profile, @add_profile_decorator_to_class_methods decorators.
 - Reorder functions in __main__.py by abstraction levels. From higher abstraction level to lower.
@@ -32,7 +33,7 @@
 - 详细看完 Green Tree Sankes 文档，透彻了解
 - visit_Name 不同 context 在 Green Tree Snake 文档中查看
 - Remember timestamp to ignore unmodified files
-- Use multi-thread to accelerate when there are large amounts of input files waiting to be processed.
+- Use multi-thread/multi-process/asyncIO to accelerate when there are large amounts of input files waiting to be processed.
   - Take inspiration from black tool's source code
   - Take inspiration from autopep8 tool's source code
   - File IO is the most expensive and most suitable for multi-thread.
