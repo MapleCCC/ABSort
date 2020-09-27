@@ -105,17 +105,18 @@ Usage: absort [OPTIONS] <files or directories to search for Python files>
   A command line utility to sort Python source code by abstraction levels
 
 Options:
-  -d, --diff                      Specify whether to display diff view between
-                                  the original source code and the new source
-                                  code.
+  -c, --check                     Check if the file is already well-formatted.
+  -d, --diff                      Specify whether to display the diff view
+                                  between the original source code and the new
+                                  source code.
 
-  -i, --in-place                  Specify whether to modify file in-place.
+  -i, --in-place                  Specify whether to modify the file in-place.
                                   This is a dangerous option. Use to your own
                                   risk. A confirmation prompt shows up to give
                                   you second chance to think over.
 
-  --no-fix-main-to-bottom         Specify that main function doesn't need to
-                                  be fixed to the bottom-most. The default
+  --no-fix-main-to-bottom         Specify that the main function doesn't need
+                                  to be fixed to the bottom-most. The default
                                   behavior of the program is to fix the main
                                   function to the bottom-most, unless the
                                   `--no-fix-main-to-bottom` option is set.
@@ -133,7 +134,7 @@ Options:
   -e, --encoding ENCODING         The encoding scheme used to read and write
                                   Python files.  [default: utf-8]
 
-  -c, --comment-strategy COMMENT_STRATEGY
+  --comment-strategy COMMENT_STRATEGY
                                   Specify how to treat comments. Possible
                                   values are `push-top`, `attr-follow-decl`,
                                   and `ignore` (not recommended). The default
@@ -150,11 +151,23 @@ Options:
                                   [default: 3.8]
 
   -q, --quiet                     Suppress all output except the error
-                                  channel.
+                                  channel. To also suppress error channel
+                                  please use `2>/dev/null`.
 
   -v, --verbose                   Increase verboseness.
+  --color-off                     Turn off color output. For compatibility
+                                  with environment without color code support.
+
+  -y, --yes                       Bypass all confirmation prompts. Dangerous
+                                  option. Not recommended.
+
   --version                       Show the version and exit.
-  --help                          Show this message and exit.
+  -h, /?, --help                  Show this message and exit.
+
+  While the tool is in the experimental stage, all files are backuped to a
+  local cache before processing. If something goes wrong or regret hits you,
+  it's always possible to safely recover the original files. The location of
+  the backup cache is [CACHE_LOCATION].
 ```
 
 Alternatively, you can pass Python code from `stdin`.
