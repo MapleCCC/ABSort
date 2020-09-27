@@ -395,24 +395,28 @@ def backup_to_cache(file: Path) -> None:
         shrink_cache()
 
 
-# FIXME race condition on printing to console
 # FIXME race condition on digest variable
 def absort_files(files: List[Path], digest: Counter) -> None:
+    stdout_lock = asyncio.Lock()
+    stderr_lock = asyncio.Lock()
+
     async def read_source(file: Path) -> str:
         try:
             return file.read_text(args.encoding)
         except UnicodeDecodeError:
+            async with stderr_lock:
+                print(f"{file} is not decodable by {args.encoding}", file=sys.stderr)
+                print(
+                    f"Try to automatically detect file encoding......", file=sys.stderr
+                )
+                detected_encoding = detect_encoding(str(file))
 
-            print(f"{file} is not decodable by {args.encoding}", file=sys.stderr)
-            print(f"Try to automatically detect file encoding......", file=sys.stderr)
-            detected_encoding = detect_encoding(str(file))
+                try:
+                    return file.read_text(detected_encoding)
+                except UnicodeDecodeError:
 
-            try:
-                return file.read_text(detected_encoding)
-            except UnicodeDecodeError:
-
-                print(f"{file} has unknown encoding.", file=sys.stderr)
-                return Fail  # type: ignore
+                    print(f"{file} has unknown encoding.", file=sys.stderr)
+                    return Fail  # type: ignore
 
     async def transform_source(old_source: str) -> str:
         if old_source is Fail:
@@ -421,24 +425,27 @@ def absort_files(files: List[Path], digest: Counter) -> None:
         try:
             return transform(old_source)
         except SyntaxError as exc:
+            async with stderr_lock:
 
-            # if re.fullmatch(r"Missing parentheses in call to 'print'. Did you mean print(.*)\?", exc.msg):
-            #     pass
-            print(f"{file} has erroneous syntax: {exc.msg}", file=sys.stderr)
-            return Fail  # type: ignore
+                # if re.fullmatch(r"Missing parentheses in call to 'print'. Did you mean print(.*)\?", exc.msg):
+                #     pass
+                print(f"{file} has erroneous syntax: {exc.msg}", file=sys.stderr)
+                return Fail  # type: ignore
 
         except NameRedefinition:
+            async with stderr_lock:
 
-            print(
-                f"{file} contains duplicate name redefinitions. Not supported yet.",
-                file=sys.stderr,
-            )
-            return Fail  # type: ignore
+                print(
+                    f"{file} contains duplicate name redefinitions. Not supported yet.",
+                    file=sys.stderr,
+                )
+                return Fail  # type: ignore
 
     async def write_source(file: Path, new_source: str) -> None:
-        ans = click.confirm(
-            f"Are you sure you want to in-place update the file {file}?", err=True
-        )
+        async with stderr_lock:
+            ans = click.confirm(
+                f"Are you sure you want to in-place update the file {file}?", err=True
+            )
         if not ans:
             digest["unmodified"] += 1
             return
@@ -448,7 +455,8 @@ def absort_files(files: List[Path], digest: Counter) -> None:
         file.write_text(new_source, args.encoding)
         digest["modified"] += 1
         if args.verbose:
-            print(f"Processed {file}")
+            async with stdout_lock:
+                print(f"Processed {file}")
 
     async def process_new_source(new_source: str, old_source: str) -> None:
         if new_source is Fail:
@@ -460,7 +468,8 @@ def absort_files(files: List[Path], digest: Counter) -> None:
         if args.display_diff:
 
             digest["unmodified"] += 1
-            display_diff_with_filename(old_source, new_source, str(file))
+            async with stdout_lock:
+                display_diff_with_filename(old_source, new_source, str(file))
 
         elif args.in_place:
 
@@ -472,12 +481,13 @@ def absort_files(files: List[Path], digest: Counter) -> None:
         else:
             digest["unmodified"] += 1
             divider = bright_yellow("-" * 79)
-            print(divider)
-            print(file)
-            print(divider)
-            print(new_source)
-            print(divider)
-            print("\n", end="")
+            async with stdout_lock:
+                print(divider)
+                print(file)
+                print(divider)
+                print(new_source)
+                print(divider)
+                print("\n", end="")
 
     async def absort_file(file: Path) -> None:
         old_source = await read_source(file)
