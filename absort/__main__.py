@@ -507,9 +507,19 @@ def check_args() -> None:
     if args.quiet and args.verbose:
         raise ValueError("Can't specify both `--quiet` and `--verbose` options")
 
+    # First confirmation prompt
     if args.yes:
         ans = click.confirm(
             "Are you sure you want to bypass all confirmation prompts? "
+            "(Dangerous, not recommended)"
+        )
+        if not ans:
+            args.yes = False
+
+    # Second confirmation prompt
+    if args.yes:
+        ans = click.confirm(
+            "Are you REALLY REALLY REALLY sure you want to bypass all confirmation prompts? "
             "(Dangerous, not recommended)"
         )
         if not ans:
