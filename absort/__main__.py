@@ -64,6 +64,9 @@ Digest = typing.Counter[str]
 # A global variable to store CLI arguments.
 args = SimpleNamespace()
 
+# A global variable to store digest information
+digest: Digest = Counter(modified=0, unmodified=0, failed=0)
+
 # Custom Exceptions
 
 # Alternative name: DuplicateNames
@@ -396,7 +399,7 @@ async def backup_to_cache(file: Path) -> None:
         shrink_cache()
 
 
-async def absort_file(file: Path, digest: Digest) -> None:
+async def absort_file(file: Path) -> None:
     async def read_source(file: Path) -> str:
         try:
             return await aread_text(file, args.encoding)
@@ -480,14 +483,14 @@ async def absort_file(file: Path, digest: Digest) -> None:
         pass
 
 
-def absort_files(files: List[Path], digest: Digest) -> None:
+def absort_files(files: List[Path]) -> None:
     async def entry() -> None:
-        await asyncio.gather(*(absort_file(file, digest) for file in files))
+        await asyncio.gather(*(absort_file(file) for file in files))
 
     asyncio.run(entry())
 
 
-def display_summary(digest: Digest) -> None:
+def display_summary() -> None:
     summary = []
     if digest["modified"]:
         summary.append(f"{digest['modified']} files modified")
@@ -657,9 +660,6 @@ def main(
     files = list(collect_python_files(map(Path, filepaths)))
     print(f"Found {len(files)} files")
 
-    # TODO make digest a global variable so that we don't need to pass around
-    digest: Digest = Counter(modified=0, unmodified=0, failed=0)
-
     verboseness_context_manager = silent_context() if quiet else contextlib.nullcontext()
 
     # TODO test --color-off under different environments, eg. Linux, macOS, ...
@@ -667,9 +667,9 @@ def main(
 
     with verboseness_context_manager, colorness_context_manager:
 
-        absort_files(files, digest)
+        absort_files(files)
 
-        display_summary(digest)
+        display_summary()
 
 
 if __name__ == "__main__":
