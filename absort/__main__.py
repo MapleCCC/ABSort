@@ -141,8 +141,14 @@ def generate_dependency_graph(decls: List[DeclarationType]) -> Graph:
     for decl in decls:
         deps = get_dependency_of_decl(decl)
         for dep in deps:
-            if dep in decl_names:
-                graph.add_edge(decl.name, dep)
+            # We don't add the dependency to the dependency graph, when:
+            # 1. the dependency is not among the decls to sort;
+            # 2. the dependency is of the same name with the decl itself. It can be inferred
+            # that the dependency must come from other places, thus no need to add it to
+            # the dependency graph anyway. One example: https://github.com/pytest-dev/py/blob/92e36e60b22e2520337748f950e3d885e0c7c551/py/_log/warning.py#L3
+            if dep not in decl_names or dep == decl.name:
+                continue
+            graph.add_edge(decl.name, dep)
 
         # Below line is necessary for adding node with zero out-degree to the graph.
         graph.add_node(decl.name)
