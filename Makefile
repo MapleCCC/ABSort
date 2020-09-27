@@ -7,7 +7,8 @@ test:
 	pytest tests
 
 stress-test:
-	time absort --quiet "D:/Program Files/Python38/Lib/site-packages"
+	time python -m absort --quiet "D:/Program Files/Python38/Lib/site-packages"
+	# time python -m absort --quiet "D:\Program Files\Python38\Lib\site-packages\isort\main.py"
 
 format:
 	autopep8 --in-place --recursive --aggressive --aggressive --select E501 --max-line-length 88 .

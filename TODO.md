@@ -1,6 +1,6 @@
 ## High Priority
 
-- Use more advanced AST library, not the naive builtin ast module.
+- Use more advanced AST library, not the naive builtin ast module. More high level functionalities to provide.
   - astor
   - astunparse
   - libcst
@@ -16,15 +16,12 @@
 - Release 1.0.0rc1 release candidate version.
 - Fill in unit tests, then deploy Travis-CI and codecov.io
 - 完善 README
-- Fix race condition on writing to stdout/stderr in absort_files()
 - Instead of LRU, maybe we should use LFU?, or frecency? Investigate different cache replacement policy/strategy.
 - Pre-commit hook to update absort --help message in README
-- Try to use threading.lock or asyncio.lock to solve race condition on writing to stdout/stderr.
 - Fill in requirements*.txt files.
 - Remove @profile, @add_profile_decorator_to_class_methods decorators.
 - Reorder functions in __main__.py by abstraction levels. From higher abstraction level to lower.
 - Fill more metadata in setup.py
-- Refactor absort_files(). Break larget function into multiple small functions.
 
 ## Medium Priority
 
@@ -45,6 +42,8 @@
 - 用 line-profiler 测试 absort 项目中多线程 get_dependency_of_decl 是否有助于提升性能，看性能热点占比百分比来定值确定
 - Entries from running `rg TODO` across the whole repo.
 - Entries from running `rg FIXME` across the whole repo.
+- 使用 click 第三方插件来实现 mutually-exclusive options.
+- Use click third-party pluggin to realize double confirmation of the -y/--yes option.
 
 ## Low Priority
 
@@ -130,6 +129,9 @@
   - Take inspiration from black tool's source code.
 - GetUndefinedVariableVisitor __slots__ doesn't seem to work?
   - ANSWER: from doc: "When inheriting from a class without __slots__, the __dict__ and __weakref__ attribute of the instances will always be accessible.". Reference: https://docs.python.org/3/reference/datamodel.html#object.__slots__
+- Fix race condition on writing to stdout/stderr in absort_files()
+- Try to use threading.lock or asyncio.lock to solve race condition on writing to stdout/stderr.
+- Refactor absort_files(). Break larget function into multiple small functions.
 
 
 ## TIL

@@ -31,6 +31,7 @@ from .graph import Graph
 from .utils import (
     aread_text,
     awrite_text,
+    bright_green,
     bright_yellow,
     colored_unified_diff,
     compose,
@@ -347,7 +348,7 @@ def display_diff_with_filename(
 def collect_python_files(filepaths: Iterable[Path]) -> Iterator[Path]:
     for filepath in filepaths:
         if not filepath.exists():
-            print(f'File "{filepath}" doesn\'t exist. Skipped.')
+            print(f'File "{filepath}" doesn\'t exist. Skipped.', file=sys.stderr)
         elif filepath.is_file():
 
             # We don't test file suffix, because it's possible user explicitly enters an
@@ -454,7 +455,7 @@ async def absort_file(file: Path) -> None:
         await awrite_text(file, new_source, args.encoding)
         digest["modified"] += 1
         if args.verbose:
-            print(f"Processed {file}")
+            print(bright_green(f"Processed {file}"))
 
     async def process_new_source(new_source: str) -> None:
         # TODO add more styled output (e.g. colorized)
@@ -637,7 +638,7 @@ def check_args() -> None:
 @click.option(
     "--color-off",
     is_flag=True,
-    help="Turn off color output, for compatibility with environment without color code support.",
+    help="Turn off color output. For compatibility with environment without color code support.",
 )
 @click.option(
     "-y",
@@ -648,6 +649,7 @@ def check_args() -> None:
 @click.version_option(__version__)
 @click.pass_context
 # TODO add command line option to ignore files specified by .gitignore
+# TODO add command line option to customize cache location
 @profile  # type: ignore
 def main(
     ctx: click.Context,
@@ -680,7 +682,8 @@ def main(
     verboseness_context_manager = silent_context() if quiet else contextlib.nullcontext()
 
     # TODO test --color-off under different environments, eg. Linux, macOS, ...
-    colorness_context_manager = colorama_text(strip=True, convert=False, wrap=True) if color_off else colorama_text()
+    color_off_context_manager = colorama_text(strip=True, convert=False, wrap=True)
+    colorness_context_manager = colorama_text() if not color_off else color_off_context_manager
 
     with verboseness_context_manager, colorness_context_manager:
 

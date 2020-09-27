@@ -4,13 +4,13 @@
 from __future__ import annotations
 
 from collections import defaultdict, deque
-from typing import Any, Callable, Dict, Iterator, List, Optional, Set, Tuple
+from typing import Any, Callable, DefaultDict, Iterator, List, Optional, Set, Tuple
 
 
 # Thin semantic type abstraction
 Node = Any
 Edge = Tuple[Node, Node]
-AdjacencyList = Dict[Node, Set[Node]]
+AdjacencyList = DefaultDict[Node, Set[Node]]
 
 
 __all__ = ["CircularDependencyError", "SelfLoopError", "Graph"]

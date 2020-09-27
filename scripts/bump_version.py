@@ -146,10 +146,15 @@ def preliminary_check() -> None:
             )
 
 
-@click.command()
+@click.command(
+    name="bump_version", help="A script to bump version", no_args_is_help=True  # type: ignore
+)
 @click.argument("component")
-@click.option("--no-release", is_flag=True)
+@click.option(
+    "--no-release", is_flag=True, help="Specify that no GitHub release is published"
+)
 def main(component: str, no_release: bool) -> None:
+    """ A script to bump version """
 
     logger.log("Conducting preliminary check ...")
     preliminary_check()
