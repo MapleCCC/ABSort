@@ -400,7 +400,7 @@ async def backup_to_cache(file: Path) -> None:
     shutil.copy2(file, backup_file)
 
     if dirsize(CACHE_DIR) > CACHE_MAX_SIZE:
-        shrink_cache()
+        await shrink_cache()
 
 
 @attr.s(auto_attribs=True, slots=True)
