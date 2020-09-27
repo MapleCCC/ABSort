@@ -442,13 +442,14 @@ def absort_files(files: List[Path], digest: Counter) -> None:
                 return Fail  # type: ignore
 
     async def write_source(file: Path, new_source: str) -> None:
-        async with stderr_lock:
-            ans = click.confirm(
-                f"Are you sure you want to in-place update the file {file}?", err=True
-            )
-        if not ans:
-            digest["unmodified"] += 1
-            return
+        if not args.yes:
+            async with stderr_lock:
+                ans = click.confirm(
+                    f"Are you sure you want to in-place update the file {file}?", err=True
+                )
+            if not ans:
+                digest["unmodified"] += 1
+                return
 
         backup_to_cache(file)
 
@@ -517,6 +518,14 @@ def check_args() -> None:
 
     if args.quiet and args.verbose:
         raise ValueError("Can't specify both `--quiet` and `--verbose` options")
+
+    if args.yes:
+        ans = click.confirm(
+            "Are you sure you want to bypass all confirmation prompts? "
+            "(Dangerous, not recommended)"
+        )
+        if not ans:
+            args.yes = False
 
 
 # TODO provide a programmatical interface. Check if click library provides such a functionality, to turn a CLI interface to programmatical interface.
@@ -613,9 +622,14 @@ def check_args() -> None:
     is_flag=True,
     help="Turn off color output, for compatibility with environment without color code support.",
 )
+@click.option(
+    "-y",
+    "--yes",
+    is_flag=True,
+    help="Bypass all confirmation prompts. Dangerous option. Not recommended.",
+)
 @click.version_option(__version__)
 @click.pass_context
-# TODO add command line option --yes to bypass all confirmation prompts
 # TODO add command line option to ignore files specified by .gitignore
 @profile  # type: ignore
 def main(
@@ -632,6 +646,7 @@ def main(
     quiet: bool,
     verbose: bool,
     color_off: bool,
+    yes: bool,
 ) -> None:
 
     # A global variable to store CLI arguments.
