@@ -7,6 +7,7 @@ import os
 import re
 import shutil
 import sys
+import typing
 from collections import Counter
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
@@ -634,7 +635,8 @@ def main(
     print(f"Found {len(files)} files")
 
     # TODO make digest a global variable so that we don't need to pass around
-    digest: Counter = Counter(modified=0, unmodified=0, failed=0)
+    digest: typing.Counter[str]
+    digest = Counter(modified=0, unmodified=0, failed=0)
 
     verboseness_context_manager = silent_context() if quiet else contextlib.nullcontext()
 
