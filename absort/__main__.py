@@ -703,6 +703,11 @@ def main(
     check_args()
 
     files = list(collect_python_files(map(Path, filepaths)))
+
+    if not files:
+        print("No file is found")
+        return
+
     print(f"Found {len(files)} files")
 
     verboseness_context_manager = silent_context() if quiet else contextlib.nullcontext()
