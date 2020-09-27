@@ -9,7 +9,6 @@ import shutil
 import sys
 import typing
 from collections import Counter
-from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from enum import Enum
 from operator import itemgetter
@@ -30,7 +29,6 @@ from .ast_utils import (
 from .extra_typing import Declaration, DeclarationType
 from .graph import Graph
 from .utils import (
-    SingleThreadPoolExecutor,
     aread_text,
     awrite_text,
     bright_yellow,
@@ -56,8 +54,6 @@ except NameError:
 
 CACHE_DIR = Path.home() / ".absort_cache"
 CACHE_MAX_SIZE = 400000  # unit is byte
-
-SINGLE_THREAD_APROACH_MAX_DECLNUM = 3
 
 # Types
 
@@ -139,21 +135,14 @@ def generate_dependency_graph(decls: List[DeclarationType]) -> Graph:
 
     graph = Graph()
 
-    if len(decls) <= SINGLE_THREAD_APROACH_MAX_DECLNUM:
-        thread_pool_executor = SingleThreadPoolExecutor
-    else:
-        thread_pool_executor = ThreadPoolExecutor
+    for decl in decls:
+        deps = get_dependency_of_decl(decl)
+        for dep in deps:
+            if dep in decl_names:
+                graph.add_edge(decl.name, dep)
 
-    with thread_pool_executor() as executor:
-        depses = executor.map(get_dependency_of_decl, decls)
-        for decl, deps in zip(decls, depses):
-
-            for dep in deps:
-                if dep in decl_names:
-                    graph.add_edge(decl.name, dep)
-
-            # Below line is necessary for adding node with zero out-degree to the graph.
-            graph.add_node(decl.name)
+        # Below line is necessary for adding node with zero out-degree to the graph.
+        graph.add_node(decl.name)
 
     return graph
 
