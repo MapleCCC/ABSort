@@ -567,12 +567,13 @@ def check_args() -> None:
 
 # TODO provide a programmatical interface. Check if click library provides such a functionality, to turn a CLI interface to programmatical interface.
 
-# TODO add -h option
+
 # TODO add -V as short option of --version
 @click.command(
     name="absort",
     help="A command line utility to sort Python source code by abstraction levels",
     no_args_is_help=True,  # type: ignore
+    context_settings=dict(help_option_names=["-h", "--help", "/?"]),
 )
 @click.argument(
     "filepaths",
