@@ -530,8 +530,12 @@ def absort_files(files: List[Path]) -> Digest:
 def display_summary(digest: Digest) -> None:
     summary = []
     for field in attr.fields(Digest):
-        name = field.name
-        summary.append(f"{digest[name]} files {name}")
+        description = field.name
+        file_num = digest[description]
+        if not file_num:
+            continue
+        plurality_suffix = "s" if file_num > 1 else ""
+        summary.append(f"{file_num} file{plurality_suffix} {description}")
     print(", ".join(summary) + ".")
 
 
