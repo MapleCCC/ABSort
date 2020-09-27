@@ -65,9 +65,6 @@ Digest = typing.Counter[str]
 # A global variable to store CLI arguments.
 args = SimpleNamespace()
 
-# A global variable to store digest information
-digest: Digest = Counter(modified=0, unmodified=0, failed=0)
-
 # Custom Exceptions
 
 # Alternative name: DuplicateNames
@@ -406,7 +403,7 @@ async def backup_to_cache(file: Path) -> None:
         shrink_cache()
 
 
-async def absort_file(file: Path) -> None:
+async def absort_file(file: Path) -> Digest:
     async def read_source(file: Path) -> str:
         try:
             return await aread_text(file, args.encoding)
@@ -489,21 +486,24 @@ async def absort_file(file: Path) -> None:
             print("\n", end="")
 
     try:
+        digest: Digest = Counter()
         old_source = await read_source(file)
         new_source = transform_source(old_source)
         await process_new_source(new_source)
+        return digest
     except ABSortFail:
-        pass
+        return Counter()
 
 
-def absort_files(files: List[Path]) -> None:
-    async def entry() -> None:
-        await asyncio.gather(*(absort_file(file) for file in files))
+def absort_files(files: List[Path]) -> Digest:
+    async def entry() -> Digest:
+        digests = await asyncio.gather(*(absort_file(file) for file in files))
+        return sum(digests, Counter())
 
-    asyncio.run(entry())
+    return asyncio.run(entry())
 
 
-def display_summary() -> None:
+def display_summary(digest: Digest) -> None:
     summary = []
     if digest["modified"]:
         summary.append(f"{digest['modified']} files modified")
@@ -687,9 +687,9 @@ def main(
 
     with verboseness_context_manager, colorness_context_manager:
 
-        absort_files(files)
+        digest = absort_files(files)
 
-        display_summary()
+        display_summary(digest)
 
 
 if __name__ == "__main__":
