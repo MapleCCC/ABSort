@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+from __future__ import annotations
+
 import ast
 import asyncio
 import contextlib
@@ -7,7 +9,6 @@ import os
 import re
 import shutil
 import sys
-import typing
 from collections import Counter
 from datetime import datetime
 from enum import Enum
@@ -16,6 +17,7 @@ from pathlib import Path
 from types import SimpleNamespace
 from typing import Any, Iterable, Iterator, List, Set, Tuple
 
+import attr
 import click
 from colorama import colorama_text
 
@@ -57,8 +59,6 @@ CACHE_DIR = Path.home() / ".absort_cache"
 CACHE_MAX_SIZE = 400000  # unit is byte
 
 # Types
-
-Digest = typing.Counter[str]
 
 # Global Variables
 
@@ -403,6 +403,33 @@ async def backup_to_cache(file: Path) -> None:
         shrink_cache()
 
 
+@attr.s(auto_attribs=True, slots=True)
+class Digest:
+    unmodified: int = 0
+    modified: int = 0
+    failed: int = 0
+
+    def __getitem__(self, key: str) -> int:
+        return attr.asdict(self)[key]
+
+    def __setitem__(self, key: str, value: int) -> int:
+        setattr(self, key, value)
+
+    def __add__(self, other: Any) -> Digest:
+        if not isinstance(other, Digest):
+            return NotImplemented
+        c1 = Counter(attr.asdict(self))
+        c2 = Counter(attr.asdict(other))
+        return Digest(**(c1 + c2))
+
+    def __iadd__(self, other: Any) -> Digest:
+        if not isinstance(other, Digest):
+            return NotImplemented
+        for field in attr.fields(Digest):
+            self[field.name] += other[field.name]
+        return self
+
+
 async def absort_file(file: Path) -> Digest:
     async def read_source(file: Path) -> str:
         try:
@@ -441,13 +468,13 @@ async def absort_file(file: Path) -> Digest:
                 f"Are you sure you want to in-place update the file {file}?", err=True
             )
             if not ans:
-                digest["unmodified"] += 1
+                digest.unmodified += 1
                 return
 
         await backup_to_cache(file)
 
         await awrite_text(file, new_source, args.encoding)
-        digest["modified"] += 1
+        digest.modified += 1
         if args.verbose:
             print(bright_green(f"Processed {file}"))
 
@@ -456,24 +483,24 @@ async def absort_file(file: Path) -> Digest:
 
         if args.display_diff:
 
-            digest["unmodified"] += 1
+            digest.unmodified += 1
             display_diff_with_filename(old_source, new_source, str(file))
 
         elif args.in_place:
 
             if old_source == new_source:
-                digest["unmodified"] += 1
+                digest.unmodified += 1
                 return
             await write_source(file, new_source)
 
         elif args.check:
 
-            digest["unmodified"] += 1
+            digest.unmodified += 1
             if old_source != new_source:
                 print(f"{file} needs reformat")
 
         else:
-            digest["unmodified"] += 1
+            digest.unmodified += 1
             divider = bright_yellow("-" * 79)
             print(divider)
             print(file)
@@ -483,31 +510,28 @@ async def absort_file(file: Path) -> Digest:
             print("\n", end="")
 
     try:
-        digest: Digest = Counter()
+        digest = Digest()
         old_source = await read_source(file)
         new_source = transform_source(old_source)
         await process_new_source(new_source)
         return digest
     except ABSortFail:
-        return Counter(failed=1)
+        return Digest(failed=1)
 
 
 def absort_files(files: List[Path]) -> Digest:
     async def entry() -> Digest:
         digests = await asyncio.gather(*(absort_file(file) for file in files))
-        return sum(digests, Counter())
+        return sum(digests, Digest())
 
     return asyncio.run(entry())
 
 
 def display_summary(digest: Digest) -> None:
     summary = []
-    if digest["modified"]:
-        summary.append(f"{digest['modified']} files modified")
-    if digest["unmodified"]:
-        summary.append(f"{digest['unmodified']} files unmodified")
-    if digest["failed"]:
-        summary.append(f"{digest['failed']} files failed")
+    for field in attr.fields(Digest):
+        name = field.name
+        summary.append(f"{digest[name]} files {name}")
     print(", ".join(summary) + ".")
 
 
