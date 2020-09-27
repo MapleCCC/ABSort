@@ -471,6 +471,12 @@ async def absort_file(file: Path) -> None:
                 return
             await write_source(file, new_source)
 
+        elif args.check:
+
+            digest["unmodified"] += 1
+            if old_source != new_source:
+                print(f"{file} needs reformat")
+
         else:
             digest["unmodified"] += 1
             divider = bright_yellow("-" * 79)
@@ -510,8 +516,10 @@ def display_summary() -> None:
 def check_args() -> None:
     # FIXME use click library's builtin mechanism to specify mutually exclusive options
 
-    if args.display_diff and args.in_place:
-        raise ValueError("Can't specify both `--diff` and `--in-place` options")
+    if sum([args.check, args.display_diff, args.in_place]) > 1:
+        raise ValueError(
+            "Only one of the `--check`, `--diff` and `--in-place` options can be specified at the same time"
+        )
 
     if args.quiet and args.verbose:
         raise ValueError("Can't specify both `--quiet` and `--verbose` options")
@@ -559,6 +567,9 @@ def check_args() -> None:
     ),
 )
 @click.option(
+    "-c", "--check", is_flag=True, help="Check if file is already well-formatted."
+)
+@click.option(
     "-d",
     "--diff",
     "display_diff",
@@ -601,7 +612,6 @@ def check_args() -> None:
     help="The encoding scheme used to read and write Python files.",
 )
 @click.option(
-    "-c",
     "--comment-strategy",
     default="attr-follow-decl",
     show_default=True,
@@ -642,6 +652,7 @@ def check_args() -> None:
 def main(
     ctx: click.Context,
     filepaths: Tuple[str, ...],
+    check: bool,
     display_diff: bool,
     in_place: bool,
     no_fix_main_to_bottom: bool,
