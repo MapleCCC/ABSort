@@ -578,6 +578,9 @@ def check_args() -> None:
     help="A command line utility to sort Python source code by abstraction levels",
     no_args_is_help=True,  # type: ignore
     context_settings=dict(help_option_names=["-h", "--help", "/?"]),
+    epilog="While the tool is on experimental stage, all files are backuped to a local cache before processing. "
+    "If something goes wrong or regret hits you, it's always possible to safely recover the original files. "
+    f"The location of the backup cache is {CACHE_DIR}.",
 )
 @click.argument(
     "filepaths",
