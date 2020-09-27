@@ -24,6 +24,7 @@ from typing import (
     overload,
 )
 
+from aiofile import AIOFile
 from colorama import Fore, Style
 
 from .lfu import LFU
@@ -52,6 +53,8 @@ __all__ = [
     "SingleThreadPoolExecutor",
     "compose",
     "whitespace_lines",
+    "aread_text",
+    "awrite_text",
 ]
 
 # Note: the name `profile` will be injected by line-profiler at run-time
@@ -345,3 +348,13 @@ class compose:
 def whitespace_lines(lines: List[str]) -> bool:
     """ Return whether lines are all whitespaces """
     return all(not line.strip() for line in lines)
+
+
+async def aread_text(file: Path, encoding: str = "utf-8") -> str:
+    async with AIOFile(str(file), "r", encoding=encoding) as afp:
+        return await afp.read()  # type: ignore
+
+
+async def awrite_text(file: Path, text: str, encoding: str = "utf-8") -> None:
+    async with AIOFile(str(file), "w", encoding=encoding) as afp:
+        await afp.write(text)
