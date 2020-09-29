@@ -5,9 +5,9 @@ import re
 import subprocess
 import sys
 import time
-from functools import singledispatch
+from functools import partial
 from pathlib import Path
-from typing import Any, Callable, List, Sequence, Type, TypeVar
+from typing import Callable, List, Sequence, Type, TypeVar
 
 import click
 import semver
@@ -17,6 +17,9 @@ sys.path.append(os.getcwd())
 from absort.__version__ import __version__ as current_version
 from absort.utils import Logger
 from scripts._local_credentials import github_account_access_token
+
+
+_T = TypeVar("_T")
 
 
 FILES_TO_UPDATE = ["README.md", "absort/__version__.py"]
@@ -72,14 +75,15 @@ class MaxRetryError(Exception):
     pass
 
 
-_T = TypeVar("_T")
-
-
-@singledispatch
 def retry(
-    total: int = 3, backoff_factor: float = 0.1, on_except: List[Type[Exception]] = None
+    func: Callable[..., _T],
+    total: int = 3,
+    backoff_factor: float = 0.1,
+    on_except: List[Type[Exception]] = None,
 ) -> Callable[..., _T]:
     """
+    Tips: Pass function arguments by functools.partial.
+
     The `total` and `backoff_factor` parameters has same meaning with that of
     `urllib3.util.Retry` (https://urllib3.readthedocs.io/en/latest/reference/urllib3.util.html#urllib3.util.Retry)
     """
@@ -94,25 +98,15 @@ def retry(
     else:
         exceptions = tuple(on_except)
 
-    def apply(fn: Callable[..., _T], *args: Any, **kwargs: Any) -> _T:
-        for i in range(total + 1):
-            if i >= 2:
-                time.sleep(backoff_factor * (2 ** (i - 1)))
-            try:
-                return fn(*args, **kwargs)
-            except exceptions:
-                continue
-        raise MaxRetryError(
-            f"Reached maximum retries on applying function {fn} to arguments {args}, {kwargs}"
-        )
+    for i in range(total + 1):
+        if i >= 2:
+            time.sleep(backoff_factor * (2 ** (i - 1)))
+        try:
+            return func()
+        except exceptions:
+            continue
 
-    return apply
-
-
-@retry.register
-def _(fn: Callable[..., _T], *args: Any, **kwargs: Any) -> _T:
-    base = retry.registry[object]
-    return base()(fn, *args, **kwargs)
+    raise MaxRetryError(f"Reached maximum retries on calling function {func}")
 
 
 def calculate_new_version(component) -> str:
@@ -177,7 +171,7 @@ def main(component: str, no_release: bool) -> None:
     # TODO if we change from using subprocess.run to using PyGithub,
     # will the time cost be shorter?
     logger.log("Pushing tag to remote......")
-    retry(run, ["git", "push", "origin", new_version])
+    retry(partial(run, ["git", "push", "origin", new_version]))
 
     if not no_release:
         logger.log("Creating release in GitHub repo......")
@@ -189,10 +183,12 @@ def main(component: str, no_release: bool) -> None:
         g = Github(github_account_access_token)
         repo = g.get_repo("MapleCCC/ABSort")
         retry(
-            repo.create_git_release,
-            tag=new_version,
-            name=new_version,
-            message="For detail changelog, please consult commit history, and commit messages.",
+            partial(
+                repo.create_git_release,
+                tag=new_version,
+                name=new_version,
+                message="For detail changelog, please consult commit history, and commit messages.",
+            )
         )
 
 
