@@ -1,7 +1,7 @@
 import ast
 from typing import Union
 
-__all__ = ["Declaration", "Declarationtype", "Decoratable", "DecoratableType"]
+__all__ = ["Declaration", "DeclarationType", "Decoratable", "DecoratableType"]
 
 Declaration = (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)
 DeclarationType = Union[ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef]
