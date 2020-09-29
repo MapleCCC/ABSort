@@ -35,7 +35,7 @@ def bump_file(file: str, new_version: str) -> None:
     p = Path(file)
     new_content = p.read_text(encoding="utf-8")
 
-    for pattern, repl in substitues:
+    for pattern, repl in substitues.items():
         new_content, num_of_sub = re.subn(pattern, repl, new_content)
         if not num_of_sub:
             logger.log(
