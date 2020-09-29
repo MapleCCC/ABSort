@@ -403,8 +403,7 @@ async def backup_to_cache(file: Path) -> None:
     timestamp = generate_timestamp()
     backup_file = CACHE_DIR / (file.name + "." + timestamp + ".backup")
 
-    if not await CACHE_DIR.is_dir():
-        await CACHE_DIR.mkdir(parents=True, exist_ok=True)
+    await CACHE_DIR.mkdir(parents=True, exist_ok=True)
     await file.copy2(backup_file)
 
     if await dirsize(CACHE_DIR) > CACHE_MAX_SIZE:
