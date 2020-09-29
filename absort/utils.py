@@ -291,7 +291,7 @@ def rmdir(path: Path) -> None:
     if path.is_dir():
         raise NotADirectoryError(f"{path} is not a directory")
 
-    for file in path.rglob("*.bak"):
+    for file in path.rglob("*"):
         file.unlink()
 
     path.rmdir()
