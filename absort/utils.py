@@ -1,21 +1,17 @@
 import contextlib
 import difflib
 import functools
-import io
 import itertools
 import os
 import sys
-import tokenize
 from collections import namedtuple
 from functools import partial
-from pathlib import Path
 from types import SimpleNamespace
 from typing import (
     IO,
     Any,
     Callable,
     Hashable,
-    IO,
     Iterable,
     Iterator,
     List,
@@ -24,9 +20,9 @@ from typing import (
     overload,
 )
 
-from aiofile import AIOFile
 from colorama import Fore, Style
 
+from .aiopathlib import AsyncPath as Path
 from .lfu import LFU
 from .lru import LRU
 
@@ -43,7 +39,6 @@ __all__ = [
     "silent_context",
     "lru_cache_with_key",
     "lfu_cache_with_key",
-    "detect_encoding",
     "apply",
     "first_true",
     "dirsize",
@@ -53,8 +48,6 @@ __all__ = [
     "SingleThreadPoolExecutor",
     "compose",
     "whitespace_lines",
-    "aread_text",
-    "awrite_text",
 ]
 
 # Note: the name `profile` will be injected by line-profiler at run-time
@@ -224,36 +217,6 @@ lfu_cache_with_key = partial(cache_with_key, policy="LFU")
 lfu_cache_with_key.__doc__ = "It's like the builtin `functools.lru_cache`, except that it provides customization space for the key calculating method, and it uses LFU, not LRU, as cache replacement policy."
 
 
-# TODO rewrite to async version
-# The source code of open_with_encoding() is taken from autopep8 (https://github.com/hhatto/autopep8)
-def open_with_encoding(
-    filename: str, mode: str = "r", encoding: str = None, limit_byte_check: int = -1
-) -> IO:
-    """Return opened file with a specific encoding."""
-    if not encoding:
-        encoding = detect_encoding(filename, limit_byte_check=limit_byte_check)
-
-    return io.open(
-        filename, mode=mode, encoding=encoding, newline=""
-    )  # Preserve line endings
-
-
-# TODO rewrite to async version
-# The source code of detect_encoding() is taken from autopep8 (https://github.com/hhatto/autopep8)
-def detect_encoding(filename: str, limit_byte_check: int = -1) -> str:
-    """Return file encoding."""
-    try:
-        with open(filename, "rb") as input_file:
-            encoding = tokenize.detect_encoding(input_file.readline)[0]
-
-        with open_with_encoding(filename, encoding=encoding) as test_file:
-            test_file.read(limit_byte_check)
-
-        return encoding
-    except (LookupError, SyntaxError, UnicodeDecodeError):
-        return "latin-1"
-
-
 def apply(fn: Callable[..., _T], *args: Any, **kwargs: Any) -> _T:
     """ Equivalent to Haskell's $ operator """
     return fn(*args, **kwargs)
@@ -279,22 +242,27 @@ def first_true(
     return default
 
 
-# TODO rewrite to async version
-def dirsize(path: Path) -> int:
+async def dirsize(path: Path) -> int:
     """ Return the total size of a directory, in bytes """
-    return sum(f.stat().st_size for f in path.rglob("*") if f.is_file())
+
+    size = 0
+    async for f in path.rglob("*"):
+        if await f.is_file():
+            stat = await f.stat()
+            size += stat.st_size
+    return size
 
 
-def removedirs(path: Path) -> None:
+async def removedirs(path: Path) -> None:
     """ Remove a directory, also removing files and subdirectories inside. """
 
-    if path.is_dir():
+    if await path.is_dir():
         raise NotADirectoryError(f"{path} is not a directory")
 
-    for file in path.rglob("*"):
-        file.unlink()
+    async for file in path.rglob("*"):
+        await file.unlink()
 
-    path.rmdir()
+    await path.rmdir()
 
 
 class Logger:
@@ -351,13 +319,3 @@ class compose:
 def whitespace_lines(lines: List[str]) -> bool:
     """ Return whether lines are all whitespaces """
     return all(not line.strip() for line in lines)
-
-
-async def aread_text(file: Path, encoding: str = "utf-8") -> str:
-    async with AIOFile(str(file), "r", encoding=encoding) as afp:
-        return await afp.read()  # type: ignore
-
-
-async def awrite_text(file: Path, text: str, encoding: str = "utf-8") -> None:
-    async with AIOFile(str(file), "w", encoding=encoding) as afp:
-        await afp.write(text)

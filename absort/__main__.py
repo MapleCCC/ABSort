@@ -6,37 +6,35 @@ import ast
 import asyncio
 import contextlib
 import re
-import shutil
 import sys
 from collections import Counter
 from datetime import datetime
 from enum import Enum
 from operator import itemgetter
-from pathlib import Path
 from types import SimpleNamespace
-from typing import Any, Iterable, Iterator, List, Set, Tuple
+from typing import Any, AsyncIterator, Iterable, Iterator, List, Set, Tuple
 
 import attr
+import cchardet
 import click
 from colorama import colorama_text
 
 from .__version__ import __version__
+from .aiopathlib import AsyncPath as Path
 from .ast_utils import (
     ast_get_decorator_list_source_lines,
     ast_get_leading_comment_and_decorator_list_source_lines,
     ast_get_leading_comment_source_lines,
     ast_get_source_lines,
 )
+from .async_utils import run_in_event_loop
 from .extra_typing import Declaration, DeclarationType
 from .graph import Graph
 from .utils import (
-    aread_text,
-    awrite_text,
     bright_green,
     bright_yellow,
     colored_unified_diff,
     compose,
-    detect_encoding,
     dirsize,
     first_true,
     silent_context,
@@ -56,7 +54,7 @@ except NameError:
 # Constants
 #
 
-CACHE_DIR = Path.home() / ".absort_cache"
+CACHE_DIR = Path.sync_home() / ".absort_cache"
 CACHE_MAX_SIZE = 400000  # unit is byte
 
 #
@@ -349,7 +347,8 @@ def display_diff_with_filename(
     print("\n", end="")
 
 
-def collect_python_files(filepaths: Iterable[Path]) -> Iterator[Path]:
+@run_in_event_loop
+async def collect_python_files(filepaths: Iterable[Path]) -> AsyncIterator[Path]:
     for filepath in filepaths:
         if not filepath.exists():
             print(f'File "{filepath}" doesn\'t exist. Skipped.', file=sys.stderr)
@@ -362,21 +361,21 @@ def collect_python_files(filepaths: Iterable[Path]) -> Iterator[Path]:
             yield filepath
 
         elif filepath.is_dir():
-            yield from filepath.rglob("*.py")
+
+            async for p in filepath.rglob("*.py"):
+                yield p
+
         else:
             raise NotImplementedError
 
 
-# TODO rewrite to use async IO
 async def shrink_cache() -> None:
-    # TODO use an async version of dirsize
-    shrink_target_size = CACHE_MAX_SIZE - dirsize(CACHE_DIR)
+    shrink_target_size = CACHE_MAX_SIZE - await dirsize(CACHE_DIR)
 
     backup_filename_pattern = r".*\.(?P<timestamp>\d{14})\.backup"
 
     files: List[Tuple[str, Path]] = []
-    # TODO use an async version of Path.iterdir
-    for f in CACHE_DIR.iterdir():
+    async for f in CACHE_DIR.iterdir():
         if m := re.fullmatch(backup_filename_pattern, f.name):
             timestamp = m.group("timestamp")
             files.append((timestamp, f))
@@ -385,15 +384,13 @@ async def shrink_cache() -> None:
 
     shrinked_size = 0
     for _, f in sorted_files:
-        # TODO use an async version of Path.stat
-        shrinked_size += f.stat().st_size
-        # TODO use an async version of Path.unlink
-        f.unlink()
+        stat = await f.stat()
+        shrinked_size += stat.st_size
+        await f.unlink()
         if shrinked_size >= shrink_target_size:
             break
 
 
-# TODO rewrite to use async IO
 async def backup_to_cache(file: Path) -> None:
     def generate_timestamp() -> str:
         now = str(datetime.now())
@@ -406,15 +403,11 @@ async def backup_to_cache(file: Path) -> None:
     timestamp = generate_timestamp()
     backup_file = CACHE_DIR / (file.name + "." + timestamp + ".backup")
 
-    # TODO use an async version of Path.is_dir
-    if not CACHE_DIR.is_dir():
-        # TODO use an async version of Path.mkdir
-        CACHE_DIR.mkdir(parents=True, exist_ok=True)
-    # TODO use an async version of shutil.copy2
-    shutil.copy2(file, backup_file)
+    if not await CACHE_DIR.is_dir():
+        await CACHE_DIR.mkdir(parents=True, exist_ok=True)
+    await file.copy2(backup_file)
 
-    # TODO use an async version of dirsize
-    if dirsize(CACHE_DIR) > CACHE_MAX_SIZE:
+    if await dirsize(CACHE_DIR) > CACHE_MAX_SIZE:
         await shrink_cache()
 
 
@@ -438,15 +431,15 @@ class Digest:
 async def absort_file(file: Path) -> Digest:
     async def read_source(file: Path) -> str:
         try:
-            return await aread_text(file, args.encoding)
+            return await file.read_text(args.encoding)
         except UnicodeDecodeError:
             print(f"{file} is not decodable by {args.encoding}", file=sys.stderr)
             print(f"Try to automatically detect file encoding......", file=sys.stderr)
-            # TODO use an async version of detect_encoding
-            detected_encoding = detect_encoding(str(file))
+            binary = await file.read_bytes()
+            detected_encoding = cchardet.detect(binary)
 
             try:
-                return await aread_text(file, detected_encoding)
+                return await file.read_text(detected_encoding)
             except UnicodeDecodeError:
 
                 print(f"{file} has unknown encoding.", file=sys.stderr)
@@ -479,7 +472,7 @@ async def absort_file(file: Path) -> Digest:
 
         await backup_to_cache(file)
 
-        await awrite_text(file, new_source, args.encoding)
+        await file.write_text(new_source, args.encoding)
         digest.modified += 1
         if args.verbose:
             print(bright_green(f"Processed {file}"))
