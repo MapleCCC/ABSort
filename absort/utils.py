@@ -282,7 +282,7 @@ def first_true(
 # TODO rewrite to async version
 def dirsize(path: Path) -> int:
     """ Return the total size of a directory, in bytes """
-    return sum(f.stat().st_size for f in path.rglob("*") if f.is_file)
+    return sum(f.stat().st_size for f in path.rglob("*") if f.is_file())
 
 
 def rmdir(path: Path) -> None:
