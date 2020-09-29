@@ -47,7 +47,7 @@ __all__ = [
     "apply",
     "first_true",
     "dirsize",
-    "rmdir",
+    "removedirs",
     "Logger",
     "concat",
     "SingleThreadPoolExecutor",
@@ -285,7 +285,7 @@ def dirsize(path: Path) -> int:
     return sum(f.stat().st_size for f in path.rglob("*") if f.is_file())
 
 
-def rmdir(path: Path) -> None:
+def removedirs(path: Path) -> None:
     """ Remove a directory, also removing files and subdirectories inside. """
 
     if path.is_dir():
