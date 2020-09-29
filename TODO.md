@@ -37,6 +37,8 @@
   - Take inspiration from black tool's source code
   - Take inspiration from autopep8 tool's source code
   - File IO is the most expensive and most suitable for multi-thread.
+  - CPU-bound components can be accelerated by multi-processing.
+  - IO-bound components can be accelerated by multi-threading or async IO.
 - Try to utilize diff-so-fancy when displaying diff.
 - Should we use ThreadPoolExecutor or ProcessPoolExecutor? Test which one yields better performance.
 - Why does ProcessPoolExecutor perform so much worse than ThreadPoolExecutor? Why?

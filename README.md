@@ -23,7 +23,7 @@
 - [Example](#example)
 - [Installation](#installation)
 - [Usage](#usage)
-- [Interanl Algorithm](#interanl-algorithm)
+- [Internal Algorithm](#internal-algorithm)
 - [Limitations](#limitations)
 - [Development](#development)
   - [Test](#test)
@@ -172,7 +172,7 @@ Options:
 
 Alternatively, you can pass Python code from `stdin`.
 
-## Interanl Algorithm
+## Internal Algorithm
 
 The sorting algorithm is currently a reversed topological sort on the dependency graph, with function/class definitions as graph nodes, and their dependency relations as graph edges.
 

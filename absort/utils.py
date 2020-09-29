@@ -224,6 +224,7 @@ lfu_cache_with_key = partial(cache_with_key, policy="LFU")
 lfu_cache_with_key.__doc__ = "It's like the builtin `functools.lru_cache`, except that it provides customization space for the key calculating method, and it uses LFU, not LRU, as cache replacement policy."
 
 
+# TODO rewrite to async version
 # The source code of open_with_encoding() is taken from autopep8 (https://github.com/hhatto/autopep8)
 def open_with_encoding(
     filename: str, mode: str = "r", encoding: str = None, limit_byte_check: int = -1
@@ -237,6 +238,7 @@ def open_with_encoding(
     )  # Preserve line endings
 
 
+# TODO rewrite to async version
 # The source code of detect_encoding() is taken from autopep8 (https://github.com/hhatto/autopep8)
 def detect_encoding(filename: str, limit_byte_check: int = -1) -> str:
     """Return file encoding."""
@@ -277,6 +279,7 @@ def first_true(
     return default
 
 
+# TODO rewrite to async version
 def dirsize(path: Path) -> int:
     """ Return the total size of a directory, in bytes """
     return sum(f.stat().st_size for f in path.rglob("*") if f.is_file)

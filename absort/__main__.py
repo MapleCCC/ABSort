@@ -52,19 +52,27 @@ try:
 except NameError:
     profile = lambda x: x
 
+#
 # Constants
+#
 
 CACHE_DIR = Path.home() / ".absort_cache"
 CACHE_MAX_SIZE = 400000  # unit is byte
 
+#
 # Types
+#
 
+#
 # Global Variables
+#
 
 # A global variable to store CLI arguments.
 args = SimpleNamespace()
 
+#
 # Custom Exceptions
+#
 
 # Alternative name: DuplicateNames
 class NameRedefinition(Exception):
@@ -361,11 +369,13 @@ def collect_python_files(filepaths: Iterable[Path]) -> Iterator[Path]:
 
 # TODO rewrite to use async IO
 async def shrink_cache() -> None:
+    # TODO use an async version of dirsize
     shrink_target_size = CACHE_MAX_SIZE - dirsize(CACHE_DIR)
 
     backup_filename_pattern = r".*\.(?P<timestamp>\d{14})\.backup"
 
     files: List[Tuple[str, Path]] = []
+    # TODO use an async version of Path.iterdir
     for f in CACHE_DIR.iterdir():
         if m := re.fullmatch(backup_filename_pattern, f.name):
             timestamp = m.group("timestamp")
@@ -375,7 +385,9 @@ async def shrink_cache() -> None:
 
     shrinked_size = 0
     for _, f in sorted_files:
+        # TODO use an async version of Path.stat
         shrinked_size += f.stat().st_size
+        # TODO use an async version of Path.unlink
         f.unlink()
         if shrinked_size >= shrink_target_size:
             break
@@ -394,10 +406,14 @@ async def backup_to_cache(file: Path) -> None:
     timestamp = generate_timestamp()
     backup_file = CACHE_DIR / (file.name + "." + timestamp + ".backup")
 
+    # TODO use an async version of Path.is_dir
     if not CACHE_DIR.is_dir():
+        # TODO use an async version of Path.mkdir
         CACHE_DIR.mkdir(parents=True, exist_ok=True)
+    # TODO use an async version of shutil.copy2
     shutil.copy2(file, backup_file)
 
+    # TODO use an async version of dirsize
     if dirsize(CACHE_DIR) > CACHE_MAX_SIZE:
         await shrink_cache()
 
@@ -426,6 +442,7 @@ async def absort_file(file: Path) -> Digest:
         except UnicodeDecodeError:
             print(f"{file} is not decodable by {args.encoding}", file=sys.stderr)
             print(f"Try to automatically detect file encoding......", file=sys.stderr)
+            # TODO use an async version of detect_encoding
             detected_encoding = detect_encoding(str(file))
 
             try:
