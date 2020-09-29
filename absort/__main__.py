@@ -5,7 +5,6 @@ from __future__ import annotations
 import ast
 import asyncio
 import contextlib
-import os
 import re
 import shutil
 import sys
@@ -396,7 +395,7 @@ async def backup_to_cache(file: Path) -> None:
     backup_file = CACHE_DIR / (file.name + "." + timestamp + ".backup")
 
     if not CACHE_DIR.is_dir():
-        os.makedirs(CACHE_DIR)
+        CACHE_DIR.mkdir(parents=True, exist_ok=True)
     shutil.copy2(file, backup_file)
 
     if dirsize(CACHE_DIR) > CACHE_MAX_SIZE:
