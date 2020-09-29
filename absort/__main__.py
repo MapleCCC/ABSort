@@ -350,9 +350,9 @@ def display_diff_with_filename(
 @run_in_event_loop
 async def collect_python_files(filepaths: Iterable[Path]) -> AsyncIterator[Path]:
     for filepath in filepaths:
-        if not filepath.exists():
+        if not await filepath.exists():
             print(f'File "{filepath}" doesn\'t exist. Skipped.', file=sys.stderr)
-        elif filepath.is_file():
+        elif await filepath.is_file():
 
             # We don't test file suffix, because it's possible user explicitly enters an
             # input file that contains Python code but doesn't have `.py` extension.
@@ -360,7 +360,7 @@ async def collect_python_files(filepaths: Iterable[Path]) -> AsyncIterator[Path]
             # part of the code and handled by exception handling routines anyway.
             yield filepath
 
-        elif filepath.is_dir():
+        elif await filepath.is_dir():
 
             async for p in filepath.rglob("*.py"):
                 yield p

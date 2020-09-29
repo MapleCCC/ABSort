@@ -25,7 +25,7 @@ def asyncify(func: Callable) -> Callable:
 
         return wrapper
 
-    elif inspect.isfunction(func):
+    elif inspect.isfunction(func) or inspect.ismethod(func):
 
         @functools.wraps(func)
         async def wrapper(*args, **kwargs):
@@ -36,7 +36,7 @@ def asyncify(func: Callable) -> Callable:
         return wrapper
 
     else:
-        raise ValueError
+        raise ValueError(f"Expect callable, got {type(func)}")
 
 
 def run_in_event_loop(func: Callable) -> Callable:
@@ -67,4 +67,4 @@ def run_in_event_loop(func: Callable) -> Callable:
         return wrapper
 
     else:
-        raise ValueError
+        raise ValueError(f"Expect callable, got {type(func)}")

@@ -21,6 +21,12 @@ class AsyncPath:
 
     __slots__ = ["_path"]
 
+    def __str__(self) -> str:
+        return str(self._path)
+
+    def __repr__(self) -> str:
+        return repr(self._path)
+
     async def stat(self) -> stat_result:
         return await asyncify(self._path.stat)()
 
