@@ -35,7 +35,6 @@ from .utils import (
     bright_yellow,
     colored_unified_diff,
     compose,
-    dirsize,
     first_true,
     silent_context,
     whitespace_lines,
@@ -370,7 +369,7 @@ async def collect_python_files(filepaths: Iterable[Path]) -> AsyncIterator[Path]
 
 
 async def shrink_cache() -> None:
-    shrink_target_size = CACHE_MAX_SIZE - await dirsize(CACHE_DIR)
+    shrink_target_size = CACHE_MAX_SIZE - await CACHE_DIR.dirsize()
 
     backup_filename_pattern = r".*\.(?P<timestamp>\d{14})\.backup"
 
@@ -406,7 +405,7 @@ async def backup_to_cache(file: Path) -> None:
     await CACHE_DIR.mkdir(parents=True, exist_ok=True)
     await file.copy2(backup_file)
 
-    if await dirsize(CACHE_DIR) > CACHE_MAX_SIZE:
+    if await CACHE_DIR.dirsize() > CACHE_MAX_SIZE:
         await shrink_cache()
 
 

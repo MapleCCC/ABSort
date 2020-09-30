@@ -106,3 +106,27 @@ class AsyncPath:
 
     async def copy2(self, dst: Union[str, AsyncPath], *, follow_symlinks=True) -> None:
         await asyncify(shutil.copy2)(self._path, dst, follow_symlinks=follow_symlinks)
+
+    async def dirsize(self) -> int:
+        """ Return the total size of a directory, in bytes """
+
+        if await self.is_dir():
+            raise NotADirectoryError(f"{self} is not a directory")
+
+        size = 0
+        async for f in self.rglob("*"):
+            if await f.is_file():
+                stat = await f.stat()
+                size += stat.st_size
+        return size
+
+    async def removedirs(self) -> None:
+        """ Remove a directory, also removing files and subdirectories inside. """
+
+        if await self.is_dir():
+            raise NotADirectoryError(f"{self} is not a directory")
+
+        async for file in self.rglob("*"):
+            await file.unlink()
+
+        await self.rmdir()

@@ -22,7 +22,6 @@ from typing import (
 
 from colorama import Fore, Style
 
-from .aiopathlib import AsyncPath as Path
 from .lfu import LFU
 from .lru import LRU
 
@@ -41,8 +40,6 @@ __all__ = [
     "lfu_cache_with_key",
     "apply",
     "first_true",
-    "dirsize",
-    "removedirs",
     "Logger",
     "concat",
     "SingleThreadPoolExecutor",
@@ -240,29 +237,6 @@ def first_true(
         if pred(elem):
             return elem
     return default
-
-
-async def dirsize(path: Path) -> int:
-    """ Return the total size of a directory, in bytes """
-
-    size = 0
-    async for f in path.rglob("*"):
-        if await f.is_file():
-            stat = await f.stat()
-            size += stat.st_size
-    return size
-
-
-async def removedirs(path: Path) -> None:
-    """ Remove a directory, also removing files and subdirectories inside. """
-
-    if await path.is_dir():
-        raise NotADirectoryError(f"{path} is not a directory")
-
-    async for file in path.rglob("*"):
-        await file.unlink()
-
-    await path.rmdir()
 
 
 class Logger:
