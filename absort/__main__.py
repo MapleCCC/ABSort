@@ -252,7 +252,7 @@ def find_continguous_decls(
 
 
 @profile  # type: ignore
-def transform(old_source: str) -> str:
+def absort_str(old_source: str) -> str:
     def preliminary_sanity_check(top_level_stmts: List[ast.stmt]) -> None:
         # TODO add more sanity checks
 
@@ -443,9 +443,9 @@ async def absort_file(file: Path) -> Digest:
                 print(f"{file} has unknown encoding.", file=sys.stderr)
                 raise ABSortFail
 
-    def transform_source(old_source: str) -> str:
+    def absort_source(old_source: str) -> str:
         try:
-            return transform(old_source)
+            return absort_str(old_source)
         except SyntaxError as exc:
             # if re.fullmatch(r"Missing parentheses in call to 'print'. Did you mean print(.*)\?", exc.msg):
             #     pass
@@ -509,7 +509,7 @@ async def absort_file(file: Path) -> Digest:
     try:
         digest = Digest()
         old_source = await read_source(file)
-        new_source = transform_source(old_source)
+        new_source = absort_source(old_source)
         await process_new_source(new_source)
         return digest
     except ABSortFail:
