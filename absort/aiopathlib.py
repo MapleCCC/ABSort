@@ -7,7 +7,7 @@ from typing import AsyncIterator, Type, Union
 
 import aiofiles
 
-from .async_utils import asyncify
+from .async_utils import run_async
 
 
 __all__ = ["AsyncPath"]
@@ -28,30 +28,30 @@ class AsyncPath:
         return repr(self._path)
 
     async def stat(self) -> stat_result:
-        return await asyncify(self._path.stat)()
+        return await run_async(self._path.stat)
 
     async def unlink(self, missing_ok=False) -> None:
-        await asyncify(self._path.unlink)(missing_ok)
+        await run_async(self._path.unlink, missing_ok)
 
     async def is_dir(self) -> bool:
-        return await asyncify(self._path.is_dir)()
+        return await run_async(self._path.is_dir)
 
     async def is_file(self) -> bool:
-        return await asyncify(self._path.is_file)()
+        return await run_async(self._path.is_file)
 
     async def exists(self) -> bool:
-        return await asyncify(self._path.exists)()
+        return await run_async(self._path.exists)
 
     async def rmdir(self) -> None:
-        await asyncify(self._path.rmdir)()
+        await run_async(self._path.rmdir)
 
     async def rglob(self, pattern: str) -> AsyncIterator[AsyncPath]:
-        async for p in asyncify(self._path.rglob)(pattern):
+        async for p in run_async(self._path.rglob, pattern):
             yield AsyncPath(p)
 
     @classmethod
     async def home(cls: Type) -> AsyncPath:
-        return AsyncPath(await asyncify(SyncPath.home)())
+        return AsyncPath(await run_async(SyncPath.home))
 
     @classmethod
     def sync_home(cls: Type) -> AsyncPath:
@@ -64,10 +64,10 @@ class AsyncPath:
         return AsyncPath(other / self._path)
 
     async def mkdir(self, mode=0o777, parents=False, exist_ok=False) -> None:
-        await asyncify(self._path.mkdir)(mode, parents, exist_ok)
+        await run_async(self._path.mkdir, mode, parents, exist_ok)
 
     async def iterdir(self) -> AsyncIterator[AsyncPath]:
-        async for p in asyncify(self._path.iterdir)():
+        async for p in run_async(self._path.iterdir):
             yield AsyncPath(p)
 
     @property
@@ -102,10 +102,10 @@ class AsyncPath:
             await fp.write(data)
 
     async def copy(self, dst: Union[str, AsyncPath], *, follow_symlinks=True) -> None:
-        await asyncify(shutil.copy)(self._path, dst, follow_symlinks=follow_symlinks)
+        await run_async(shutil.copy, self._path, dst, follow_symlinks=follow_symlinks)
 
     async def copy2(self, dst: Union[str, AsyncPath], *, follow_symlinks=True) -> None:
-        await asyncify(shutil.copy2)(self._path, dst, follow_symlinks=follow_symlinks)
+        await run_async(shutil.copy2, self._path, dst, follow_symlinks=follow_symlinks)
 
     async def dirsize(self) -> int:
         """ Return the total size of a directory, in bytes """

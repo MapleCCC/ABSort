@@ -12,6 +12,18 @@ from typing import (
 
 _T = TypeVar("_T")
 @overload
+def run_async(
+    func: Callable[..., Generator[_T, Any, Any]], *args: Any, **kwargs: Any
+) -> AsyncGenerator[_T, Any]: ...
+@overload
+def run_async(
+    func: Callable[..., Iterator[_T]], *args: Any, **kwargs: Any
+) -> AsyncIterator[_T]: ...
+@overload
+def run_async(
+    func: Callable[..., _T], *args: Any, **kwargs: Any
+) -> Coroutine[Any, Any, _T]: ...
+@overload
 def asyncify(
     func: Callable[..., Generator[_T, Any, Any]]
 ) -> Callable[..., AsyncGenerator[_T, Any]]: ...

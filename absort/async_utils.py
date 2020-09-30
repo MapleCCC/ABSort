@@ -15,7 +15,7 @@ from typing import (
 from .utils import dispatch
 
 
-__all__ = ["asyncify", "run_in_event_loop"]
+__all__ = ["run_async", "asyncify", "run_in_event_loop"]
 
 
 # FIXME In view of that the tedious and heavy type annotations in this module are visually
@@ -25,6 +25,10 @@ __all__ = ["asyncify", "run_in_event_loop"]
 
 
 _T = TypeVar("_T")
+
+
+def run_async(func: Callable, *args, **kwargs):
+    return asyncify(func)(*args, **kwargs)
 
 
 @dispatch
