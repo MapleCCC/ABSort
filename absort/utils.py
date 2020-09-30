@@ -312,10 +312,9 @@ def dispatch(base_func: Callable) -> Callable:
             self._regsitry: typing.OrderedDict[Predicate, Callable]
             self._registry = OrderedDict()
 
-            # self._registry[lambda _: True] = base_func
-            self._registry[lambda x: isinstance(x, object)] = base_func
+            self._base_func = base_func
 
-        __slots__ = ["_registry"]
+        __slots__ = ["_registry", "_base_func"]
 
         def __call__(self, *args):
             if not args:
@@ -325,6 +324,8 @@ def dispatch(base_func: Callable) -> Callable:
             for predicate, func in self._registry.items():
                 if predicate(args[0]):
                     return func(*args)
+
+            return self._base_func(*args)
 
         def register(self, predicate: Predicate) -> Callable:
             def decorator(func: Callable) -> Callable:
