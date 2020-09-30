@@ -476,7 +476,7 @@ async def absort_file(file: Path) -> Digest:
             print(f"{file} is not decodable by {args.encoding}", file=sys.stderr)
             print(f"Try to automatically detect file encoding......", file=sys.stderr)
             binary = await file.read_bytes()
-            detected_encoding = cchardet.detect(binary)
+            detected_encoding = cchardet.detect(binary)["encoding"]
 
             try:
                 return await file.read_text(detected_encoding)
