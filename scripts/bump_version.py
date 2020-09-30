@@ -52,10 +52,14 @@ def run(cmd: Sequence[str]) -> None:
     subprocess.run(cmd).check_returncode()
 
 
-def contains_uncommitted_change(filepath: str):
+def uncommitted(filepath: str)->bool:
+    """
+    Check if a file contains uncommitted changes.
+    """
+
     # Add non-existent file check/guard, because `git status --porcelain` has
     # similar output for both unmodified file and non-existent file
-    if not os.path.exists(filepath):
+    if not Path(filepath).exists():
         raise FileNotFoundError(f"Can't get status of non-existent file: {filepath}")
 
     cmpl_proc = subprocess.run(
@@ -133,7 +137,7 @@ def bump_files(new_version: str) -> None:
 
 def preliminary_check() -> None:
     for file in FILES_TO_UPDATE:
-        if contains_uncommitted_change(file):
+        if uncommitted(file):
             raise RuntimeError(
                 f"{file} contains uncommitted change. "
                 "Please clean it up before rerun the script."
