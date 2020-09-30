@@ -1,5 +1,5 @@
 import ast
-from typing import Dict, List, Optional, Set, Sequence, Tuple, Union
+from typing import Dict, List, Optional, Sequence, Set, Tuple, Union
 
 from .profile_tools import add_profile_decorator_to_class_methods
 
@@ -15,7 +15,7 @@ except NameError:
 
 
 def retrieve_names_from_args(args: ast.arguments) -> Set[str]:
-    names = set()
+    names: Set[str] = set()
     names.update(arg.arg for arg in args.posonlyargs)
     names.update(arg.arg for arg in args.args)
     names.update(arg.arg for arg in args.kwonlyargs)

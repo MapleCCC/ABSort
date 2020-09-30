@@ -74,25 +74,32 @@ args = SimpleNamespace()
 
 # Alternative name: DuplicateNames
 class NameRedefinition(Exception):
+    """ An exception to signal that duplicate name definitions are detected """
     pass
 
 
 class ABSortFail(Exception):
+    """ An exception to signal that sorting fails """
     pass
 
 
 class CommentStrategy(Enum):
+    """ An enumeration to specify different kinds of comment strategies """
+
     PUSH_TOP = "push-top"
     ATTR_FOLLOW_DECL = "attr-follow-decl"
     IGNORE = "ignore"
 
 
 class CommentStrategyParamType(click.ParamType):
+    """ A parameter type for the --comment-strategy CLI option """
+
     name = "comment_strategy"
 
     def convert(self, value: str, param: Any, ctx: Any) -> CommentStrategy:
         try:
             return CommentStrategy(value)
+
         except ValueError:
             self.fail(
                 "--comment-strategy argument has invalid value. "
@@ -103,9 +110,12 @@ class CommentStrategyParamType(click.ParamType):
 
 
 class PyVersionParamType(click.ParamType):
+    """ A parameter type for the --py-version CLI option """
+
     name = "py_version"
 
     def convert(self, value: str, param: Any, ctx: Any) -> Tuple[int, int]:
+
         # Reference: "Currently major must equal to 3." from https://docs.python.org/3/library/ast.html#ast.parse
         valid_majors = [3]
         # Reference: "The lowest supported version is (3, 4); the highest is sys.version_info[0:2]." from https://docs.python.org/3/library/ast.html#ast.parse
@@ -118,6 +128,7 @@ class PyVersionParamType(click.ParamType):
             if version not in valid_py_versions:
                 raise ValueError
             return version
+
         except (AttributeError, ValueError):
             stringfy_valid_py_versions = ", ".join(
                 f"{x}.{y}" for x, y in valid_py_versions
@@ -131,12 +142,16 @@ class PyVersionParamType(click.ParamType):
 
 
 def get_dependency_of_decl(decl: DeclarationType) -> Set[str]:
+    """ Calculate the dependencies (as set of symbols) of the declaration """
+
     temp_module = ast.Module(body=[decl], type_ignores=[])
     visitor = GetUndefinedVariableVisitor(py_version=args.py_version)
     return visitor.visit(temp_module)
 
 
 def generate_dependency_graph(decls: List[DeclarationType]) -> Graph:
+    """ Generate a dependency graph from a continguous block of declarations """
+
     decl_names = [decl.name for decl in decls]
 
     graph = Graph()
@@ -161,7 +176,11 @@ def generate_dependency_graph(decls: List[DeclarationType]) -> Graph:
 
 @profile  # type: ignore
 def absort_decls(decls: List[DeclarationType]) -> Iterator[DeclarationType]:
+    """ Sort a continguous block of declarations """
+
     def same_abstract_level_sorter(names: List[str]) -> List[str]:
+        """ Specify how to sort declarations within the same abstract level """
+
         # Currently sort by retaining their original relative order, to reduce diff size.
         #
         # Possible alternatives: sort by lexicographical order of the names, sort by body
@@ -205,6 +224,8 @@ def absort_decls(decls: List[DeclarationType]) -> Iterator[DeclarationType]:
 
 @profile  # type: ignore
 def get_related_source_lines_of_decl(source: str, node: ast.AST) -> List[str]:
+    """ Retrieve source lines corresponding to the AST node, from the source """
+
     source_lines = []
 
     if args.comment_strategy is CommentStrategy.ATTR_FOLLOW_DECL:
@@ -224,6 +245,8 @@ def get_related_source_lines_of_decl(source: str, node: ast.AST) -> List[str]:
 def find_continguous_decls(
     stmts: List[ast.stmt],
 ) -> Iterator[Tuple[int, int, List[DeclarationType]]]:
+    """ Yield blocks of continguous declarations """
+
     # WARNING: lineno and end_lineno are 1-indexed
 
     head_sentinel = ast.stmt()
@@ -254,6 +277,8 @@ def find_continguous_decls(
 
 @profile  # type: ignore
 def absort_str(old_source: str) -> str:
+    """ Sort the source code in string """
+
     def preliminary_sanity_check(top_level_stmts: List[ast.stmt]) -> None:
         # TODO add more sanity checks
 
@@ -290,6 +315,8 @@ def absort_str(old_source: str) -> str:
 def get_related_source_lines_of_block(
     source: str, decls: List[DeclarationType]
 ) -> List[str]:
+    """ Retrieve source lines corresponding to the block of continguous declarations, from source """
+
     source_lines = []
 
     for decl in decls:
@@ -333,6 +360,8 @@ def get_related_source_lines_of_block(
 def display_diff_with_filename(
     old_src: str, new_src: str, filename: str = None
 ) -> None:
+    """ Display diff view between old source and new source """
+
     old_src_lines = old_src.splitlines(keepends=True)
     new_src_lines = new_src.splitlines(keepends=True)
 
@@ -349,6 +378,8 @@ def display_diff_with_filename(
 
 @run_in_event_loop
 async def collect_python_files(filepaths: Iterable[Path]) -> AsyncIterator[Path]:
+    """ Yield python files searched from the given paths """
+
     for filepath in filepaths:
         if not await filepath.exists():
             print(f'File "{filepath}" doesn\'t exist. Skipped.', file=sys.stderr)
@@ -370,6 +401,8 @@ async def collect_python_files(filepaths: Iterable[Path]) -> AsyncIterator[Path]
 
 
 async def shrink_cache() -> None:
+    """ Shrink the size of cache to under threshold """
+
     shrink_target_size = CACHE_MAX_SIZE - await CACHE_DIR.dirsize()
 
     backup_filename_pattern = r".*\.(?P<timestamp>\d{14})\.backup"
@@ -392,6 +425,8 @@ async def shrink_cache() -> None:
 
 
 async def backup_to_cache(file: Path) -> None:
+    """ Make a backup of the file, put in the cache """
+
     def generate_timestamp() -> str:
         now = str(datetime.now())
         timestamp = ""
@@ -412,6 +447,8 @@ async def backup_to_cache(file: Path) -> None:
 
 @attr.s(auto_attribs=True, slots=True)
 class Digest:
+    """ A semantic data class to represent digest data """
+
     unmodified: int = 0
     modified: int = 0
     failed: int = 0
@@ -428,7 +465,11 @@ class Digest:
 
 
 async def absort_file(file: Path) -> Digest:
+    """ Sort the source in the given file """
+
     async def read_source(file: Path) -> str:
+        """ Read source from the file, including exception handling """
+
         try:
             return await file.read_text(args.encoding)
         except UnicodeDecodeError:
@@ -445,6 +486,8 @@ async def absort_file(file: Path) -> Digest:
                 raise ABSortFail
 
     def absort_source(old_source: str) -> str:
+        """ Sort the source in string, including exception handling """
+
         try:
             return absort_str(old_source)
         except SyntaxError as exc:
@@ -461,6 +504,8 @@ async def absort_file(file: Path) -> Digest:
             raise ABSortFail
 
     async def write_source(file: Path, new_source: str) -> None:
+        """ Write the new source to the file, prompt for confirmation and make backup """
+
         if not args.yes:
             ans = click.confirm(
                 f"Are you sure you want to in-place update the file {file}?", err=True
@@ -477,6 +522,8 @@ async def absort_file(file: Path) -> Digest:
             print(bright_green(f"Processed {file}"))
 
     async def process_new_source(new_source: str) -> None:
+        """ Process the new source as specified by the CLI arguments """
+
         # TODO add more styled output (e.g. colorized)
 
         if args.display_diff:
@@ -518,6 +565,8 @@ async def absort_file(file: Path) -> Digest:
 
 
 def absort_files(files: List[Path]) -> Digest:
+    """ Sort a list of files """
+
     async def entry() -> Digest:
         digests = await asyncio.gather(*(absort_file(file) for file in files))
         return sum(digests, Digest())
@@ -526,6 +575,8 @@ def absort_files(files: List[Path]) -> Digest:
 
 
 def display_summary(digest: Digest) -> None:
+    """ Display the succint summary of the sorting process """
+
     summary = []
     for field in attr.fields(Digest):
         description = field.name
@@ -538,6 +589,8 @@ def display_summary(digest: Digest) -> None:
 
 
 def check_args() -> None:
+    """ Preliminary check of the validness of the CLI argument """
+
     # FIXME use click library's builtin mechanism to specify mutually exclusive options
 
     if sum([args.check, args.display_diff, args.in_place]) > 1:
@@ -695,6 +748,7 @@ def main(
     color_off: bool,
     yes: bool,
 ) -> None:
+    """ the CLI entry """
 
     # A global variable to store CLI arguments.
     global args

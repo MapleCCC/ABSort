@@ -18,6 +18,12 @@ from .utils import dispatch
 __all__ = ["asyncify", "run_in_event_loop"]
 
 
+# FIXME In view of that the tedious and heavy type annotations in this module are visually
+# bad and undermine the readability, should we just move the heavy and detailed type
+# annotations to standalone type stub files, while only leaving some lightweight type
+# annotations here?
+
+
 _T = TypeVar("_T")
 
 

@@ -3,6 +3,9 @@ MAKEFLAGS += .silent
 all:
 	python -m absort sample.py
 
+pypy:
+	pypy3 -m absort sample3.py
+
 test:
 	pytest tests
 
