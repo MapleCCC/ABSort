@@ -35,6 +35,7 @@ from .utils import (
     bright_yellow,
     colored_unified_diff,
     compose,
+    duplicated,
     first_true,
     silent_context,
     whitespace_lines,
@@ -177,7 +178,7 @@ def absort_decls(decls: List[DeclarationType]) -> Iterator[DeclarationType]:
         return sorted(names, key=lambda name: decl_name_inverse_index[name])
 
     decl_names = [decl.name for decl in decls]
-    if len(set(decl_names)) < len(decl_names):
+    if duplicated(decl_names):
         raise NameRedefinition("Name redefinition exists. Not supported yet.")
 
     graph = generate_dependency_graph(decls)
@@ -259,7 +260,7 @@ def absort_str(old_source: str) -> str:
         decls = [stmt for stmt in top_level_stmts if isinstance(stmt, Declaration)]
         decl_names = [decl.name for decl in decls]
 
-        if len(set(decl_names)) < len(decl_names):
+        if duplicated(decl_names):
             raise NameRedefinition("Name redefinition exists. Not supported yet.")
 
     module_tree = ast.parse(old_source, feature_version=args.py_version)

@@ -17,6 +17,7 @@ from typing import (
     Iterator,
     List,
     Optional,
+    Sequence,
     TypeVar,
     overload,
 )
@@ -47,6 +48,7 @@ __all__ = [
     "compose",
     "whitespace_lines",
     "dispatch",
+    "duplicated",
 ]
 
 # Note: the name `profile` will be injected by line-profiler at run-time
@@ -339,3 +341,20 @@ class dispatch:
             return func
 
         return decorator
+
+
+def duplicated(sequence: Sequence) -> bool:
+    """
+    Determine if a sequence contains duplicate elements
+    """
+
+    try:
+        return len(set(sequence)) < len(sequence)
+    except TypeError:
+        seen = []
+        for elem in sequence:
+            if elem in seen:
+                return True
+            else:
+                seen.append(elem)
+        return False
