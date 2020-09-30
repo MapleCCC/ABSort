@@ -79,6 +79,8 @@ print(add_three(1))
 
 ## Installation
 
+You may optionally install [uvloop](https://github.com/magicstack/uvloop) to boost speed.
+
 ```bash
 # Optionally create a virtual environment for isolation purpose
 $ python -m virtualenv .venv

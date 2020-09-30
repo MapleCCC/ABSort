@@ -710,6 +710,13 @@ def main(
 
     print(f"Found {len(files)} files")
 
+    # Optionally use uvloop to boost speed
+    try:
+        import uvloop  # type: ignore
+        uvloop.install()
+    except ImportError:
+        pass
+
     verboseness_context_manager = silent_context() if quiet else contextlib.nullcontext()
 
     # TODO test --color-off under different environments, eg. Linux, macOS, ...
