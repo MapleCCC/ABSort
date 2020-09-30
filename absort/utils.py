@@ -300,46 +300,42 @@ def whitespace_lines(lines: List[str]) -> bool:
 Predicate = Callable[[Any], bool]
 
 
-def dispatch(base_func: Callable) -> Callable:
+class dispatch:
     """
     Similar to the functools.singledispatch, except that it uses predicates to dispatch.
     """
 
-    # FIXME can we use functools.wrap to decorate class?
-    # @functools.wraps(base_func)
-    class wrapper:
-        def __init__(self, base_func: Callable) -> None:
-            self._regsitry: typing.OrderedDict[Predicate, Callable]
-            self._registry = OrderedDict()
+    def __init__(self, base_func: Callable) -> None:
+        self._regsitry: typing.OrderedDict[Predicate, Callable]
+        self._registry = OrderedDict()
 
-            self._base_func = base_func
+        self._base_func = base_func
 
-        __slots__ = ["_registry", "_base_func"]
+    __slots__ = ["_registry", "_base_func"]
 
-        def __call__(self, *args):
-            if not args:
-                raise ValueError
+    def __call__(self, *args):
+        if not args:
+            raise ValueError
 
-            # For OrderedDict, the iteration order is LIFO
-            for predicate, func in self._registry.items():
-                if predicate(args[0]):
-                    return func(*args)
+        # For OrderedDict, the iteration order is LIFO
+        for predicate, func in self._registry.items():
+            if predicate(args[0]):
+                return func(*args)
 
-            return self._base_func(*args)
+        # Fall back to the base function
+        return self._base_func(*args)
 
-        def register(self, predicate: Predicate) -> Callable:
-            def decorator(func: Callable) -> Callable:
+    def register(self, predicate: Predicate) -> Callable:
+        def decorator(func: Callable) -> Callable:
 
-                if predicate in self._registry:
-                    raise RuntimeError(
-                        f"More than one functions are registered for {predicate}"
-                    )
+            if predicate in self._registry:
+                raise RuntimeError(
+                    f"More than one functions are registered for {predicate}"
+                )
 
-                self._registry[predicate] = func
+            self._registry[predicate] = func
 
-                # Return the orginal function to enable decorator stacking
-                return func
+            # Return the orginal function to enable decorator stacking
+            return func
 
-            return decorator
-
-    return wrapper(base_func)
+        return decorator
