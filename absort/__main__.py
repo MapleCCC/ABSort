@@ -10,6 +10,7 @@ import sys
 from collections import Counter
 from datetime import datetime
 from enum import Enum
+from itertools import combinations
 from operator import itemgetter
 from types import SimpleNamespace
 from typing import Any, AsyncIterator, Iterable, Iterator, List, Set, Tuple
@@ -26,6 +27,7 @@ from .ast_utils import (
     ast_get_leading_comment_and_decorator_list_source_lines,
     ast_get_leading_comment_source_lines,
     ast_get_source_lines,
+    ast_tree_distance,
 )
 from .async_utils import run_in_event_loop
 from .directed_graph import DirectedGraph
@@ -42,6 +44,7 @@ from .utils import (
     xreverse,
 )
 from .visitors import GetUndefinedVariableVisitor
+from .weighted_graph import WeightedGraph
 
 
 # Note: the name `profile` will be injected by line-profiler at run-time
@@ -176,6 +179,16 @@ def generate_dependency_graph(decls: List[DeclarationType]) -> DirectedGraph:
     return graph
 
 
+def sort_decls_by_syntax_tree_similarity(
+    decls: List[DeclarationType],
+) -> Iterator[DeclarationType]:
+    graph = WeightedGraph()
+    for decl1, decl2 in combinations(decls, 2):
+        distance = ast_tree_distance(decl1, decl2)
+        graph.add_edge(decl1, decl2, distance)
+    yield from graph.minimum_spanning_tree()
+
+
 @profile  # type: ignore
 def absort_decls(decls: List[DeclarationType]) -> Iterator[DeclarationType]:
     """ Sort a continguous block of declarations """
@@ -193,10 +206,19 @@ def absort_decls(decls: List[DeclarationType]) -> Iterator[DeclarationType]:
         #
         # Code similarity can be implemented in:
         # 1. easy and naive way: source code string similarity. eg. shortest edit distance algorithm.
-        # 2. sophisticated way: syntax tree similarity.
+        # 2. sophisticated way: syntax tree similarity. E.g. the classic Zhange-Shaha algorithm.
 
-        decl_name_inverse_index = {name: idx for idx, name in enumerate(decl_names)}
-        return sorted(names, key=lambda name: decl_name_inverse_index[name])
+        if args.no_aggressive:
+            decl_name_inverse_index = {name: idx for idx, name in enumerate(decl_names)}
+            return sorted(names, key=lambda name: decl_name_inverse_index[name])
+
+        else:
+            # Sort by putting two visually similar definitions together
+
+            name_lookup_table = {decl.name: decl for decl in decls}
+            same_level_decls = [name_lookup_table[name] for name in names]
+            sorted_decls = sort_decls_by_syntax_tree_similarity(same_level_decls)
+            return [decl.name for decl in sorted_decls]
 
     decl_names = [decl.name for decl in decls]
     if duplicated(decl_names):

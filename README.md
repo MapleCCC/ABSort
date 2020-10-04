@@ -186,6 +186,14 @@ Alternatively, you can pass Python code from `stdin`.
 
 The sorting algorithm is currently a reversed topological sort on the dependency graph, with function/class definitions as graph nodes, and their dependency relations as graph edges.
 
+For graph nodes within the same abstract level, they are in turn sorted in two options:
+
+1. Quick and naïve: retain original order. This method requires less resources, and results in smaller diff size.
+
+2. Sophisticated: sorted by syntax tree similarity. The syntax tree similarity is calculated by an adoption of [the ZhangShasha algorithm](https://epubs.siam.org/doi/abs/10.1137/0218082). This method is more advanced, and results in better visual outcome.
+
+The sophisticated method is by now the default behavior, unless the CLI option `--no-aggressive` is set.
+
 ## Limitations
 
 The script is a static analysis tool. It's beyond the tool's capability and scope to handle some heavily dynamic behaviours, e.g. dynamic manipulation of the globals(), locals(), etc.
