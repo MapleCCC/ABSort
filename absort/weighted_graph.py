@@ -38,6 +38,13 @@ class WeightedGraph:
         edge = frozenset({v, w})
         self._weight_table.pop(edge, None)
 
+    def weight(self, v: Node, w: Node) -> Weight:
+        try:
+            edge = frozenset({v, w})
+            return self._weight_table[edge]
+        except KeyError:
+            raise ValueError(f"{{{v}, {w}}} is not an edge in the graph")
+
     def copy(self) -> WeightedGraph:
         """
         Note that this is NOT deep copy.
@@ -75,9 +82,28 @@ class WeightedGraph:
         while _graph._weight_table:
             candidate_edges = []
             for node in seen:
-                candidate_edges.extend({node, w} for w in _graph._adjacency_list[node])
-            target_edge = min(candidate_edges, key=lambda edge: _graph._weight_table[edge])
+                for neighbor in _graph._adjacency_list[node]:
+                    edge = frozenset({node, neighbor})
+                    candidate_edges.append(edge)
+
+            target_edge = min(
+                candidate_edges, key=lambda edge: _graph._weight_table[edge]
+            )
             seen.update(target_edge)
             _graph.remove_edge(*target_edge)
 
         return seen
+
+
+if __name__ == "__main__":
+    g = WeightedGraph()
+    g.add_edge("A", "B", 1)
+    g.add_edge("A", "D", 3)
+    g.add_edge("B", "D", 5)
+    g.add_edge("E", "D", 1)
+    g.add_edge("E", "B", 1)
+    g.add_edge("C", "B", 6)
+    g.add_edge("C", "F", 2)
+    g.add_edge("E", "F", 4)
+    g.add_edge("E", "C", 5)
+    print(list(g.minimum_spanning_tree()))
