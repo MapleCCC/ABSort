@@ -98,7 +98,7 @@ class PriorityQueue:
 
         return self._storage[0]
 
-    def clear(self)->None:
+    def clear(self) -> None:
         self._storage.clear()
         self._priority_table.clear()
         self._priority_table[max_priority_sentinel] = math.inf  # type: ignore
@@ -123,7 +123,7 @@ class LFU:
             maxsize = math.inf  # type: ignore
         if maxsize <= 0:
             raise ValueError("maxsize shoule be positive number")
-        self._maxsize = maxsize
+        self._maxsize: int = maxsize  # type: ignore
 
         self._storage: Dict = dict()
         self._frequency: PriorityQueue = PriorityQueue()

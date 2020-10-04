@@ -110,7 +110,7 @@ class DirectedGraph:
 
     def copy(self) -> DirectedGraph:
         """
-        Note that this is NOT deep copy.
+        Note that this is shallow copy, NOT deep copy.
 
         The interface guarantees deep copy of the whole tree structure, but not to the
         level of Node internal. User are responsible to ensure deep copy of the Node

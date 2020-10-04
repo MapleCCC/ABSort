@@ -36,10 +36,10 @@ class LRU:
             maxsize = math.inf  # type: ignore
         if maxsize <= 0:
             raise ValueError("maxsize should be positive integer")
-        self._maxsize = maxsize
+        self._maxsize: int = maxsize  # type: ignore
         self._storage: Dict = dict()
         self._recency: List = list()
-        self._indexer: Dict = dict()
+        self._indexer: Dict[Any, int] = dict()
         self._offset: int = 0
 
     __slots__ = ("_maxsize", "_storage", "_recency", "_indexer", "_offset")

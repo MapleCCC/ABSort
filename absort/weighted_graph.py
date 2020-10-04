@@ -3,7 +3,7 @@ from __future__ import annotations
 import pickle
 from collections import defaultdict
 from hashlib import md5
-from typing import Dict, DefaultDict, Set, Iterator, TypeVar, FrozenSet
+from typing import DefaultDict, Dict, FrozenSet, Iterator, Set, TypeVar
 
 from .collections_extra import OrderedSet
 
@@ -54,7 +54,7 @@ class WeightedGraph:
 
     def copy(self) -> WeightedGraph:
         """
-        Note that this is NOT deep copy.
+        Note that this is shallow copy, NOT deep copy.
 
         The interface guarantees deep copy of the whole tree structure, but not to the
         level of Node internal. User are responsible to ensure deep copy of the Node

@@ -3,8 +3,8 @@ import difflib
 import functools
 import itertools
 import os
-import typing
 import sys
+import typing
 from collections import OrderedDict, namedtuple
 from functools import partial
 from itertools import zip_longest
