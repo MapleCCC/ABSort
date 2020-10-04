@@ -182,6 +182,10 @@ def generate_dependency_graph(decls: List[DeclarationType]) -> DirectedGraph:
 def sort_decls_by_syntax_tree_similarity(
     decls: List[DeclarationType],
 ) -> Iterator[DeclarationType]:
+    if len(decls) == 1:
+        yield decls[0]
+        return
+
     graph = WeightedGraph()
     for decl1, decl2 in combinations(decls, 2):
         distance = ast_tree_distance(decl1, decl2)
