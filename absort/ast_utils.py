@@ -24,6 +24,7 @@ __all__ = [
     "ast_get_decorator_list_source_lines",
     "ast_get_source_lines",
     "cached_ast_iter_child_nodes",
+    "ast_iter_non_node_fields",
     "ast_tree_distance",
 ]
 
@@ -168,6 +169,23 @@ def cached_ast_iter_child_nodes(node: ast.AST) -> List[ast.AST]:
     return list(ast.iter_child_nodes(node))
 
 
+def ast_iter_non_node_fields(node: ast.AST) -> Iterator:
+    """ Complement of the ast.iter_child_nodes function """
+
+    for _, field in ast.iter_fields(node):
+        if isinstance(field, ast.AST):
+            continue
+        elif isinstance(field, list):
+            if all(map(lambda elm: isinstance(elm, ast.AST), field)):
+                continue
+            elif all(map(lambda elm: not isinstance(elm, ast.AST), field)):
+                yield field
+            else:
+                raise RuntimeError("Unreachable")
+        else:
+            yield field
+
+
 # TODO do we want to extract the abstract tree_diff algorithm out to standalone module (treediff.py)?
 # If abstract/generic, use typevar to annotate node type.
 
@@ -270,14 +288,13 @@ def ast_tree_distance(
             if type(node1) != type(node2):
                 return 1
             else:
-                values1 = [value for _, value in ast.iter_fields(node1)]
-                values2 = [value for _, value in ast.iter_fields(node2)]
+                values1 = list(ast_iter_non_node_fields(node1))
+                values2 = list(ast_iter_non_node_fields(node2))
                 assert len(values1) == len(values2)
                 field_length = len(values1)
                 if not field_length:
                     return 0
-                else:
-                    return hamming_distance(values1, values2) / len(values1)
+                return hamming_distance(values1, values2) / len(values1)
 
         rename_cost = default_rename_cost
 
