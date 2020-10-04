@@ -45,6 +45,14 @@ class WeightedGraph:
         edge = frozenset({v, w})
         self._weight_table.pop(edge, None)
 
+    @property
+    def num_nodes(self) -> int:
+        return len(self._adjacency_list)
+
+    @property
+    def num_edges(self) -> int:
+        return len(self._weight_table)
+
     def weight(self, v: Node, w: Node) -> Weight:
         try:
             edge = frozenset({v, w})
@@ -79,6 +87,11 @@ class WeightedGraph:
             raise ValueError("No maximum edge in an empty or one-noded graph")
 
     def minimum_spanning_tree(self) -> Iterator[Node]:
+        if self.num_edges == 0:
+            # An empty or one-noded graph
+            yield from self._adjacency_list.keys()
+            return
+
         _graph = self.copy()
         seen: Set[Node] = OrderedSet()
 
