@@ -27,6 +27,9 @@ class WeightedGraph:
     __slots__ = ["_adjacency_list", "_weight_table"]
 
     def add_edge(self, v: Node, w: Node, weight: Weight) -> None:
+        if v == w:
+            raise ValueError("Self loop is not supported")
+
         self._adjacency_list[v].add(w)
         self._adjacency_list[w].add(v)
         edge = frozenset({v, w})
