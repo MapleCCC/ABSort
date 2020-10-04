@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import pickle
 from collections import defaultdict
+from hashlib import md5
 from typing import Dict, DefaultDict, Set, Iterator, TypeVar, FrozenSet
 
 from .collections_extra import OrderedSet
@@ -84,14 +86,14 @@ class WeightedGraph:
 
         # Make the order deterministic, instead of different for each call
         node1, node2 = minimum_edge
-        hashcode1 = hash(node1)
-        hashcode2 = hash(node2)
-        if hashcode1 > hashcode2:
+        digest1 = md5(pickle.dumps(node1)).hexdigest()
+        digest2 = md5(pickle.dumps(node2)).hexdigest()
+        if digest1 > digest2:
             seen.update((node1, node2))
-        elif hashcode1 < hashcode2:
+        elif digest1 < digest2:
             seen.update((node2, node1))
         else:
-            raise RuntimeError("Unreachable")
+            raise RuntimeError("Unlikely hash collision encountered")
 
         _graph.remove_edge(*minimum_edge)
 
