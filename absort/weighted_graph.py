@@ -42,7 +42,12 @@ class WeightedGraph:
         """ Note that this is NOT deep copy """
 
         new = WeightedGraph()
-        new._adjacency_list = self._adjacency_list.copy()
+
+        new_adjacency_list: AdjacencyList = defaultdict(set)
+        for node, nodes in self._adjacency_list:
+            new_adjacency_list[node] = nodes.copy()
+        new._adjacency_list = new_adjacency_list
+
         new._weight_table = self._weight_table.copy()
         return new
 
