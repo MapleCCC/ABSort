@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from typing import Dict, DefaultDict, Set, Iterator, TypeVar
+from typing import Dict, DefaultDict, Set, Iterator, TypeVar, FrozenSet
 
 
 __all__ = ["WeightedGraph"]
@@ -14,7 +14,7 @@ __all__ = ["WeightedGraph"]
 # TODO: specify that Node type has to be hashable (constrained by current implementation,
 # though we may consider to rewrite the implementation to waive the constraint in the future)
 Node = TypeVar("Node")
-Edge = Set[Node]
+Edge = FrozenSet[Node]
 Weight = float
 AdjacencyList = DefaultDict[Node, Set[Node]]
 
@@ -29,14 +29,14 @@ class WeightedGraph:
     def add_edge(self, v: Node, w: Node, weight: Weight) -> None:
         self._adjacency_list[v].add(w)
         self._adjacency_list[w].add(v)
-        # FIXME set object is not hashable, hence not able to be used as dict key,
-        # we should use frozenset instead.
-        self._weight_table[{v, w}] = weight
+        edge = frozenset({v, w})
+        self._weight_table[edge] = weight
 
     def remove_edge(self, v: Node, w: Node) -> None:
         self._adjacency_list[v].discard(w)
         self._adjacency_list[w].discard(v)
-        self._weight_table.pop({v, w}, None)
+        edge = frozenset({v, w})
+        self._weight_table.pop(edge, None)
 
     def copy(self) -> WeightedGraph:
         """
@@ -50,7 +50,7 @@ class WeightedGraph:
         new = WeightedGraph()
 
         new_adjacency_list: AdjacencyList = defaultdict(set)
-        for node, nodes in self._adjacency_list:
+        for node, nodes in self._adjacency_list.items():
             new_adjacency_list[node] = nodes.copy()
         new._adjacency_list = new_adjacency_list
 
