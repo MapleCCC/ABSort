@@ -4,7 +4,7 @@
 from __future__ import annotations
 
 from collections import defaultdict, deque
-from typing import Any, Callable, DefaultDict, Iterator, List, Optional, Set, Tuple
+from typing import Callable, DefaultDict, Iterator, List, Optional, Set, Tuple, TypeVar
 
 
 #
@@ -13,7 +13,7 @@ from typing import Any, Callable, DefaultDict, Iterator, List, Optional, Set, Tu
 
 # TODO: specify that Node type has to be hashable (constrained by current implementation,
 # though we may consider to rewrite the implementation to waive the constraint in the future)
-Node = Any
+Node = TypeVar("Node")
 Edge = Tuple[Node, Node]
 AdjacencyList = DefaultDict[Node, Set[Node]]
 
