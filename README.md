@@ -16,6 +16,7 @@
 <!-- TODO which diff method should we use? two dots or three dots? -->
 <!-- TODO add badge about compatible CPython/PyPy versions -->
 
+
 ## Table of Content
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
@@ -23,11 +24,11 @@
 
 
 - [Overview](#overview)
-- [Example](#example)
-- [Installation](#installation)
-- [Usage](#usage)
 - [Internal Algorithm](#internal-algorithm)
 - [Limitations](#limitations)
+- [Usage](#usage)
+- [Example](#example)
+- [Installation](#installation)
 - [Development](#development)
   - [Test](#test)
   - [Profile](#profile)
@@ -35,6 +36,7 @@
 - [License](#license)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 
 ## Overview
 
@@ -45,58 +47,24 @@
 <!-- TODO insert demo animation gif here-->
 <!-- TODO add "try it on a demo" hyperlink, pointing to a heroku-hosted instance -->
 
-<!-- TODO move internal algorithm section and limitations section up here -->
-<!-- TODO move usage section up here -->
 
-## Example
+## Internal Algorithm
 
-Original code:
+The sorting algorithm is currently a reversed topological sort on the dependency graph, with function/class definitions as graph nodes, and their dependency relations as graph edges.
 
-```python
-def increment(x):
-    return x + 1
+For graph nodes within the same abstract level, they are in turn sorted in two options:
 
-def add_three(x):
-    return add_two(increment(x))
+1. Quick and naïve: retain original order. This method requires less resources, and results in smaller diff size.
 
-def add_two(x):
-    return increment(increment(x))
+2. Sophisticated: sorted by syntax tree similarity. The syntax tree similarity is calculated by an adoption of [the ZhangShasha algorithm](https://epubs.siam.org/doi/abs/10.1137/0218082). This method is more advanced, and results in better visual outcome.
 
-class Adder:
-    method = increment
+The sophisticated method is by now the default behavior, unless the CLI option `--no-aggressive` is set.
 
-print(add_three(1))
-```
 
-After ABSorting:
+## Limitations
 
-```python
-def add_three(x):
-    return add_two(increment(x))
+The script is a static analysis tool. It's beyond the tool's capability and scope to handle some heavily dynamic behaviours, e.g. dynamic manipulation of the globals(), locals(), etc.
 
-def add_two(x):
-    return increment(increment(x))
-
-class Adder:
-    method = increment
-
-def increment(x):
-    return x + 1
-
-print(add_three(1))
-```
-
-## Installation
-
-You may consider optionally installing [uvloop](https://github.com/magicstack/uvloop) and [orderedsort](https://github.com/simonpercivall/orderedset) to boost speed.
-
-```bash
-# Optionally create a virtual environment for isolation purpose
-$ python -m virtualenv .venv
-$ source .venv/Scripts/activate
-
-$ python -m pip install git+https://github.com/MapleCCC/ABSort.git@v0.1.0#egg=ABSort
-```
 
 ## Usage
 
@@ -183,21 +151,58 @@ Options:
 
 Alternatively, you can pass Python code from `stdin`.
 
-## Internal Algorithm
 
-The sorting algorithm is currently a reversed topological sort on the dependency graph, with function/class definitions as graph nodes, and their dependency relations as graph edges.
+## Example
 
-For graph nodes within the same abstract level, they are in turn sorted in two options:
+Original code:
 
-1. Quick and naïve: retain original order. This method requires less resources, and results in smaller diff size.
+```python
+def increment(x):
+    return x + 1
 
-2. Sophisticated: sorted by syntax tree similarity. The syntax tree similarity is calculated by an adoption of [the ZhangShasha algorithm](https://epubs.siam.org/doi/abs/10.1137/0218082). This method is more advanced, and results in better visual outcome.
+def add_three(x):
+    return add_two(increment(x))
 
-The sophisticated method is by now the default behavior, unless the CLI option `--no-aggressive` is set.
+def add_two(x):
+    return increment(increment(x))
 
-## Limitations
+class Adder:
+    method = increment
 
-The script is a static analysis tool. It's beyond the tool's capability and scope to handle some heavily dynamic behaviours, e.g. dynamic manipulation of the globals(), locals(), etc.
+print(add_three(1))
+```
+
+After ABSorting:
+
+```python
+def add_three(x):
+    return add_two(increment(x))
+
+def add_two(x):
+    return increment(increment(x))
+
+class Adder:
+    method = increment
+
+def increment(x):
+    return x + 1
+
+print(add_three(1))
+```
+
+
+## Installation
+
+You may consider optionally installing [uvloop](https://github.com/magicstack/uvloop) and [orderedsort](https://github.com/simonpercivall/orderedset) to boost speed.
+
+```bash
+# Optionally create a virtual environment for isolation purpose
+$ python -m virtualenv .venv
+$ source .venv/Scripts/activate
+
+$ python -m pip install git+https://github.com/MapleCCC/ABSort.git@v0.1.0#egg=ABSort
+```
+
 
 ## Development
 
@@ -227,6 +232,7 @@ $ source .venv/Scripts/activate
 $ python -m pip install -e git+https://github.com/MapleCCC/ABSort.git#egg=ABSort
 ```
 
+
 ### Test
 
 ```bash
@@ -238,6 +244,7 @@ $ pytest tests
 
 <!-- TODO tox -->
 
+
 ### Profile
 
 ```bash
@@ -248,9 +255,11 @@ $ python scripts/profile.py
 
 Note: special attention needs to be paid to that 1. line-profiler is not able to collect profiling information in non-main threads, and 2. it's most robust practice to have `@profile` be the innermost decorator.
 
+
 ## Contribution
 
 Go to [issues](https://github.com/MapleCCC/ABSort/issues) to send issues or feedbacks. Pull requests are welcome.
+
 
 ## License
 
