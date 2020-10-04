@@ -3,6 +3,8 @@ from __future__ import annotations
 from collections import defaultdict
 from typing import Dict, DefaultDict, Set, Iterator, TypeVar, FrozenSet
 
+from .collections_extra import OrderedSet
+
 
 __all__ = ["WeightedGraph"]
 
@@ -74,12 +76,23 @@ class WeightedGraph:
         except ValueError:
             raise ValueError("No maximum edge in an empty or one-noded graph")
 
-    def minimum_spanning_tree(self) -> Set[Node]:
+    def minimum_spanning_tree(self) -> Iterator[Node]:
         _graph = self.copy()
-        seen: Set[Node] = set()
+        seen: Set[Node] = OrderedSet()
 
         minimum_edge = _graph.find_minimum_edge()
-        seen.update(minimum_edge)
+
+        # Make the order deterministic, instead of different for each call
+        node1, node2 = minimum_edge
+        hashcode1 = hash(node1)
+        hashcode2 = hash(node2)
+        if hashcode1 > hashcode2:
+            seen.update((node1, node2))
+        elif hashcode1 < hashcode2:
+            seen.update((node2, node1))
+        else:
+            raise RuntimeError("Unreachable")
+
         _graph.remove_edge(*minimum_edge)
 
         while _graph._weight_table:
@@ -95,7 +108,7 @@ class WeightedGraph:
             seen.update(target_edge)
             _graph.remove_edge(*target_edge)
 
-        return seen
+        yield from seen
 
 
 if __name__ == "__main__":
