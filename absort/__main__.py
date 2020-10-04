@@ -29,7 +29,7 @@ from .ast_utils import (
 )
 from .async_utils import run_in_event_loop
 from .extra_typing import Declaration, DeclarationType
-from .graph import Graph
+from .graph import DirectedGraph
 from .utils import (
     bright_green,
     bright_yellow,
@@ -151,12 +151,12 @@ def get_dependency_of_decl(decl: DeclarationType) -> Set[str]:
     return visitor.visit(temp_module)
 
 
-def generate_dependency_graph(decls: List[DeclarationType]) -> Graph:
+def generate_dependency_graph(decls: List[DeclarationType]) -> DirectedGraph:
     """ Generate a dependency graph from a continguous block of declarations """
 
     decl_names = [decl.name for decl in decls]
 
-    graph = Graph()
+    graph = DirectedGraph()
 
     for decl in decls:
         deps = get_dependency_of_decl(decl)

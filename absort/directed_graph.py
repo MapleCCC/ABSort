@@ -18,7 +18,7 @@ Edge = Tuple[Node, Node]
 AdjacencyList = DefaultDict[Node, Set[Node]]
 
 
-__all__ = ["CircularDependencyError", "SelfLoopError", "Graph"]
+__all__ = ["CircularDependencyError", "SelfLoopError", "DirectedGraph"]
 
 
 class CircularDependencyError(Exception):
@@ -30,7 +30,7 @@ class SelfLoopError(Exception):
 
 
 # Graph is represented internally as data structure adjacency list
-class Graph:
+class DirectedGraph:
     def __init__(self) -> None:
         self._adjacency_list: AdjacencyList = defaultdict(set)
 
@@ -96,7 +96,7 @@ class Graph:
                 current_path.pop()
         return None
 
-    def get_invert_graph(self) -> Graph:
+    def get_invert_graph(self) -> DirectedGraph:
         new_adjlist: AdjacencyList = defaultdict(set)
         for key in self._adjacency_list.keys():
             new_adjlist[key] = set()
@@ -104,16 +104,16 @@ class Graph:
             for child in children:
                 new_adjlist[child].add(node)
 
-        new_graph = Graph()
+        new_graph = DirectedGraph()
         new_graph._adjacency_list = new_adjlist
         return new_graph
 
-    def copy(self) -> Graph:
+    def copy(self) -> DirectedGraph:
         # Deep copy
         new_adjlist: AdjacencyList = defaultdict(set)
         for node, children in self._adjacency_list.items():
             new_adjlist[node] = children.copy()
-        new_graph = Graph()
+        new_graph = DirectedGraph()
         new_graph._adjacency_list = new_adjlist
         return new_graph
 
@@ -126,7 +126,7 @@ class Graph:
         Note that `reversed(topological_sort)` is not equivalent to `topological_sort(reverse=True)`
         """
 
-        def find_sources(graph: Graph) -> Set[Node]:
+        def find_sources(graph: DirectedGraph) -> Set[Node]:
             adjlist = graph._adjacency_list
             sources = set(adjlist.keys())
             for children in adjlist.values():
@@ -138,7 +138,7 @@ class Graph:
                 )
             return sources
 
-        def find_sinks(graph: Graph) -> Set[Node]:
+        def find_sinks(graph: DirectedGraph) -> Set[Node]:
             adjlist = graph._adjacency_list
             sinks = set()
             for node, children in adjlist.items():
@@ -151,7 +151,7 @@ class Graph:
                 )
             return sinks
 
-        def remove_sources(graph: Graph) -> Set[Node]:
+        def remove_sources(graph: DirectedGraph) -> Set[Node]:
             srcs = find_sources(graph)
             for src in srcs:
                 del graph._adjacency_list[src]
@@ -159,7 +159,7 @@ class Graph:
                 graph._adjacency_list[node] -= srcs
             return srcs
 
-        def remove_sinks(graph: Graph) -> Set[Node]:
+        def remove_sinks(graph: DirectedGraph) -> Set[Node]:
             sinks = find_sinks(graph)
             for sink in sinks:
                 del graph._adjacency_list[sink]
@@ -189,7 +189,7 @@ class Graph:
         all leftover nodes as the same rank.
         """
 
-        def find_sources(graph: Graph) -> Set[Node]:
+        def find_sources(graph: DirectedGraph) -> Set[Node]:
             adjlist = graph._adjacency_list
             sources = set(adjlist.keys())
             for children in adjlist.values():
@@ -201,7 +201,7 @@ class Graph:
                 return set(adjlist.keys())
             return sources
 
-        def find_sinks(graph: Graph) -> Set[Node]:
+        def find_sinks(graph: DirectedGraph) -> Set[Node]:
             adjlist = graph._adjacency_list
             sinks = set()
             for node, children in adjlist.items():
@@ -214,7 +214,7 @@ class Graph:
                 return set(adjlist.keys())
             return sinks
 
-        def remove_sources(graph: Graph) -> Set[Node]:
+        def remove_sources(graph: DirectedGraph) -> Set[Node]:
             srcs = find_sources(graph)
             for src in srcs:
                 del graph._adjacency_list[src]
@@ -222,7 +222,7 @@ class Graph:
                 graph._adjacency_list[node] -= srcs
             return srcs
 
-        def remove_sinks(graph: Graph) -> Set[Node]:
+        def remove_sinks(graph: DirectedGraph) -> Set[Node]:
             sinks = find_sinks(graph)
             for sink in sinks:
                 del graph._adjacency_list[sink]
@@ -252,7 +252,7 @@ class Graph:
 
 # TODO: move to unit test of Graph class
 if __name__ == "__main__":
-    g = Graph()
+    g = DirectedGraph()
     g.add_edge("0", "1")
     g.add_edge("1", "2")
     g.add_edge("0", "3")
