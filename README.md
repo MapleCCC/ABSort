@@ -1,5 +1,7 @@
 # ABSort - Sort Python Source Code by Abstraction Levels
 
+<!-- TODO insert profile picture here -->
+
 <!-- TODO add badge about code coverage -->
 <!-- TODO add badge about requires.io -->
 <!-- TODO add badge about pylint rating -->
@@ -13,7 +15,7 @@
 <!-- [![GitHub commits since latest release (by SemVer)](https://img.shields.io/github/commits-since/MapleCCC/ABSort/latest?sort=semver)](https://github.com/MapleCCC/ABSort/compare/v1.0.0...master) -->
 <!-- TODO which diff method should we use? two dots or three dots? -->
 
-## TOC
+## Table of Content
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
@@ -38,6 +40,12 @@
 `isort`, one of the most popular libraries in Python ecosystem, is specialized at sorting import statements. Besides import statements, there are other kinds of statements in Python code that can benefit from a sorting process. What about a tool that sorts function/class definitions? Don't worry, `ABSort` got your back!
 
 `ABSort` is a lightweight library and a command line utility to sort Python source code by their abstraction levels.
+
+<!-- TODO insert demo animation gif here-->
+<!-- TODO add "try it on a demo" hyperlink, pointing to a heroku-hosted instance -->
+
+<!-- TODO move internal algorithm section and limitations section up here -->
+<!-- TODO move usage section up here -->
 
 ## Example
 
@@ -79,7 +87,7 @@ print(add_three(1))
 
 ## Installation
 
-You may optionally install [uvloop](https://github.com/magicstack/uvloop) to boost speed.
+You may consider optionally installing [uvloop](https://github.com/magicstack/uvloop) to boost speed.
 
 ```bash
 # Optionally create a virtual environment for isolation purpose
@@ -219,7 +227,7 @@ $ python -m pip install -r requirements/test.txt
 $ pytest tests
 ```
 
-<!-- tox -->
+<!-- TODO tox -->
 
 ### Profile
 
@@ -238,3 +246,6 @@ Go to [issues](https://github.com/MapleCCC/ABSort/issues) to send issues or feed
 ## License
 
 This project is currently licensed under terms of [MIT](LICENSE) license. Feel free to contribute, fork, modify or redistribute.
+
+
+<!-- Insert content of TODO.md here -->

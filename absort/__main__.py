@@ -75,11 +75,13 @@ args = SimpleNamespace()
 # Alternative name: DuplicateNames
 class NameRedefinition(Exception):
     """ An exception to signal that duplicate name definitions are detected """
+
     pass
 
 
 class ABSortFail(Exception):
     """ An exception to signal that sorting fails """
+
     pass
 
 
@@ -567,6 +569,8 @@ async def absort_file(file: Path) -> Digest:
 def absort_files(files: List[Path]) -> Digest:
     """ Sort a list of files """
 
+    # TODO use multi-processing to boost speed of handling a bunch of files (CPU-bound parts)
+
     async def entry() -> Digest:
         digests = await asyncio.gather(*(absort_file(file) for file in files))
         return sum(digests, Digest())
@@ -712,7 +716,10 @@ def check_args() -> None:
     help="Specify the version of Python abstract grammar being used in parsing input files.",
 )
 @click.option(
-    "-q", "--quiet", is_flag=True, help="Suppress all output except the error channel. To also suppress error channel please use `2>/dev/null`."
+    "-q",
+    "--quiet",
+    is_flag=True,
+    help="Suppress all output except the error channel. To also suppress error channel please use `2>/dev/null`.",
 )
 @click.option("-v", "--verbose", is_flag=True, help="Increase verboseness.")
 @click.option(
@@ -768,6 +775,7 @@ def main(
     # Optionally use uvloop to boost speed
     try:
         import uvloop  # type: ignore
+
         uvloop.install()
     except ImportError:
         pass

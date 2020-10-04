@@ -113,7 +113,7 @@ def retry(
     raise MaxRetryError(f"Reached maximum retries on calling function {func}")
 
 
-def calculate_new_version(component) -> str:
+def calculate_new_version(component: str) -> str:
     old_version_info = semver.VersionInfo.parse(current_version.lstrip("v"))
 
     method = getattr(old_version_info, f"bump_{component}", None)

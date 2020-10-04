@@ -10,8 +10,8 @@ test:
 	pytest tests
 
 stress-test:
-	time python -m absort --quiet "D:/Program Files/Python38/Lib/site-packages"
-	# time python -m absort --quiet "D:\Program Files\Python38\Lib\site-packages\isort\main.py"
+	cd "D:/Program Files/Python38/Lib/site-packages" && time absort --check .
+	# time python -m absort --check "D:\Program Files\Python38\Lib\site-packages\isort\main.py"
 
 format:
 	autopep8 --in-place --recursive --aggressive --aggressive --select E501 --max-line-length 88 .
@@ -39,4 +39,4 @@ todo:
 clean:
 	rm -rf __pycache__/
 
-.PHONY: all test stress-test format prof type-check lint unused-imports todo clean
+.PHONY: all pypy test stress-test format prof type-check lint unused-imports todo clean
