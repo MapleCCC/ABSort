@@ -7,7 +7,12 @@ from collections import defaultdict, deque
 from typing import Any, Callable, DefaultDict, Iterator, List, Optional, Set, Tuple
 
 
+#
 # Thin semantic type abstraction
+#
+
+# TODO: specify that Node type has to be hashable (constrained by current implementation,
+# though we may consider to rewrite the implementation to waive the constraint in the future)
 Node = Any
 Edge = Tuple[Node, Node]
 AdjacencyList = DefaultDict[Node, Set[Node]]
