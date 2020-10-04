@@ -67,11 +67,6 @@ _T = TypeVar("_T")
 _S = TypeVar("_S")
 
 
-@overload
-def ireverse(iterable: Iterable[_T]) -> Iterator[_T]:
-    ...
-
-
 def ireverse(iterable: Iterable) -> Iterator:
     """
     Similar to the builtin function reversed(), except accept iterable objects as input
@@ -82,7 +77,7 @@ def ireverse(iterable: Iterable) -> Iterator:
 
 
 @overload
-def xreverse(iterable: Iterable[_T]) -> List[_T]:
+def ireverse(iterable: Iterable[_T]) -> Iterator[_T]:
     ...
 
 
@@ -92,6 +87,11 @@ def xreverse(iterable: Iterable) -> List:
     and return non-lazy result
     """
     return list(iterable)[::-1]
+
+
+@overload
+def xreverse(iterable: Iterable[_T]) -> List[_T]:
+    ...
 
 
 def beginswith(s: str, prefix: str) -> bool:
@@ -228,13 +228,6 @@ def apply(fn: Callable[..., _T], *args: Any, **kwargs: Any) -> _T:
     return fn(*args, **kwargs)
 
 
-@overload
-def first_true(
-    iterable: Iterable[_T], *, default: Any = None, pred: Callable[[_T], bool] = None
-) -> Any:
-    ...
-
-
 def first_true(
     iterable: Iterable, *, default: Any = None, pred: Callable[..., bool] = None
 ) -> Any:
@@ -246,6 +239,13 @@ def first_true(
         if pred(elem):
             return elem
     return default
+
+
+@overload
+def first_true(
+    iterable: Iterable[_T], *, default: Any = None, pred: Callable[[_T], bool] = None
+) -> Any:
+    ...
 
 
 class Logger:
@@ -270,14 +270,14 @@ class Logger:
         self._count += 1
 
 
-@overload
-def concat(lists: Iterable[List[_T]]) -> List[_T]:
-    ...
-
-
 def concat(lists: Iterable[List]) -> List:
     """ Concatenate multiple lists into one list """
     return list(itertools.chain.from_iterable(lists))
+
+
+@overload
+def concat(lists: Iterable[List[_T]]) -> List[_T]:
+    ...
 
 
 @contextlib.contextmanager
@@ -374,11 +374,6 @@ def constantfunc(const: _T) -> Callable[..., _T]:
     return func
 
 
-@overload
-def nth(iterable: Iterable[_T], n: int) -> _T:
-    ...
-
-
 def nth(iterable: Iterable, n: int):
     count = 0
     for elem in iterable:
@@ -389,13 +384,18 @@ def nth(iterable: Iterable, n: int):
 
 
 @overload
-def nths(iterable: Iterable[Iterable[_T]], n: int) -> Iterator[_T]:
+def nth(iterable: Iterable[_T], n: int) -> _T:
     ...
 
 
 def nths(iterable: Iterable, n: int = 0) -> Iterator:
     for sub_iterable in iterable:
         yield nth(sub_iterable, n)
+
+
+@overload
+def nths(iterable: Iterable[Iterable[_T]], n: int) -> Iterator[_T]:
+    ...
 
 
 def hamming_distance(iterable1: Iterable, iterable2: Iterable) -> int:
