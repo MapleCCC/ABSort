@@ -28,8 +28,8 @@ from .ast_utils import (
     ast_get_source_lines,
 )
 from .async_utils import run_in_event_loop
-from .extra_typing import Declaration, DeclarationType
-from .graph import DirectedGraph
+from .directed_graph import DirectedGraph
+from .typing_extra import Declaration, DeclarationType
 from .utils import (
     bright_green,
     bright_yellow,
