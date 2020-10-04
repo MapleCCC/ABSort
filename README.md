@@ -14,6 +14,7 @@
 [![Code Style](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 <!-- [![GitHub commits since latest release (by SemVer)](https://img.shields.io/github/commits-since/MapleCCC/ABSort/latest?sort=semver)](https://github.com/MapleCCC/ABSort/compare/v1.0.0...master) -->
 <!-- TODO which diff method should we use? two dots or three dots? -->
+<!-- TODO add badge about compatible CPython/PyPy versions -->
 
 ## Table of Content
 
@@ -87,7 +88,7 @@ print(add_three(1))
 
 ## Installation
 
-You may consider optionally installing [uvloop](https://github.com/magicstack/uvloop) to boost speed.
+You may consider optionally installing [uvloop](https://github.com/magicstack/uvloop) and [orderedsort](https://github.com/simonpercivall/orderedset) to boost speed.
 
 ```bash
 # Optionally create a virtual environment for isolation purpose

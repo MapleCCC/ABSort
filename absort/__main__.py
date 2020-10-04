@@ -57,7 +57,9 @@ except NameError:
 # Constants
 #
 
+# Specify the location of the cache directory
 CACHE_DIR = Path.sync_home() / ".absort_cache"
+# Specify the maximum size threshold fot the cache directory (in bytes)
 CACHE_MAX_SIZE = 400000  # unit is byte
 
 #

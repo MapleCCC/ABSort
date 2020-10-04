@@ -84,7 +84,7 @@ class WeightedGraph:
             edges = self._weight_table.keys()
             return min(edges, key=lambda edge: self._weight_table[edge])
         except ValueError:
-            raise ValueError("No maximum edge in an empty or one-noded graph")
+            raise ValueError("No minimum edge in an empty or one-noded graph")
 
     def minimum_spanning_tree(self) -> Iterator[Node]:
         if self.num_edges == 0:
@@ -93,12 +93,14 @@ class WeightedGraph:
             return
 
         _graph = self.copy()
+        # TODO annotate the `seen` variable with type OrderedSet[Node]
         seen: Set[Node] = OrderedSet()
 
         minimum_edge = _graph.find_minimum_edge()
 
         # Make the order deterministic, instead of different for each call
         node1, node2 = minimum_edge
+        # Additionally require the Node type to be pickable
         digest1 = md5(pickle.dumps(node1)).hexdigest()
         digest2 = md5(pickle.dumps(node2)).hexdigest()
         if digest1 > digest2:

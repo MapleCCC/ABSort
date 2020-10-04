@@ -7,6 +7,7 @@ from .treedist import tree_distance
 from .utils import (
     beginswith,
     cached_splitlines,
+    compose,
     hamming_distance,
     ireverse,
     lfu_cache_with_key,
@@ -223,7 +224,7 @@ def ast_tree_distance(
     return tree_distance(
         node1,
         node2,
-        children=lambda node: list(ast.iter_child_nodes(node)),
+        children=compose(list, ast.iter_child_nodes),
         insert_cost=insert_cost,
         delete_cost=delete_cost,
         rename_cost=rename_cost,
