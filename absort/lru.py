@@ -48,6 +48,17 @@ class LRU:
     def size(self) -> int:
         return len(self._storage)
 
+    def __str__(self) -> str:
+        temp = []
+        # start with the element with greatest recency
+        for key in reversed(self._recency):
+            if key is not _BOGUS_CELL:
+                temp.append(f"{key}: {self._storage[key]}")
+        content = ", ".join(temp)
+        return "LRU({" + content + "})"
+
+    __repr__ = __str__
+
     def __setitem__(self, key: Any, value: Any) -> None:
         if key in self._indexer:
             index = self._indexer[key]
@@ -96,3 +107,11 @@ class LRU:
         self._recency.clear()
         self._indexer.clear()
         self._offset = 0
+
+
+if __name__ == "__main__":
+    lru = LRU()
+    lru[0] = 1
+    lru[1] = 2
+    lru[0] = 3
+    print(lru)

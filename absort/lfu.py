@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 import math
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Iterator, List, Optional
 
 __all__ = ["LFU"]
 
@@ -101,6 +103,17 @@ class PriorityQueue:
         self._priority_table.clear()
         self._priority_table[max_priority_sentinel] = math.inf  # type: ignore
 
+    def copy(self) -> PriorityQueue:
+        new = PriorityQueue()
+        new._storage = self._storage.copy()
+        new._priority_table = self._priority_table.copy()
+        return new
+
+    def __iter__(self) -> Iterator:
+        temp = self.copy()
+        while temp.size:
+            yield temp.pop()
+
 
 class LFU:
     """ A lightweight and efficient data structure that implements the LFU mechanism. """
@@ -120,6 +133,15 @@ class LFU:
     @property
     def size(self) -> int:
         return len(self._storage)
+
+    def __str__(self) -> str:
+        temp = []
+        for elem in self._frequency:
+            temp.append(f"{elem}: {self._storage[elem]}")
+        content = ", ".join(temp)
+        return "LFU({" + content + "})"
+
+    __repr__ = __str__
 
     def __setitem__(self, key: Any, value: Any) -> None:
         self._frequency.increment(key)
@@ -141,3 +163,10 @@ class LFU:
     def clear(self) -> None:
         self._storage.clear()
         self._frequency.clear()
+
+
+if __name__ == "__main__":
+    lfu = LFU()
+    lfu[0] = 1
+    lfu[1] = 2
+    print(lfu)
