@@ -109,7 +109,14 @@ class DirectedGraph:
         return new_graph
 
     def copy(self) -> DirectedGraph:
-        # Deep copy
+        """
+        Note that this is NOT deep copy.
+
+        The interface guarantees deep copy of the whole tree structure, but not to the
+        level of Node internal. User are responsible to ensure deep copy of the Node
+        internal.
+        """
+
         new_adjlist: AdjacencyList = defaultdict(set)
         for node, children in self._adjacency_list.items():
             new_adjlist[node] = children.copy()

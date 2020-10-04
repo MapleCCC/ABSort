@@ -39,7 +39,13 @@ class WeightedGraph:
         self._weight_table.pop({v, w}, None)
 
     def copy(self) -> WeightedGraph:
-        """ Note that this is NOT deep copy """
+        """
+        Note that this is NOT deep copy.
+
+        The interface guarantees deep copy of the whole tree structure, but not to the
+        level of Node internal. User are responsible to ensure deep copy of the Node
+        internal.
+        """
 
         new = WeightedGraph()
 
