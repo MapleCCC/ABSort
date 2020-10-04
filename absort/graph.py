@@ -92,7 +92,7 @@ class Graph:
         return None
 
     def get_invert_graph(self) -> Graph:
-        new_adjlist: AdjacencyList = dict()
+        new_adjlist: AdjacencyList = defaultdict(set)
         for key in self._adjacency_list.keys():
             new_adjlist[key] = set()
         for node, children in self._adjacency_list.items():
@@ -105,7 +105,7 @@ class Graph:
 
     def copy(self) -> Graph:
         # Deep copy
-        new_adjlist = dict()
+        new_adjlist: AdjacencyList = defaultdict(set)
         for node, children in self._adjacency_list.items():
             new_adjlist[node] = children.copy()
         new_graph = Graph()
