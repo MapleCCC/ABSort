@@ -1,9 +1,19 @@
 import ast
 import copy
 from collections import deque
-from typing import Any, Deque, Iterator, List, Optional, Set
+from functools import partial
+from typing import Any, Callable, Deque, Iterator, List, Optional, Set
 
-from .utils import beginswith, cached_splitlines, ireverse, lfu_cache_with_key
+from .utils import (
+    beginswith,
+    cached_splitlines,
+    constantfunc,
+    hamming_distance,
+    ireverse,
+    lfu_cache_with_key,
+    lru_cache_with_key,
+)
+
 
 __all__ = [
     "ast_pretty_dump",
@@ -14,6 +24,7 @@ __all__ = [
     "ast_get_decorator_list_source_lines",
     "ast_get_source_lines",
     "cached_ast_iter_child_nodes",
+    "ast_tree_distance",
 ]
 
 
@@ -155,3 +166,119 @@ def ast_get_source_lines(source: str, node: ast.AST) -> List[str]:
 def cached_ast_iter_child_nodes(node: ast.AST) -> List[ast.AST]:
     """ A cached version of the `ast.iter_child_nodes` method """
     return list(ast.iter_child_nodes(node))
+
+
+# TODO do we want to extract the abstract tree_diff algorithm out to standalone module (treediff.py)?
+# If abstract/generic, use typevar to annotate node type.
+
+# TODO use collections.UserList to add new Forest type, instead of using Forest as a type alias of the List type
+
+# TODO use more advanced algorithms to replace the classic Zhang-Shasha algorithm
+
+Tree = ast.AST
+Forest = List[Tree]
+EmptyForest = []
+contains_one_tree = lambda forest: len(forest) == 1
+
+
+def ast_tree_distance(
+    tree1: Tree,
+    tree2: Tree,
+    insert_cost: Callable[[Tree], float] = None,
+    delete_cost: Callable[[Tree], float] = None,
+    rename_cost: Callable[[Tree, Tree], float] = None,
+) -> float:
+    """
+    Implementation is Zhang-Shasha's tree edit distance algorithm.
+
+    Reference: https://epubs.siam.org/doi/abs/10.1137/0218082
+
+    Note that the rename_cost function **should** return 0 for identical nodes.
+    """
+
+    def remove_rightmost_root(forest: Forest) -> Forest:
+        rightmost_tree = forest[-1]
+        rightmost_tree_children = list(ast.iter_child_nodes(rightmost_tree))
+        return forest[:-1] + rightmost_tree_children
+
+    calculate_cache_key = lambda forest1, forest2: (
+        tuple(map(id, forest1)),
+        tuple(map(id, forest2)),
+    )
+
+    @lru_cache_with_key(key=calculate_cache_key, maxsize=None)
+    def forest_distance(forest1: Forest, forest2: Forest) -> float:
+
+        str_forest = (
+            lambda forest: "["
+            + ", ".join(map(partial(ast.dump, annotate_fields=False), forest))
+            + "]"
+        )
+        print(f"Calling forest_distance({str_forest(forest1)}, {str_forest(forest2)})")
+
+        if not forest1 and not forest2:
+            return 0
+
+        elif not forest1:
+            new_forest2 = remove_rightmost_root(forest2)
+            return forest_distance(forest1, new_forest2) + insert_cost(forest2[-1])
+
+        elif not forest2:
+            new_forest1 = remove_rightmost_root(forest1)
+            return forest_distance(new_forest1, forest2) + delete_cost(forest1[-1])
+
+        elif contains_one_tree(forest1) and contains_one_tree(forest2):
+            new_forest1 = remove_rightmost_root(forest1)
+            new_forest2 = remove_rightmost_root(forest2)
+            candidates: List[float] = [None] * 3  # type: ignore
+
+            candidates[0] = forest_distance(new_forest1, forest2) + delete_cost(
+                forest1[-1]
+            )
+            candidates[1] = forest_distance(forest1, new_forest2) + insert_cost(
+                forest2[-1]
+            )
+            candidates[2] = forest_distance(new_forest1, new_forest2) + rename_cost(
+                forest1[-1], forest2[-1]
+            )
+            return min(candidates)
+
+        else:
+            new_forest1 = remove_rightmost_root(forest1)
+            new_forest2 = remove_rightmost_root(forest2)
+            candidates: List[float] = [None] * 3  # type: ignore
+
+            candidates[0] = forest_distance(new_forest1, forest2) + delete_cost(
+                forest1[-1]
+            )
+            candidates[1] = forest_distance(forest1, new_forest2) + insert_cost(
+                forest2[-1]
+            )
+            candidates[2] = forest_distance(
+                forest1[:-1], forest2[:-1]
+            ) + forest_distance([forest1[-1]], [forest2[-1]])
+            return min(candidates)
+
+    if insert_cost is None:
+        insert_cost = constantfunc(1)
+    if delete_cost is None:
+        delete_cost = constantfunc(1)
+    if rename_cost is None:
+
+        # hopefully a sane default
+        def default_rename_cost(node1: ast.AST, node2: ast.AST) -> float:
+            if type(node1) != type(node2):
+                return 1
+            else:
+                values1 = [value for _, value in ast.iter_fields(node1)]
+                values2 = [value for _, value in ast.iter_fields(node2)]
+                assert len(values1) == len(values2)
+                field_length = len(values1)
+                if not field_length:
+                    return 0
+                else:
+                    return hamming_distance(values1, values2) / len(values1)
+
+        rename_cost = default_rename_cost
+
+    return forest_distance([tree1], [tree2])

@@ -7,6 +7,7 @@ import typing
 import sys
 from collections import OrderedDict, namedtuple
 from functools import partial
+from itertools import zip_longest
 from types import SimpleNamespace
 from typing import (
     IO,
@@ -49,6 +50,10 @@ __all__ = [
     "whitespace_lines",
     "dispatch",
     "duplicated",
+    "constantfunc",
+    "nth",
+    "nths",
+    "hamming_distance",
 ]
 
 # Note: the name `profile` will be injected by line-profiler at run-time
@@ -358,3 +363,47 @@ def duplicated(sequence: Sequence) -> bool:
             else:
                 seen.append(elem)
         return False
+
+
+def constantfunc(const: _T) -> Callable[..., _T]:
+    """ A constant function """
+
+    def func(*_: Any, **__: Any) -> _T:
+        return const
+
+    return func
+
+
+@overload
+def nth(iterable: Iterable[_T], n: int) -> _T:
+    ...
+
+
+def nth(iterable: Iterable, n: int):
+    count = 0
+    for elem in iterable:
+        if count == n:
+            return elem
+        count += 1
+    raise ValueError(f"Iterable doesn't have {n}-th element")
+
+
+@overload
+def nths(iterable: Iterable[Iterable[_T]], n: int) -> Iterator[_T]:
+    ...
+
+
+def nths(iterable: Iterable, n: int = 0) -> Iterator:
+    for sub_iterable in iterable:
+        yield nth(sub_iterable, n)
+
+
+def hamming_distance(iterable1: Iterable, iterable2: Iterable) -> int:
+    """ Don't apply on infinite iterables """
+
+    sentinel = object()
+    distance = 0
+    for elem1, elem2 in zip_longest(iterable1, iterable2, fillvalue=sentinel):
+        if elem1 != elem2:
+            distance += 1
+    return distance
