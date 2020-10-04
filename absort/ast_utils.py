@@ -227,12 +227,14 @@ def ast_tree_distance(
     @lru_cache_with_key(key=calculate_cache_key, maxsize=None)
     def forest_distance(forest1: Forest, forest2: Forest) -> float:
 
-        str_forest = (
-            lambda forest: "["
-            + ", ".join(map(partial(ast.dump, annotate_fields=False), forest))
-            + "]"
-        )
-        print(f"Calling forest_distance({str_forest(forest1)}, {str_forest(forest2)})")
+        # Uncomment following lines to activate debug mode
+        #
+        # str_forest = (
+        #     lambda forest: "["
+        #     + ", ".join(map(partial(ast.dump, annotate_fields=False), forest))
+        #     + "]"
+        # )
+        # print(f"Calling forest_distance({str_forest(forest1)}, {str_forest(forest2)})")
 
         if not forest1 and not forest2:
             return 0
