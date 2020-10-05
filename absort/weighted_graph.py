@@ -3,7 +3,7 @@ from __future__ import annotations
 import pickle
 from collections import defaultdict
 from hashlib import md5
-from typing import DefaultDict, Dict, FrozenSet, Iterator, Set, TypeVar
+from typing import DefaultDict, Dict, FrozenSet, Generic, Iterator, Set, TypeVar
 
 from .collections_extra import OrderedSet
 
@@ -23,7 +23,7 @@ Weight = float
 AdjacencyList = DefaultDict[Node, Set[Node]]
 
 
-class WeightedGraph:
+class WeightedGraph(Generic[Node]):
     def __init__(self) -> None:
         self._adjacency_list: AdjacencyList = defaultdict(set)
         self._weight_table: Dict[Edge, Weight] = {}
@@ -93,8 +93,7 @@ class WeightedGraph:
             return
 
         _graph = self.copy()
-        # TODO annotate the `seen` variable with type OrderedSet[Node]
-        seen: Set[Node] = OrderedSet()
+        seen: OrderedSet[Node] = OrderedSet()
 
         minimum_edge = _graph.find_minimum_edge()
 

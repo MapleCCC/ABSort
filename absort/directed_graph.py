@@ -4,7 +4,17 @@
 from __future__ import annotations
 
 from collections import defaultdict, deque
-from typing import Callable, DefaultDict, Iterator, List, Optional, Set, Tuple, TypeVar
+from typing import (
+    Callable,
+    DefaultDict,
+    Generic,
+    Iterator,
+    List,
+    Optional,
+    Set,
+    Tuple,
+    TypeVar,
+)
 
 
 #
@@ -30,7 +40,7 @@ class SelfLoopError(Exception):
 
 
 # Graph is represented internally as data structure adjacency list
-class DirectedGraph:
+class DirectedGraph(Generic[Node]):
     def __init__(self) -> None:
         self._adjacency_list: AdjacencyList = defaultdict(set)
 

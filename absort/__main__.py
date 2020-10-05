@@ -156,12 +156,12 @@ def get_dependency_of_decl(decl: DeclarationType) -> Set[str]:
     return visitor.visit(temp_module)
 
 
-def generate_dependency_graph(decls: List[DeclarationType]) -> DirectedGraph:
+def generate_dependency_graph(decls: List[DeclarationType]) -> DirectedGraph[str]:
     """ Generate a dependency graph from a continguous block of declarations """
 
     decl_names = [decl.name for decl in decls]
 
-    graph = DirectedGraph()
+    graph: DirectedGraph[str] = DirectedGraph()
 
     for decl in decls:
         deps = get_dependency_of_decl(decl)
@@ -188,7 +188,7 @@ def sort_decls_by_syntax_tree_similarity(
         yield decls[0]
         return
 
-    graph = WeightedGraph()
+    graph: WeightedGraph[DeclarationType] = WeightedGraph()
     for decl1, decl2 in combinations(decls, 2):
         distance = ast_tree_distance(decl1, decl2)
         graph.add_edge(decl1, decl2, distance)
