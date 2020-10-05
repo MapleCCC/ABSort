@@ -2,6 +2,7 @@ import contextlib
 import difflib
 import functools
 import itertools
+import operator
 import os
 import sys
 import typing
@@ -416,12 +417,26 @@ def nths(iterable: Iterable, n: int = 0) -> Iterator:
         yield nth(sub_iterable, n)
 
 
-def hamming_distance(iterable1: Iterable, iterable2: Iterable) -> int:
+@overload
+def hamming_distance(
+    iterable1: Iterable[_T],
+    iterable2: Iterable[_S],
+    equal: Callable[[_T, _S], bool] = None,
+) -> int:
+    ...
+
+
+def hamming_distance(
+    iterable1: Iterable, iterable2: Iterable, equal: Callable[[Any, Any], bool] = None
+) -> int:
     """ Don't apply on infinite iterables """
+
+    if equal is None:
+        equal = operator.eq
 
     sentinel = object()
     distance = 0
     for elem1, elem2 in zip_longest(iterable1, iterable2, fillvalue=sentinel):
-        if elem1 != elem2:
+        if not equal(elem1, elem2):
             distance += 1
     return distance
