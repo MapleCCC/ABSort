@@ -111,12 +111,13 @@ class WeightedGraph(Generic[Node]):
 
         _graph.remove_edge(*minimum_edge)
 
-        while _graph._weight_table:
+        while len(seen) < _graph.num_nodes:
             candidate_edges = []
             for node in seen:
                 for neighbor in _graph._adjacency_list[node]:
-                    edge = frozenset({node, neighbor})
-                    candidate_edges.append(edge)
+                    if neighbor not in seen:
+                        edge = frozenset({node, neighbor})
+                        candidate_edges.append(edge)
 
             target_edge = min(
                 candidate_edges, key=lambda edge: _graph._weight_table[edge]
