@@ -66,12 +66,12 @@ except NameError:
     profile = lambda x: x
 
 
-_T = TypeVar("_T")
-_S = TypeVar("_S")
+T = TypeVar("T")
+S = TypeVar("S")
 
 
 @overload
-def ireverse(iterable: Iterable[_T]) -> Iterator[_T]:
+def ireverse(iterable: Iterable[T]) -> Iterator[T]:
     ...
 
 
@@ -85,7 +85,7 @@ def ireverse(iterable: Iterable) -> Iterator:
 
 
 @overload
-def xreverse(iterable: Iterable[_T]) -> List[_T]:
+def xreverse(iterable: Iterable[T]) -> List[T]:
     ...
 
 
@@ -178,7 +178,7 @@ def silent_context() -> Iterator:
 # TODO Add more cache replacement policy implementation
 def cache_with_key(
     key: Callable[..., Hashable], maxsize: Optional[int] = 128, policy: str = "LRU"
-) -> Callable[[Callable[..., _T]], Callable[..., _T]]:
+) -> Callable[[Callable[..., T]], Callable[..., T]]:
     """
     It's like the builtin `functools.lru_cache`, except that it provides customization
     space for the key calculating method and the cache replacement policy.
@@ -192,7 +192,7 @@ def cache_with_key(
         currsize: int = 0
 
     class decorator:
-        def __init__(self, func: Callable[..., _T]) -> None:
+        def __init__(self, func: Callable[..., T]) -> None:
             self._func = func
 
             if policy == "LRU":
@@ -206,7 +206,7 @@ def cache_with_key(
 
         __slots__ = ("_func", "_cache", "_hit", "_miss")
 
-        def __call__(self, *args: Any, **kwargs: Any) -> _T:
+        def __call__(self, *args: Any, **kwargs: Any) -> T:
             arg_key = key(*args, **kwargs)
             if arg_key in self._cache:
                 self._hit += 1
@@ -237,14 +237,14 @@ lfu_cache_with_key = partial(cache_with_key, policy="LFU")
 lfu_cache_with_key.__doc__ = "It's like the builtin `functools.lru_cache`, except that it provides customization space for the key calculating method, and it uses LFU, not LRU, as cache replacement policy."
 
 
-def apply(fn: Callable[..., _T], *args: Any, **kwargs: Any) -> _T:
+def apply(fn: Callable[..., T], *args: Any, **kwargs: Any) -> T:
     """ Equivalent to Haskell's $ operator """
     return fn(*args, **kwargs)
 
 
 @overload
 def first_true(
-    iterable: Iterable[_T], *, default: Any = None, pred: Callable[[_T], bool] = None
+    iterable: Iterable[T], *, default: Any = None, pred: Callable[[T], bool] = None
 ) -> Any:
     ...
 
@@ -285,7 +285,7 @@ class Logger:
 
 
 @overload
-def concat(lists: Iterable[List[_T]]) -> List[_T]:
+def concat(lists: Iterable[List[T]]) -> List[T]:
     ...
 
 
@@ -308,13 +308,13 @@ def SingleThreadPoolExecutor() -> Iterator[SimpleNamespace]:
 class compose:
     """ Equivalent to Haskell's . operator """
 
-    def __init__(self, fn1: Callable[[_T], _S], fn2: Callable[..., _T]) -> None:
+    def __init__(self, fn1: Callable[[T], S], fn2: Callable[..., T]) -> None:
         self._fn1 = fn1
         self._fn2 = fn2
 
     __slots__ = ("_fn1", "_fn2")
 
-    def __call__(self, *args: Any, **kwargs: Any) -> _S:
+    def __call__(self, *args: Any, **kwargs: Any) -> S:
         return self._fn1(self._fn2(*args, **kwargs))
 
 
@@ -384,17 +384,17 @@ def duplicated(sequence: Sequence) -> bool:
         return False
 
 
-def constantfunc(const: _T) -> Callable[..., _T]:
+def constantfunc(const: T) -> Callable[..., T]:
     """ A constant function """
 
-    def func(*_: Any, **__: Any) -> _T:
+    def func(*_: Any, **__: Any) -> T:
         return const
 
     return func
 
 
 @overload
-def nth(iterable: Iterable[_T], n: int) -> _T:
+def nth(iterable: Iterable[T], n: int) -> T:
     ...
 
 
@@ -408,7 +408,7 @@ def nth(iterable: Iterable, n: int):
 
 
 @overload
-def nths(iterable: Iterable[Iterable[_T]], n: int) -> Iterator[_T]:
+def nths(iterable: Iterable[Iterable[T]], n: int) -> Iterator[T]:
     ...
 
 
@@ -419,9 +419,9 @@ def nths(iterable: Iterable, n: int = 0) -> Iterator:
 
 @overload
 def hamming_distance(
-    iterable1: Iterable[_T],
-    iterable2: Iterable[_S],
-    equal: Callable[[_T, _S], bool] = None,
+    iterable1: Iterable[T],
+    iterable2: Iterable[S],
+    equal: Callable[[T, S], bool] = None,
 ) -> int:
     ...
 

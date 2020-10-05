@@ -24,7 +24,7 @@ __all__ = ["run_async", "asyncify", "run_in_event_loop"]
 # annotations here?
 
 
-_T = TypeVar("_T")
+T = TypeVar("T")
 
 
 def run_async(func: Callable, *args, **kwargs):
@@ -42,10 +42,10 @@ def asyncify(func: Any) -> NoReturn:
 
 @asyncify.register(inspect.isgeneratorfunction)
 def _(
-    func: Callable[..., Generator[_T, Any, Any]]
-) -> Callable[..., AsyncGenerator[_T, Any]]:
+    func: Callable[..., Generator[T, Any, Any]]
+) -> Callable[..., AsyncGenerator[T, Any]]:
     @functools.wraps(func)
-    async def wrapper(*args, **kwargs) -> AsyncGenerator[_T, Any]:
+    async def wrapper(*args, **kwargs) -> AsyncGenerator[T, Any]:
 
         pfunc = partial(list, func(*args, **kwargs))
         loop = asyncio.get_running_loop()
@@ -58,9 +58,9 @@ def _(
 
 @asyncify.register(inspect.ismethod)
 @asyncify.register(inspect.isfunction)
-def _(func: Callable[..., _T]) -> Callable[..., Coroutine[Any, Any, _T]]:
+def _(func: Callable[..., T]) -> Callable[..., Coroutine[Any, Any, T]]:
     @functools.wraps(func)
-    async def wrapper(*args, **kwargs) -> Coroutine[Any, Any, _T]:
+    async def wrapper(*args, **kwargs) -> Coroutine[Any, Any, T]:
 
         pfunc = partial(func, *args, **kwargs)
         loop = asyncio.get_running_loop()
@@ -80,10 +80,10 @@ def run_in_event_loop(func: Any) -> NoReturn:
 
 @run_in_event_loop.register(inspect.isasyncgenfunction)
 def _(
-    func: Callable[..., AsyncGenerator[_T, Any]]
-) -> Callable[..., Generator[_T, Any, Any]]:
+    func: Callable[..., AsyncGenerator[T, Any]]
+) -> Callable[..., Generator[T, Any, Any]]:
     @functools.wraps(func)
-    def wrapper(*args, **kwargs) -> Generator[_T, Any, Any]:
+    def wrapper(*args, **kwargs) -> Generator[T, Any, Any]:
         async def entry():
 
             result = []
@@ -97,9 +97,9 @@ def _(
 
 
 @run_in_event_loop.register(inspect.iscoroutinefunction)
-def _(func: Callable[..., Coroutine[Any, Any, _T]]) -> Callable[..., _T]:
+def _(func: Callable[..., Coroutine[Any, Any, T]]) -> Callable[..., T]:
     @functools.wraps(func)
-    def wrapper(*args, **kwargs) -> _T:
+    def wrapper(*args, **kwargs) -> T:
 
         return asyncio.run(func(*args, **kwargs))
 

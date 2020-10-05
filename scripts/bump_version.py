@@ -19,7 +19,7 @@ from absort.utils import Logger
 from scripts._local_credentials import github_account_access_token
 
 
-_T = TypeVar("_T")
+T = TypeVar("T")
 
 
 FILES_TO_UPDATE = ["README.md", "absort/__version__.py"]
@@ -80,11 +80,11 @@ class MaxRetryError(Exception):
 
 
 def retry(
-    func: Callable[..., _T],
+    func: Callable[..., T],
     total: int = 3,
     backoff_factor: float = 0.1,
     on_except: List[Type[Exception]] = None,
-) -> Callable[..., _T]:
+) -> Callable[..., T]:
     """
     Tips: Pass function arguments by functools.partial.
 
