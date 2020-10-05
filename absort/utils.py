@@ -20,9 +20,11 @@ from typing import (
     Optional,
     Sequence,
     TypeVar,
+    Union,
     overload,
 )
 
+import attr
 from colorama import Fore, Style
 
 from .lfu import LFU
@@ -181,37 +183,48 @@ def cache_with_key(
     space for the key calculating method and the cache replacement policy.
     """
 
-    def decorator(fn: Callable[..., _T]) -> Callable[..., _T]:
-        if policy == "LRU":
-            _cache = LRU(maxsize=maxsize)
-        elif policy == "LFU":
-            _cache = LFU(maxsize=maxsize)
-        else:
-            raise NotImplementedError
+    @attr.s(auto_attribs=True)
+    class CacheInfo:
+        hit: int = 0
+        miss: int = 0
+        maxsize: int = 0
+        currsize: int = 0
 
-        CacheInfo = namedtuple("CacheInfo", ["hit", "miss", "maxsize", "currsize"])
-        hit = miss = 0
+    class decorator:
+        def __init__(self, func: Callable[..., _T]) -> None:
+            self._func = func
 
-        @functools.wraps(fn)
-        @profile  # type: ignore
-        def wrapper(*args: Any, **kwargs: Any) -> _T:
-            arg_key = key(*args, **kwargs)
-            if arg_key in _cache:
-                nonlocal hit
-                hit += 1
-                return _cache[arg_key]
+            if policy == "LRU":
+                self._cache = LRU(maxsize=maxsize)
+            elif policy == "LFU":
+                self._cache = LFU(maxsize=maxsize)
             else:
-                nonlocal miss
-                miss += 1
-                result = fn(*args, **kwargs)
-                _cache[arg_key] = result
+                raise NotImplementedError
+
+            self._hit = self._miss = 0
+
+        __slots__ = ("_func", "_cache", "_hit", "_miss")
+
+        def __call__(self, *args: Any, **kwargs: Any) -> _T:
+            arg_key = key(*args, **kwargs)
+            if arg_key in self._cache:
+                self._hit += 1
+                return self._cache[arg_key]
+            else:
+                self._miss += 1
+                result = self._func(*args, **kwargs)
+                self._cache[arg_key] = result
                 return result
 
-        wrapper.__cache__ = _cache
-        wrapper.cache_info = lambda: CacheInfo(hit, miss, maxsize, _cache.size)
-        wrapper.clear_cache = _cache.clear
+        @property
+        def __cache__(self) -> Union[LRU, LFU]:
+            return self._cache
 
-        return wrapper
+        def cache_info(self) -> CacheInfo:
+            return CacheInfo(self._hit, self._miss, maxsize, self._cache.size)  # type: ignore
+
+        def clear_cache(self) -> None:
+            self._cache.clear()
 
     return decorator
 
@@ -280,10 +293,15 @@ def concat(lists: Iterable[List]) -> List:
     return list(itertools.chain.from_iterable(lists))
 
 
+def null(*args: Any, **kwargs: Any) -> None:
+    """ A function that does nothing """
+    pass
+
+
 @contextlib.contextmanager
 def SingleThreadPoolExecutor() -> Iterator[SimpleNamespace]:
     "Return an equivalent to ThreadPoolExecutor(max_workers=1)"
-    yield SimpleNamespace(map=map, submit=apply, shutdown=lambda: None)
+    yield SimpleNamespace(map=map, submit=apply, shutdown=null)
 
 
 class compose:
@@ -320,17 +338,17 @@ class dispatch:
 
     __slots__ = ["_registry", "_base_func"]
 
-    def __call__(self, *args):
+    def __call__(self, *args, **kwargs):
         if not args:
-            raise ValueError
+            raise ValueError("There should at least be one positional argument")
 
         # For OrderedDict, the iteration order is LIFO
         for predicate, func in self._registry.items():
             if predicate(args[0]):
-                return func(*args)
+                return func(*args, **kwargs)
 
         # Fall back to the base function
-        return self._base_func(*args)
+        return self._base_func(*args, **kwargs)
 
     def register(self, predicate: Predicate) -> Callable:
         def decorator(func: Callable) -> Callable:
