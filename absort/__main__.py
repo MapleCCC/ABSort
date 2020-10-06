@@ -40,6 +40,7 @@ from .utils import (
     duplicated,
     first_true,
     silent_context,
+    strict_splitlines,
     whitespace_lines,
     xreverse,
 )
@@ -329,7 +330,9 @@ def absort_str(old_source: str, options: SimpleNamespace) -> str:
 
     blocks = find_continguous_decls(top_level_stmts)
 
-    new_source_lines = old_source.splitlines()
+    # Use strict_splitlines() instead of str.splitlines(), because CPython's ast.parse()
+    # doesn't parse the source string "#\x0c0" as containing an expression.
+    new_source_lines = strict_splitlines(old_source)
 
     for lineno, end_lineno, decls in blocks:
         sorted_decls = list(absort_decls(decls, options))

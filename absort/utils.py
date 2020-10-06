@@ -57,6 +57,7 @@ __all__ = [
     "nth",
     "nths",
     "hamming_distance",
+    "strict_splitlines",
 ]
 
 # Note: the name `profile` will be injected by line-profiler at run-time
@@ -440,3 +441,19 @@ def hamming_distance(
         if not equal(elem1, elem2):
             distance += 1
     return distance
+
+
+# TODO add `keepends` argument
+def strict_splitlines(s: str) -> List[str]:
+    """
+    Similar to the str.splilines() function, except that the line boundaries are NOT a
+    superset of universal newlines.
+    """
+
+    if not s:
+        return []
+
+    res = s.split("\n")
+    if res[-1] == "":
+        res = res[:-1]
+    return res
