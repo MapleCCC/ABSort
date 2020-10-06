@@ -70,9 +70,6 @@ CACHE_MAX_SIZE = 400000  # unit is byte
 # Global Variables
 #
 
-# A global variable to store CLI arguments.
-args = SimpleNamespace()
-
 #
 # Custom Exceptions
 #
@@ -148,15 +145,17 @@ class PyVersionParamType(click.ParamType):
             )
 
 
-def get_dependency_of_decl(decl: DeclarationType) -> Set[str]:
+def get_dependency_of_decl(decl: DeclarationType, options: SimpleNamespace) -> Set[str]:
     """ Calculate the dependencies (as set of symbols) of the declaration """
 
     temp_module = ast.Module(body=[decl], type_ignores=[])
-    visitor = GetUndefinedVariableVisitor(py_version=args.py_version)
+    visitor = GetUndefinedVariableVisitor(py_version=options.py_version)
     return visitor.visit(temp_module)
 
 
-def generate_dependency_graph(decls: List[DeclarationType]) -> DirectedGraph[str]:
+def generate_dependency_graph(
+    decls: List[DeclarationType], options: SimpleNamespace
+) -> DirectedGraph[str]:
     """ Generate a dependency graph from a continguous block of declarations """
 
     decl_names = [decl.name for decl in decls]
@@ -164,7 +163,7 @@ def generate_dependency_graph(decls: List[DeclarationType]) -> DirectedGraph[str
     graph: DirectedGraph[str] = DirectedGraph()
 
     for decl in decls:
-        deps = get_dependency_of_decl(decl)
+        deps = get_dependency_of_decl(decl, options)
         for dep in deps:
             # We don't add the dependency to the dependency graph, when:
             # 1. the dependency is not among the decls to sort;
@@ -196,7 +195,9 @@ def sort_decls_by_syntax_tree_similarity(
 
 
 @profile  # type: ignore
-def absort_decls(decls: List[DeclarationType]) -> Iterator[DeclarationType]:
+def absort_decls(
+    decls: List[DeclarationType], options: SimpleNamespace
+) -> Iterator[DeclarationType]:
     """ Sort a continguous block of declarations """
 
     def same_abstract_level_sorter(names: List[str]) -> List[str]:
@@ -214,7 +215,7 @@ def absort_decls(decls: List[DeclarationType]) -> Iterator[DeclarationType]:
         # 1. easy and naive way: source code string similarity. eg. shortest edit distance algorithm.
         # 2. sophisticated way: syntax tree similarity. E.g. the classic Zhange-Shaha algorithm.
 
-        if args.no_aggressive:
+        if options.no_aggressive:
             decl_name_inverse_index = {name: idx for idx, name in enumerate(decl_names)}
             return sorted(names, key=lambda name: decl_name_inverse_index[name])
 
@@ -230,7 +231,7 @@ def absort_decls(decls: List[DeclarationType]) -> Iterator[DeclarationType]:
     if duplicated(decl_names):
         raise NameRedefinition("Name redefinition exists. Not supported yet.")
 
-    graph = generate_dependency_graph(decls)
+    graph = generate_dependency_graph(decls, options)
 
     sorted_names = xreverse(
         graph.relaxed_topological_sort(
@@ -238,10 +239,10 @@ def absort_decls(decls: List[DeclarationType]) -> Iterator[DeclarationType]:
         )
     )
 
-    if args.reverse:
+    if options.reverse:
         sorted_names.reverse()
 
-    if not args.no_fix_main_to_bottom and "main" in sorted_names:
+    if not options.no_fix_main_to_bottom and "main" in sorted_names:
         sorted_names.remove("main")
         sorted_names.append("main")
 
@@ -253,16 +254,18 @@ def absort_decls(decls: List[DeclarationType]) -> Iterator[DeclarationType]:
 
 
 @profile  # type: ignore
-def get_related_source_lines_of_decl(source: str, node: ast.AST) -> List[str]:
+def get_related_source_lines_of_decl(
+    source: str, node: ast.AST, options: SimpleNamespace
+) -> List[str]:
     """ Retrieve source lines corresponding to the AST node, from the source """
 
     source_lines = []
 
-    if args.comment_strategy is CommentStrategy.ATTR_FOLLOW_DECL:
+    if options.comment_strategy is CommentStrategy.ATTR_FOLLOW_DECL:
         source_lines += ast_get_leading_comment_and_decorator_list_source_lines(
             source, node
         )
-    elif args.comment_strategy in (CommentStrategy.PUSH_TOP, CommentStrategy.IGNORE):
+    elif options.comment_strategy in (CommentStrategy.PUSH_TOP, CommentStrategy.IGNORE):
         source_lines += ast_get_decorator_list_source_lines(source, node)
     else:
         raise RuntimeError("Unreachable")
@@ -306,7 +309,7 @@ def find_continguous_decls(
 
 
 @profile  # type: ignore
-def absort_str(old_source: str) -> str:
+def absort_str(old_source: str, options: SimpleNamespace) -> str:
     """ Sort the source code in string """
 
     def preliminary_sanity_check(top_level_stmts: List[ast.stmt]) -> None:
@@ -318,7 +321,7 @@ def absort_str(old_source: str) -> str:
         if duplicated(decl_names):
             raise NameRedefinition("Name redefinition exists. Not supported yet.")
 
-    module_tree = ast.parse(old_source, feature_version=args.py_version)
+    module_tree = ast.parse(old_source, feature_version=options.py_version)
 
     top_level_stmts = module_tree.body
 
@@ -329,8 +332,10 @@ def absort_str(old_source: str) -> str:
     new_source_lines = old_source.splitlines()
 
     for lineno, end_lineno, decls in blocks:
-        sorted_decls = list(absort_decls(decls))
-        source_lines = get_related_source_lines_of_block(old_source, sorted_decls)
+        sorted_decls = list(absort_decls(decls, options))
+        source_lines = get_related_source_lines_of_block(
+            old_source, sorted_decls, options
+        )
         new_source_lines[lineno - 1 : end_lineno] = source_lines
 
     new_source = "\n".join(new_source_lines) + "\n"
@@ -343,7 +348,7 @@ def absort_str(old_source: str) -> str:
 
 
 def get_related_source_lines_of_block(
-    source: str, decls: List[DeclarationType]
+    source: str, decls: List[DeclarationType], options: SimpleNamespace
 ) -> List[str]:
     """ Retrieve source lines corresponding to the block of continguous declarations, from source """
 
@@ -351,9 +356,9 @@ def get_related_source_lines_of_block(
 
     for decl in decls:
 
-        related_source_lines = get_related_source_lines_of_decl(source, decl)
+        related_source_lines = get_related_source_lines_of_decl(source, decl, options)
 
-        if args.no_aggressive:
+        if options.no_aggressive:
             source_lines += related_source_lines
         elif whitespace_lines(related_source_lines):
 
@@ -373,7 +378,7 @@ def get_related_source_lines_of_block(
         else:
             source_lines += related_source_lines
 
-    if args.comment_strategy is CommentStrategy.PUSH_TOP:
+    if options.comment_strategy is CommentStrategy.PUSH_TOP:
         total_comment_lines = []
         for decl in decls:
             comment_lines = ast_get_leading_comment_source_lines(source, decl)
@@ -494,16 +499,16 @@ class Digest:
         return Digest(**(c1 + c2))  # type: ignore
 
 
-async def absort_file(file: Path) -> Digest:
+async def absort_file(file: Path, options: SimpleNamespace) -> Digest:
     """ Sort the source in the given file """
 
     async def read_source(file: Path) -> str:
         """ Read source from the file, including exception handling """
 
         try:
-            return await file.read_text(args.encoding)
+            return await file.read_text(options.encoding)
         except UnicodeDecodeError:
-            print(f"{file} is not decodable by {args.encoding}", file=sys.stderr)
+            print(f"{file} is not decodable by {options.encoding}", file=sys.stderr)
             print(f"Try to automatically detect file encoding......", file=sys.stderr)
             binary = await file.read_bytes()
             detected_encoding = cchardet.detect(binary)["encoding"]
@@ -519,7 +524,7 @@ async def absort_file(file: Path) -> Digest:
         """ Sort the source in string, including exception handling """
 
         try:
-            return absort_str(old_source)
+            return absort_str(old_source, options)
         except SyntaxError as exc:
             # if re.fullmatch(r"Missing parentheses in call to 'print'. Did you mean print(.*)\?", exc.msg):
             #     pass
@@ -536,7 +541,7 @@ async def absort_file(file: Path) -> Digest:
     async def write_source(file: Path, new_source: str) -> None:
         """ Write the new source to the file, prompt for confirmation and make backup """
 
-        if not args.yes:
+        if not options.yes:
             ans = click.confirm(
                 f"Are you sure you want to in-place update the file {file}?", err=True
             )
@@ -546,9 +551,9 @@ async def absort_file(file: Path) -> Digest:
 
         await backup_to_cache(file)
 
-        await file.write_text(new_source, args.encoding)
+        await file.write_text(new_source, options.encoding)
         digest.modified += 1
-        if args.verbose:
+        if options.verbose:
             print(bright_green(f"Processed {file}"))
 
     async def process_new_source(new_source: str) -> None:
@@ -556,19 +561,19 @@ async def absort_file(file: Path) -> Digest:
 
         # TODO add more styled output (e.g. colorized)
 
-        if args.display_diff:
+        if options.display_diff:
 
             digest.unmodified += 1
             display_diff_with_filename(old_source, new_source, str(file))
 
-        elif args.in_place:
+        elif options.in_place:
 
             if old_source == new_source:
                 digest.unmodified += 1
                 return
             await write_source(file, new_source)
 
-        elif args.check:
+        elif options.check:
 
             digest.unmodified += 1
             if old_source != new_source:
@@ -594,13 +599,13 @@ async def absort_file(file: Path) -> Digest:
         return Digest(failed=1)  # type: ignore
 
 
-def absort_files(files: List[Path]) -> Digest:
+def absort_files(files: List[Path], options: SimpleNamespace) -> Digest:
     """ Sort a list of files """
 
     # TODO use multi-processing to boost speed of handling a bunch of files (CPU-bound parts)
 
     async def entry() -> Digest:
-        digests = await asyncio.gather(*(absort_file(file) for file in files))
+        digests = await asyncio.gather(*(absort_file(file, options) for file in files))
         return sum(digests, Digest())
 
     return asyncio.run(entry())
@@ -620,36 +625,36 @@ def display_summary(digest: Digest) -> None:
     print(", ".join(summary) + ".")
 
 
-def check_args() -> None:
+def check_args(options: SimpleNamespace) -> None:
     """ Preliminary check of the validness of the CLI argument """
 
     # FIXME use click library's builtin mechanism to specify mutually exclusive options
 
-    if sum([args.check, args.display_diff, args.in_place]) > 1:
+    if sum([options.check, options.display_diff, options.in_place]) > 1:
         raise ValueError(
             "Only one of the `--check`, `--diff` and `--in-place` options can be specified at the same time"
         )
 
-    if args.quiet and args.verbose:
+    if options.quiet and options.verbose:
         raise ValueError("Can't specify both `--quiet` and `--verbose` options")
 
     # First confirmation prompt
-    if args.yes:
+    if options.yes:
         ans = click.confirm(
             "Are you sure you want to bypass all confirmation prompts? "
             "(Dangerous, not recommended)"
         )
         if not ans:
-            args.yes = False
+            options.yes = False
 
     # Second confirmation prompt
-    if args.yes:
+    if options.yes:
         ans = click.confirm(
             "Are you REALLY REALLY REALLY sure you want to bypass all confirmation prompts? "
             "(Dangerous, not recommended)"
         )
         if not ans:
-            args.yes = False
+            options.yes = False
 
 
 # TODO provide a programmatical interface. Check if click library provides such a functionality, to turn a CLI interface to programmatical interface.
@@ -785,12 +790,9 @@ def main(
 ) -> None:
     """ the CLI entry """
 
-    # A global variable to store CLI arguments.
-    global args
-    for param_name, param_value in ctx.params.items():
-        setattr(args, param_name, param_value)
+    options = SimpleNamespace(**ctx.params.items())
 
-    check_args()
+    check_args(options)
 
     files = list(collect_python_files(map(Path, filepaths)))
 
@@ -816,7 +818,7 @@ def main(
 
     with verboseness_context_manager, colorness_context_manager:
 
-        digest = absort_files(files)
+        digest = absort_files(files, options)
 
         display_summary(digest)
 
