@@ -25,6 +25,7 @@ __all__ = [
     "cached_ast_iter_child_nodes",
     "ast_iter_non_node_fields",
     "ast_tree_distance",
+    "ast_equal",
 ]
 
 
@@ -229,3 +230,15 @@ def ast_tree_distance(
         delete_cost=delete_cost,
         rename_cost=rename_cost,
     )
+
+
+def ast_equal(node1: ast.AST, node2: ast.AST) -> bool:
+    """ Return if two ast nodes are semantically equal """
+
+    if type(node1) != type(node2):
+        return False
+
+    if list(ast_iter_non_node_fields(node1)) != list(ast_iter_non_node_fields(node2)):
+        return False
+
+    return all(map(ast_equal, ast.iter_child_nodes(node1), ast.iter_child_nodes(node2)))
