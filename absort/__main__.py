@@ -58,6 +58,15 @@ except NameError:
     profile = lambda x: x
 
 
+# Optionally use uvloop to boost speed
+try:
+    import uvloop  # type: ignore
+
+    uvloop.install()
+except ImportError:
+    pass
+
+
 #
 # Enumerations
 #
@@ -834,14 +843,6 @@ def main(
         return
 
     print(f"Found {len(files)} files")
-
-    # Optionally use uvloop to boost speed
-    try:
-        import uvloop  # type: ignore
-
-        uvloop.install()
-    except ImportError:
-        pass
 
     verboseness_context_manager = silent_context() if quiet else contextlib.nullcontext()
 
