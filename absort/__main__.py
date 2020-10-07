@@ -48,11 +48,36 @@ from .visitors import GetUndefinedVariableVisitor
 from .weighted_graph import WeightedGraph
 
 
+__all__ = ["absort_str", "CommentStrategy", "FormatOption"]
+
+
 # Note: the name `profile` will be injected by line-profiler at run-time
 try:
     profile  # type: ignore
 except NameError:
     profile = lambda x: x
+
+
+#
+# Enumerations
+#
+
+
+class CommentStrategy(Enum):
+    """ An enumeration to specify different kinds of comment strategies """
+
+    PUSH_TOP = "push-top"
+    ATTR_FOLLOW_DECL = "attr-follow-decl"
+    IGNORE = "ignore"
+
+
+
+@attr.s(auto_attribs=True, frozen=True)
+class FormatOption:
+    no_aggressive: bool = False
+    reverse: bool = False
+    no_fix_main_to_bottom: bool = False
+
 
 #
 # Constants
@@ -66,6 +91,8 @@ CACHE_MAX_SIZE = 400000  # unit is byte
 #
 # Types
 #
+
+PyVersion = Tuple[int, int]
 
 #
 # Global Variables
@@ -86,14 +113,6 @@ class ABSortFail(Exception):
     """ An exception to signal that sorting fails """
 
     pass
-
-
-class CommentStrategy(Enum):
-    """ An enumeration to specify different kinds of comment strategies """
-
-    PUSH_TOP = "push-top"
-    ATTR_FOLLOW_DECL = "attr-follow-decl"
-    IGNORE = "ignore"
 
 
 class CommentStrategyParamType(click.ParamType):
@@ -119,7 +138,7 @@ class PyVersionParamType(click.ParamType):
 
     name = "py_version"
 
-    def convert(self, value: str, param: Any, ctx: Any) -> Tuple[int, int]:
+    def convert(self, value: str, param: Any, ctx: Any) -> PyVersion:
 
         # Reference: "Currently major must equal to 3." from https://docs.python.org/3/library/ast.html#ast.parse
         valid_majors = [3]
@@ -146,16 +165,16 @@ class PyVersionParamType(click.ParamType):
             )
 
 
-def get_dependency_of_decl(decl: DeclarationType, options: SimpleNamespace) -> Set[str]:
+def get_dependency_of_decl(decl: DeclarationType, py_version: PyVersion) -> Set[str]:
     """ Calculate the dependencies (as set of symbols) of the declaration """
 
     temp_module = ast.Module(body=[decl], type_ignores=[])
-    visitor = GetUndefinedVariableVisitor(py_version=options.py_version)
+    visitor = GetUndefinedVariableVisitor(py_version=py_version)
     return visitor.visit(temp_module)
 
 
 def generate_dependency_graph(
-    decls: List[DeclarationType], options: SimpleNamespace
+    decls: List[DeclarationType], py_version: PyVersion
 ) -> DirectedGraph[str]:
     """ Generate a dependency graph from a continguous block of declarations """
 
@@ -164,7 +183,7 @@ def generate_dependency_graph(
     graph: DirectedGraph[str] = DirectedGraph()
 
     for decl in decls:
-        deps = get_dependency_of_decl(decl, options)
+        deps = get_dependency_of_decl(decl, py_version)
         for dep in deps:
             # We don't add the dependency to the dependency graph, when:
             # 1. the dependency is not among the decls to sort;
@@ -197,7 +216,7 @@ def sort_decls_by_syntax_tree_similarity(
 
 @profile  # type: ignore
 def absort_decls(
-    decls: List[DeclarationType], options: SimpleNamespace
+    decls: List[DeclarationType], py_version: PyVersion, format_option: FormatOption
 ) -> Iterator[DeclarationType]:
     """ Sort a continguous block of declarations """
 
@@ -216,7 +235,7 @@ def absort_decls(
         # 1. easy and naive way: source code string similarity. eg. shortest edit distance algorithm.
         # 2. sophisticated way: syntax tree similarity. E.g. the classic Zhange-Shaha algorithm.
 
-        if options.no_aggressive:
+        if format_option.no_aggressive:
             decl_name_inverse_index = {name: idx for idx, name in enumerate(decl_names)}
             return sorted(names, key=lambda name: decl_name_inverse_index[name])
 
@@ -232,7 +251,7 @@ def absort_decls(
     if duplicated(decl_names):
         raise NameRedefinition("Name redefinition exists. Not supported yet.")
 
-    graph = generate_dependency_graph(decls, options)
+    graph = generate_dependency_graph(decls, py_version)
 
     sorted_names = xreverse(
         graph.relaxed_topological_sort(
@@ -240,10 +259,10 @@ def absort_decls(
         )
     )
 
-    if options.reverse:
+    if format_option.reverse:
         sorted_names.reverse()
 
-    if not options.no_fix_main_to_bottom and "main" in sorted_names:
+    if not format_option.no_fix_main_to_bottom and "main" in sorted_names:
         sorted_names.remove("main")
         sorted_names.append("main")
 
@@ -256,17 +275,17 @@ def absort_decls(
 
 @profile  # type: ignore
 def get_related_source_lines_of_decl(
-    source: str, node: ast.AST, options: SimpleNamespace
+    source: str, node: ast.AST, comment_strategy: CommentStrategy
 ) -> List[str]:
     """ Retrieve source lines corresponding to the AST node, from the source """
 
     source_lines = []
 
-    if options.comment_strategy is CommentStrategy.ATTR_FOLLOW_DECL:
+    if comment_strategy is CommentStrategy.ATTR_FOLLOW_DECL:
         source_lines += ast_get_leading_comment_and_decorator_list_source_lines(
             source, node
         )
-    elif options.comment_strategy in (CommentStrategy.PUSH_TOP, CommentStrategy.IGNORE):
+    elif comment_strategy in (CommentStrategy.PUSH_TOP, CommentStrategy.IGNORE):
         source_lines += ast_get_decorator_list_source_lines(source, node)
     else:
         raise RuntimeError("Unreachable")
@@ -310,7 +329,13 @@ def find_continguous_decls(
 
 
 @profile  # type: ignore
-def absort_str(old_source: str, options: SimpleNamespace) -> str:
+def absort_str(
+    old_source: str,
+    py_version: PyVersion = (3, 8),
+    comment_strategy: CommentStrategy = CommentStrategy.ATTR_FOLLOW_DECL,
+    format_option: FormatOption = FormatOption(),
+    **_,
+) -> str:
     """ Sort the source code in string """
 
     def preliminary_sanity_check(top_level_stmts: List[ast.stmt]) -> None:
@@ -322,7 +347,7 @@ def absort_str(old_source: str, options: SimpleNamespace) -> str:
         if duplicated(decl_names):
             raise NameRedefinition("Name redefinition exists. Not supported yet.")
 
-    module_tree = ast.parse(old_source, feature_version=options.py_version)
+    module_tree = ast.parse(old_source, feature_version=py_version)
 
     top_level_stmts = module_tree.body
 
@@ -335,9 +360,9 @@ def absort_str(old_source: str, options: SimpleNamespace) -> str:
     new_source_lines = strict_splitlines(old_source)
 
     for lineno, end_lineno, decls in blocks:
-        sorted_decls = list(absort_decls(decls, options))
+        sorted_decls = list(absort_decls(decls, py_version, format_option))
         source_lines = get_related_source_lines_of_block(
-            old_source, sorted_decls, options
+            old_source, sorted_decls, comment_strategy, format_option
         )
         new_source_lines[lineno - 1 : end_lineno] = source_lines
 
@@ -351,7 +376,10 @@ def absort_str(old_source: str, options: SimpleNamespace) -> str:
 
 
 def get_related_source_lines_of_block(
-    source: str, decls: List[DeclarationType], options: SimpleNamespace
+    source: str,
+    decls: List[DeclarationType],
+    comment_strategy: CommentStrategy,
+    format_option: FormatOption,
 ) -> List[str]:
     """ Retrieve source lines corresponding to the block of continguous declarations, from source """
 
@@ -359,9 +387,11 @@ def get_related_source_lines_of_block(
 
     for decl in decls:
 
-        related_source_lines = get_related_source_lines_of_decl(source, decl, options)
+        related_source_lines = get_related_source_lines_of_decl(
+            source, decl, comment_strategy
+        )
 
-        if options.no_aggressive:
+        if format_option.no_aggressive:
             source_lines += related_source_lines
         elif whitespace_lines(related_source_lines):
 
@@ -381,7 +411,7 @@ def get_related_source_lines_of_block(
         else:
             source_lines += related_source_lines
 
-    if options.comment_strategy is CommentStrategy.PUSH_TOP:
+    if comment_strategy is CommentStrategy.PUSH_TOP:
         total_comment_lines = []
         for decl in decls:
             comment_lines = ast_get_leading_comment_source_lines(source, decl)
@@ -527,7 +557,7 @@ async def absort_file(file: Path, options: SimpleNamespace) -> Digest:
         """ Sort the source in string, including exception handling """
 
         try:
-            return absort_str(old_source, options)
+            return absort_str(old_source, **options.__dict__)
         except SyntaxError as exc:
             # if re.fullmatch(r"Missing parentheses in call to 'print'. Did you mean print(.*)\?", exc.msg):
             #     pass
@@ -785,7 +815,7 @@ def main(
     no_aggressive: bool,
     encoding: str,
     comment_strategy: CommentStrategy,
-    py_version: Tuple[int, int],
+    py_version: PyVersion,
     quiet: bool,
     verbose: bool,
     color_off: bool,
