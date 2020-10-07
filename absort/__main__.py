@@ -823,7 +823,7 @@ def main(
 ) -> None:
     """ the CLI entry """
 
-    options = SimpleNamespace(**ctx.params.items())
+    options = SimpleNamespace(**ctx.params)
 
     check_args(options)
 
