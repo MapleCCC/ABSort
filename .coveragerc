@@ -1,0 +1,11 @@
+[run]
+command_line = -m pytest tests
+source = absort
+
+[report]
+exclude_lines =
+    def __str__
+    def __repr__
+    except
+    raise
+    if __name__ == .__main__.:
