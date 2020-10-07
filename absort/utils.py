@@ -245,18 +245,16 @@ def apply(fn: Callable[..., T], *args: Any, **kwargs: Any) -> T:
 
 @overload
 def first_true(
-    iterable: Iterable[T], *, default: Any = None, pred: Callable[[T], bool] = None
+    iterable: Iterable[T], *, default: Any = None, pred: Callable[[T], bool] = bool
 ) -> Any:
     ...
 
 
 def first_true(
-    iterable: Iterable, *, default: Any = None, pred: Callable[..., bool] = None
+    iterable: Iterable, *, default: Any = None, pred: Callable[..., bool] = bool
 ) -> Any:
     """ Equivalent to more-itertools library's `first_true` function """
 
-    if pred is None:
-        pred = bool
     for elem in iterable:
         if pred(elem):
             return elem
@@ -422,18 +420,15 @@ def nths(iterable: Iterable, n: int = 0) -> Iterator:
 def hamming_distance(
     iterable1: Iterable[T],
     iterable2: Iterable[S],
-    equal: Callable[[T, S], bool] = None,
+    equal: Callable[[T, S], bool] = operator.eq,
 ) -> int:
     ...
 
 
 def hamming_distance(
-    iterable1: Iterable, iterable2: Iterable, equal: Callable[[Any, Any], bool] = None
+    iterable1: Iterable, iterable2: Iterable, equal: Callable[[Any, Any], bool] = operator.eq
 ) -> int:
     """ Don't apply on infinite iterables """
-
-    if equal is None:
-        equal = operator.eq
 
     sentinel = object()
     distance = 0

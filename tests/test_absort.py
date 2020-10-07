@@ -15,11 +15,8 @@ from absort.ast_utils import ast_equal
 
 
 def contains(
-    container: Any, elem: Any, equal: Callable[[Any, Any], bool] = None
+    container: Any, elem: Any, equal: Callable[[Any, Any], bool] = operator.eq
 ) -> bool:
-    if equal is None:
-        equal = operator.eq
-
     for value in container:
         if equal(elem, value):
             return True
