@@ -39,6 +39,7 @@ from .utils import (
     compose,
     duplicated,
     first_true,
+    identityfunc,
     silent_context,
     strict_splitlines,
     whitespace_lines,
@@ -55,7 +56,7 @@ __all__ = ["absort_str", "CommentStrategy", "FormatOption"]
 try:
     profile  # type: ignore
 except NameError:
-    profile = lambda x: x
+    profile = identityfunc
 
 
 # Optionally use uvloop to boost speed

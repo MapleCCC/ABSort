@@ -16,6 +16,7 @@ from typing import (
     TypeVar,
 )
 
+from .utils import identityfunc
 
 #
 # Thin semantic type abstraction
@@ -185,7 +186,7 @@ class DirectedGraph(Generic[Node]):
             return sinks
 
         if same_rank_sorter is None:
-            same_rank_sorter = lambda x: x
+            same_rank_sorter = identityfunc
 
         _graph = self.copy()
 
@@ -248,7 +249,7 @@ class DirectedGraph(Generic[Node]):
             return sinks
 
         if same_rank_sorter is None:
-            same_rank_sorter = lambda x: x
+            same_rank_sorter = identityfunc
 
         _graph = self.copy()
 

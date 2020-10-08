@@ -53,19 +53,15 @@ __all__ = [
     "whitespace_lines",
     "dispatch",
     "duplicated",
-    "constantfunc",
     "nth",
     "nths",
     "hamming_distance",
     "strict_splitlines",
+    "nullfunc",
+    "constantfunc",
+    "identifyfunc",
     "iequal",
 ]
-
-# Note: the name `profile` will be injected by line-profiler at run-time
-try:
-    profile  # type: ignore
-except NameError:
-    profile = lambda x: x
 
 
 T = TypeVar("T")
@@ -294,15 +290,10 @@ def concat(lists: Iterable[List]) -> List:
     return list(itertools.chain.from_iterable(lists))
 
 
-def null(*args: Any, **kwargs: Any) -> None:
-    """ A function that does nothing """
-    pass
-
-
 @contextlib.contextmanager
 def SingleThreadPoolExecutor() -> Iterator[SimpleNamespace]:
     "Return an equivalent to ThreadPoolExecutor(max_workers=1)"
-    yield SimpleNamespace(map=map, submit=apply, shutdown=null)
+    yield SimpleNamespace(map=map, submit=apply, shutdown=nullfunc)
 
 
 class compose:
@@ -384,15 +375,6 @@ def duplicated(sequence: Sequence) -> bool:
         return False
 
 
-def constantfunc(const: T) -> Callable[..., T]:
-    """ A constant function """
-
-    def func(*_: Any, **__: Any) -> T:
-        return const
-
-    return func
-
-
 @overload
 def nth(iterable: Iterable[T], n: int) -> T:
     ...
@@ -453,6 +435,25 @@ def strict_splitlines(s: str) -> List[str]:
     if res[-1] == "":
         res = res[:-1]
     return res
+
+
+def nullfunc(*args: Any, **kwargs: Any) -> None:
+    """ A function that does nothing """
+    pass
+
+
+def constantfunc(const: T) -> Callable[..., T]:
+    """ A constant function """
+
+    def func(*_: Any, **__: Any) -> T:
+        return const
+
+    return func
+
+
+def identityfunc(input: T) -> T:
+    """ An identity function """
+    return input
 
 
 def iequal(

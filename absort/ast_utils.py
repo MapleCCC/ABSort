@@ -22,6 +22,7 @@ from .utils import (
     cached_splitlines,
     compose,
     hamming_distance,
+    identityfunc,
     iequal,
     ireverse,
     lfu_cache_with_key,
@@ -48,7 +49,7 @@ __all__ = [
 try:
     profile  # type: ignore
 except NameError:
-    profile = lambda x: x
+    profile = identityfunc
 
 
 def ast_pretty_dump(

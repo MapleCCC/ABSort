@@ -2,6 +2,7 @@ import ast
 from typing import Dict, List, Optional, Sequence, Set, Tuple, Union
 
 from .profile_tools import add_profile_decorator_to_class_methods
+from .utils import identityfunc
 
 
 __all__ = ["GetUndefinedVariableVisitor"]
@@ -11,7 +12,7 @@ __all__ = ["GetUndefinedVariableVisitor"]
 try:
     profile  # type: ignore
 except NameError:
-    profile = lambda x: x
+    profile = identityfunc
 
 
 def retrieve_names_from_args(args: ast.arguments) -> Set[str]:
