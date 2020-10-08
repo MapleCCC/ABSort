@@ -182,7 +182,7 @@ def cached_ast_iter_child_nodes(node: ast.AST) -> List[ast.AST]:
 
 
 @lfu_cache_with_key(key=id, maxsize=None)
-def ast_node_class_fields(ast_node_class: Type[ast.AST]) -> Iterator[Tuple[str, str]]:
+def ast_node_class_fields(ast_node_class: Type[ast.AST]) -> List[Tuple[str, str]]:
     assert hasattr(ast_node_class, "__doc__")
     schema = ast_node_class.__doc__
     assert schema
@@ -192,9 +192,7 @@ def ast_node_class_fields(ast_node_class: Type[ast.AST]) -> Iterator[Tuple[str, 
     attributes = m.group("attributes")
     if attributes is None:
         return []
-    for attribute in attributes.split(","):
-        type, name = attribute.split()
-        yield type, name
+    return [tuple(attribute.split()) for attribute in attributes.split(",")]  # type: ignore
 
 
 # Reference: https://docs.python.org/3/library/ast.html#abstract-grammar
