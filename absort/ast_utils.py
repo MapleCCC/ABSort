@@ -39,7 +39,8 @@ __all__ = [
     "cached_ast_iter_child_nodes",
     "ast_iter_non_node_fields",
     "ast_tree_distance",
-    "ast_equal",
+    "ast_shallow_equal",
+    "ast_deep_equal",
 ]
 
 
@@ -259,7 +260,28 @@ def ast_tree_distance(
     )
 
 
-def ast_equal(node1: ast.AST, node2: ast.AST) -> bool:
+def ast_shallow_equal(node1: ast.AST, node2: ast.AST) -> float:
+    """
+    Return if two ast nodes are equal, by comparing shallow level data
+    Return zero if non-equal, and positive numbers if partially equal or completely equal
+
+    For advanced usage, the returned positive number is a fraction between 0 and 1,
+    denoting how equal the two nodes are. The closer to 1 the more equal, and vice versa.
+    """
+
+    if type(node1) != type(node2):
+        return 0
+
+    fields1 = list(ast_iter_non_node_fields(node1))
+    fields2 = list(ast_iter_non_node_fields(node2))
+    assert len(fields1) == len(fields2)
+    field_length = len(fields1)
+    if not field_length:
+        return 1
+    return 1 - (hamming_distance(fields1, fields2) / len(fields1))
+
+
+def ast_deep_equal(node1: ast.AST, node2: ast.AST) -> bool:
     """ Return if two ast nodes are semantically equal """
 
     if type(node1) != type(node2):
@@ -271,6 +293,6 @@ def ast_equal(node1: ast.AST, node2: ast.AST) -> bool:
     return iequal(
         ast.iter_child_nodes(node1),
         ast.iter_child_nodes(node2),
-        equal=ast_equal,
+        equal=ast_deep_equal,
         strict=True,
     )

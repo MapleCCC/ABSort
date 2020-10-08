@@ -6,7 +6,7 @@ from hypothesis import given, settings, HealthCheck
 from hypothesmith import from_grammar, from_node
 
 from absort.__main__ import absort_str
-from absort.ast_utils import ast_equal
+from absort.ast_utils import ast_deep_equal
 
 
 # Use third-party library hypothesmith to generate random valid Python source code, to
@@ -34,4 +34,4 @@ def test_absort_str(source: str) -> None:
 
     assert len(old_ast.body) == len(new_ast.body)
     for stmt in old_ast.body:
-        assert contains(new_ast.body, stmt, equal=ast_equal)
+        assert contains(new_ast.body, stmt, equal=ast_deep_equal)
