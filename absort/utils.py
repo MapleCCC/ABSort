@@ -58,6 +58,7 @@ __all__ = [
     "nths",
     "hamming_distance",
     "strict_splitlines",
+    "iequal",
 ]
 
 # Note: the name `profile` will be injected by line-profiler at run-time
@@ -452,3 +453,17 @@ def strict_splitlines(s: str) -> List[str]:
     if res[-1] == "":
         res = res[:-1]
     return res
+
+
+def iequal(
+    iterable1: Iterable,
+    iterable2: Iterable,
+    equal: Callable[[Any, Any], bool] = operator.eq,
+    strict: bool = False,
+) -> bool:
+    if not strict:
+        return all(map(equal, iterable1, iterable2))
+    else:
+        list1 = list(iterable1)
+        list2 = list(iterable2)
+        return len(list1) == len(list2) and all(map(equal, list1, list2))

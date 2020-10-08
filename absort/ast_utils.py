@@ -9,6 +9,7 @@ from .utils import (
     cached_splitlines,
     compose,
     hamming_distance,
+    iequal,
     ireverse,
     lfu_cache_with_key,
 )
@@ -241,4 +242,9 @@ def ast_equal(node1: ast.AST, node2: ast.AST) -> bool:
     if list(ast_iter_non_node_fields(node1)) != list(ast_iter_non_node_fields(node2)):
         return False
 
-    return all(map(ast_equal, ast.iter_child_nodes(node1), ast.iter_child_nodes(node2)))
+    return iequal(
+        ast.iter_child_nodes(node1),
+        ast.iter_child_nodes(node2),
+        equal=ast_equal,
+        strict=True,
+    )
