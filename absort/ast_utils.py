@@ -2,9 +2,11 @@ import ast
 import copy
 import re
 from collections import deque
+from numbers import Number
 from typing import (
     Callable,
     Deque,
+    FrozenSet,
     Iterator,
     List,
     Optional,
@@ -197,7 +199,8 @@ def ast_node_class_fields(ast_node_class: Type[ast.AST]) -> List[Tuple[str, str]
 
 # Reference: https://docs.python.org/3/library/ast.html#abstract-grammar
 Terminals = ("identifier", "int", "string", "constant")
-TerminalType = Union[str, int]  # FIXME what type is the `constant` terminal?
+# Reference: https://docs.python.org/3/library/ast.html#ast.Constant
+TerminalType = Union[str, Number, None, Tuple, FrozenSet]
 
 
 def ast_iter_non_node_fields(
