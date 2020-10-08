@@ -235,18 +235,7 @@ def ast_tree_distance(
 
         # hopefully a sane default
         def default_rename_cost(node1: ast.AST, node2: ast.AST) -> float:
-            if type(node1) != type(node2):
-                return 1
-            else:
-                values1 = list(ast_iter_non_node_fields(node1))
-                values2 = list(ast_iter_non_node_fields(node2))
-
-                assert len(values1) == len(values2)
-                field_length = len(values1)
-                if not field_length:
-                    return 0
-
-                return hamming_distance(values1, values2) / len(values1)
+            return 1 - ast_shallow_equal(node1, node2)
 
         rename_cost = default_rename_cost
 
