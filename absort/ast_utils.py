@@ -1,7 +1,18 @@
 import ast
 import copy
+import re
 from collections import deque
-from typing import Callable, Deque, Iterator, List, Optional, Set
+from typing import (
+    Callable,
+    Deque,
+    Iterator,
+    List,
+    Optional,
+    Set,
+    Tuple,
+    Type,
+    Union,
+)
 
 from .treedist import tree_distance
 from .utils import (
@@ -170,21 +181,35 @@ def cached_ast_iter_child_nodes(node: ast.AST) -> List[ast.AST]:
     return list(ast.iter_child_nodes(node))
 
 
-def ast_iter_non_node_fields(node: ast.AST) -> Iterator:
+@lfu_cache_with_key(key=id, maxsize=None)
+def ast_node_class_fields(ast_node_class: Type[ast.AST]) -> Iterator[Tuple[str, str]]:
+    assert hasattr(ast_node_class, "__doc__")
+    schema = ast_node_class.__doc__
+    assert schema
+    m = re.fullmatch(r"\w+(?:\((?P<attributes>.*)\))?", schema)
+    if m is None:
+        raise ValueError
+    attributes = m.group("attributes")
+    if attributes is None:
+        return []
+    for attribute in attributes.split(","):
+        type, name = attribute.split()
+        yield type, name
+
+
+# Reference: https://docs.python.org/3/library/ast.html#abstract-grammar
+Terminals = ("identifier", "int", "string", "constant")
+TerminalType = Union[str, int]  # FIXME what type is the `constant` terminal?
+
+
+def ast_iter_non_node_fields(
+    node: ast.AST,
+) -> Iterator[Union[TerminalType, List[TerminalType], None]]:
     """ Complement of the ast.iter_child_nodes function """
 
-    for _, field in ast.iter_fields(node):
-        if isinstance(field, ast.AST):
-            continue
-        elif isinstance(field, list):
-            if all(map(lambda elm: isinstance(elm, ast.AST), field)):
-                continue
-            elif all(map(lambda elm: not isinstance(elm, ast.AST), field)):
-                yield field
-            else:
-                raise RuntimeError("Unreachable")
-        else:
-            yield field
+    for type, name in ast_node_class_fields(node.__class__):
+        if type.rstrip("?*") in Terminals:
+            yield getattr(node, name)
 
 
 def ast_tree_distance(
