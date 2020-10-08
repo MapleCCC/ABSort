@@ -81,7 +81,6 @@ class CommentStrategy(Enum):
     IGNORE = "ignore"
 
 
-
 @attr.s(auto_attribs=True, frozen=True)
 class FormatOption:
     no_aggressive: bool = False

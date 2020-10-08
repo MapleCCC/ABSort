@@ -52,7 +52,7 @@ def run(cmd: Sequence[str]) -> None:
     subprocess.run(cmd).check_returncode()
 
 
-def uncommitted(filepath: str)->bool:
+def uncommitted(filepath: str) -> bool:
     """
     Check if a file contains uncommitted changes.
     """

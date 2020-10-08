@@ -6,7 +6,7 @@ import operator
 import os
 import sys
 import typing
-from collections import OrderedDict, namedtuple
+from collections import OrderedDict
 from functools import partial
 from itertools import zip_longest
 from types import SimpleNamespace
@@ -409,7 +409,9 @@ def hamming_distance(
 
 
 def hamming_distance(
-    iterable1: Iterable, iterable2: Iterable, equal: Callable[[Any, Any], bool] = operator.eq
+    iterable1: Iterable,
+    iterable2: Iterable,
+    equal: Callable[[Any, Any], bool] = operator.eq,
 ) -> int:
     """ Don't apply on infinite iterables """
 
@@ -437,7 +439,7 @@ def strict_splitlines(s: str) -> List[str]:
     return res
 
 
-def nullfunc(*args: Any, **kwargs: Any) -> None:
+def nullfunc(*_: Any, **__: Any) -> None:
     """ A function that does nothing """
     pass
 
