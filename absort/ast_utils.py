@@ -1,7 +1,7 @@
 import ast
 import copy
 from collections import deque
-from typing import Any, Callable, Deque, Iterator, List, Optional, Set
+from typing import Callable, Deque, Iterator, List, Optional, Set
 
 from .treedist import tree_distance
 from .utils import (
@@ -36,15 +36,16 @@ except NameError:
     profile = lambda x: x
 
 
-def ast_pretty_dump(node: ast.AST, *args: Any, **kwargs: Any) -> str:
+def ast_pretty_dump(
+    node: ast.AST, annotate_fields: bool = True, include_attributes: bool = False
+) -> str:
     """ Use black formatting library to prettify the dumped AST """
 
-    dumped = ast.dump(node, *args, **kwargs)
+    dumped = ast.dump(node, annotate_fields, include_attributes)
+
     try:
-        # fmt: off
         import black
-        prettied = black.format_str(dumped, mode=black.FileMode())
-        # fmt: on
+        return black.format_str(dumped, mode=black.FileMode())
     except ImportError:
         raise RuntimeError(
             "Black is required to use ast_pretty_dump(). "
@@ -54,7 +55,6 @@ def ast_pretty_dump(node: ast.AST, *args: Any, **kwargs: Any) -> str:
         # FIXME remove version incompatible check after black publishes the first
         # stable version.
         raise RuntimeError("black version incompatible")
-    return prettied
 
 
 def ast_ordered_walk(node: ast.AST) -> Iterator[ast.AST]:
