@@ -1,8 +1,11 @@
 import ast
 import sys
+from itertools import combinations_with_replacement, product
 from pathlib import Path
 
-from absort.__main__ import NameRedefinition, absort_str
+import attr
+
+from absort.__main__ import CommentStrategy, FormatOption, NameRedefinition, absort_str
 from absort.ast_utils import ast_deep_equal
 from absort.utils import contains
 
@@ -20,14 +23,29 @@ TEST_FILES = (
 def test_absort_str() -> None:
     for test_sample in TEST_FILES:
         try:
-            source = test_sample.read_text(encoding="utf-8")
-            new_source = absort_str(source)
+            all_comment_strategies = iter(CommentStrategy)
+            format_option_init_arg_options = combinations_with_replacement(
+                (True, False), len(attr.fields(FormatOption))
+            )
+            all_format_options = (
+                FormatOption(*c) for c in format_option_init_arg_options  # type: ignore
+            )
+            all_arg_options = product(all_comment_strategies, all_format_options)
 
-            old_ast = ast.parse(source)
-            new_ast = ast.parse(new_source)
+            for arg_option in all_arg_options:
+                comment_strategy, format_option = arg_option
+                source = test_sample.read_text(encoding="utf-8")
+                new_source = absort_str(
+                    source,
+                    comment_strategy=comment_strategy,
+                    format_option=format_option,
+                )
 
-            assert len(old_ast.body) == len(new_ast.body)
-            for stmt in old_ast.body:
-                assert contains(new_ast.body, stmt, equal=ast_deep_equal)
+                old_ast = ast.parse(source)
+                new_ast = ast.parse(new_source)
+
+                assert len(old_ast.body) == len(new_ast.body)
+                for stmt in old_ast.body:
+                    assert contains(new_ast.body, stmt, equal=ast_deep_equal)
         except (SyntaxError, NameRedefinition):
             pass
