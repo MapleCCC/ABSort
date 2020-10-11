@@ -17,10 +17,7 @@ from absort.ast_utils import ast_deep_equal
 def contains(
     container: Any, elem: Any, equal: Callable[[Any, Any], bool] = operator.eq
 ) -> bool:
-    for value in container:
-        if equal(elem, value):
-            return True
-    return False
+    return any(equal(elem, value) for value in container)
 
 
 @settings(suppress_health_check=[HealthCheck.too_slow])
