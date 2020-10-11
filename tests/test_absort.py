@@ -15,9 +15,7 @@ from absort.utils import contains
 # The guy who use such tool to test on black library and CPython stdlib and report issues is Zac-HD (https://github.com/Zac-HD).
 
 
-TEST_FILES = (
-    f for f in Path(sys.executable).with_name("Lib").iterdir() if f.suffix == ".py"
-)
+TEST_FILES = Path(sys.executable).with_name("Lib").glob("*.py")
 
 
 def test_absort_str() -> None:
