@@ -49,7 +49,14 @@ from .visitors import GetUndefinedVariableVisitor
 from .weighted_graph import WeightedGraph
 
 
-__all__ = ["absort_str", "CommentStrategy", "FormatOption"]
+__all__ = [
+    "absort_str",
+    "absort_file",
+    "absort_files",
+    "CommentStrategy",
+    "FormatOption",
+    "FileAction",
+]
 
 
 # Note: the name `profile` will be injected by line-profiler at run-time
@@ -71,6 +78,15 @@ except ImportError:
 #
 # Enumerations
 #
+
+
+class FileAction(Enum):
+    """ An enumeration to specify different kinds of file actions """
+
+    CHECK = 0
+    DIFF = 1
+    PRINT = 2
+    WRITE = 3
 
 
 class CommentStrategy(Enum):
@@ -343,7 +359,6 @@ def absort_str(
     py_version: PyVersion = (3, 8),
     comment_strategy: CommentStrategy = CommentStrategy.ATTR_FOLLOW_DECL,
     format_option: FormatOption = FormatOption(),
-    **_,
 ) -> str:
     """ Sort the source code in string """
 
@@ -541,16 +556,25 @@ class Digest:
         return Digest(**(c1 + c2))  # type: ignore
 
 
-async def absort_file(file: Path, options: SimpleNamespace) -> Digest:
+async def absort_file(
+    file: Path,
+    encoding: str = "utf-8",
+    bypass_prompt: bool = False,
+    verbose: bool = False,
+    file_action: FileAction = FileAction.PRINT,
+    py_version: PyVersion = (3, 8),
+    comment_strategy: CommentStrategy = CommentStrategy.ATTR_FOLLOW_DECL,
+    format_option: FormatOption = FormatOption(),
+) -> Digest:
     """ Sort the source in the given file """
 
     async def read_source(file: Path) -> str:
         """ Read source from the file, including exception handling """
 
         try:
-            return await file.read_text(options.encoding)
+            return await file.read_text(encoding)
         except UnicodeDecodeError:
-            print(f"{file} is not decodable by {options.encoding}", file=sys.stderr)
+            print(f"{file} is not decodable by {encoding}", file=sys.stderr)
             print(f"Try to automatically detect file encoding......", file=sys.stderr)
             binary = await file.read_bytes()
             detected_encoding = cchardet.detect(binary)["encoding"]
@@ -566,14 +590,7 @@ async def absort_file(file: Path, options: SimpleNamespace) -> Digest:
         """ Sort the source in string, including exception handling """
 
         try:
-            format_option = FormatOption(
-                no_aggressive=options.no_aggressive,
-                reverse=options.reverse,
-                no_fix_main_to_bottom=options.no_fix_main_to_bottom,
-            )
-            return absort_str(
-                old_source, **options.__dict__, format_option=format_option
-            )
+            return absort_str(old_source, py_version, comment_strategy, format_option)
         except SyntaxError as exc:
             # if re.fullmatch(r"Missing parentheses in call to 'print'. Did you mean print(.*)\?", exc.msg):
             #     pass
@@ -590,7 +607,7 @@ async def absort_file(file: Path, options: SimpleNamespace) -> Digest:
     async def write_source(file: Path, new_source: str) -> None:
         """ Write the new source to the file, prompt for confirmation and make backup """
 
-        if not options.yes:
+        if not bypass_prompt:
             ans = click.confirm(
                 f"Are you sure you want to in-place update the file {file}?", err=True
             )
@@ -600,9 +617,9 @@ async def absort_file(file: Path, options: SimpleNamespace) -> Digest:
 
         await backup_to_cache(file)
 
-        await file.write_text(new_source, options.encoding)
+        await file.write_text(new_source, encoding)
         digest.modified += 1
-        if options.verbose:
+        if verbose:
             print(bright_green(f"Processed {file}"))
 
     async def process_new_source(new_source: str) -> None:
@@ -610,25 +627,25 @@ async def absort_file(file: Path, options: SimpleNamespace) -> Digest:
 
         # TODO add more styled output (e.g. colorized)
 
-        if options.display_diff:
+        if file_action is FileAction.DIFF:
 
             digest.unmodified += 1
             display_diff_with_filename(old_source, new_source, str(file))
 
-        elif options.in_place:
+        elif file_action is FileAction.WRITE:
 
             if old_source == new_source:
                 digest.unmodified += 1
                 return
             await write_source(file, new_source)
 
-        elif options.check:
+        elif file_action is FileAction.CHECK:
 
             digest.unmodified += 1
             if old_source != new_source:
                 print(f"{file} needs reformat")
 
-        else:
+        elif file_action is FileAction.PRINT:
             digest.unmodified += 1
             divider = bright_yellow("-" * 79)
             print(divider)
@@ -637,6 +654,9 @@ async def absort_file(file: Path, options: SimpleNamespace) -> Digest:
             print(new_source)
             print(divider)
             print("\n", end="")
+
+        else:
+            raise ValueError("the file_action argument receives invalid value")
 
     try:
         digest = Digest()
@@ -648,13 +668,35 @@ async def absort_file(file: Path, options: SimpleNamespace) -> Digest:
         return Digest(failed=1)  # type: ignore
 
 
-def absort_files(files: List[Path], options: SimpleNamespace) -> Digest:
+def absort_files(
+    files: List[Path],
+    encoding: str = "utf-8",
+    bypass_prompt: bool = False,
+    verbose: bool = False,
+    file_action: FileAction = FileAction.PRINT,
+    py_version: PyVersion = (3, 8),
+    comment_strategy: CommentStrategy = CommentStrategy.ATTR_FOLLOW_DECL,
+    format_option: FormatOption = FormatOption(),
+) -> Digest:
     """ Sort a list of files """
 
     # TODO use multi-processing to boost speed of handling a bunch of files (CPU-bound parts)
 
     async def entry() -> Digest:
-        digests = await asyncio.gather(*(absort_file(file, options) for file in files))
+        tasks = (
+            absort_file(
+                file,
+                encoding,
+                bypass_prompt,
+                verbose,
+                file_action,
+                py_version,
+                comment_strategy,
+                format_option,
+            )
+            for file in files
+        )
+        digests = await asyncio.gather(*tasks)
         return sum(digests, Digest())
 
     return asyncio.run(entry())
@@ -686,24 +728,6 @@ def check_args(options: SimpleNamespace) -> None:
 
     if options.quiet and options.verbose:
         raise ValueError("Can't specify both `--quiet` and `--verbose` options")
-
-    # First confirmation prompt
-    if options.yes:
-        ans = click.confirm(
-            "Are you sure you want to bypass all confirmation prompts? "
-            "(Dangerous, not recommended)"
-        )
-        if not ans:
-            options.yes = False
-
-    # Second confirmation prompt
-    if options.yes:
-        ans = click.confirm(
-            "Are you REALLY REALLY REALLY sure you want to bypass all confirmation prompts? "
-            "(Dangerous, not recommended)"
-        )
-        if not ans:
-            options.yes = False
 
 
 # TODO provide a programmatical interface. Check if click library provides such a functionality, to turn a CLI interface to programmatical interface.
@@ -812,6 +836,7 @@ def check_args(options: SimpleNamespace) -> None:
 @click.option(
     "-y",
     "--yes",
+    "bypass_prompt",
     is_flag=True,
     help="Bypass all confirmation prompts. Dangerous option. Not recommended.",
 )
@@ -835,21 +860,51 @@ def main(
     quiet: bool,
     verbose: bool,
     color_off: bool,
-    yes: bool,
+    bypass_prompt: bool,
 ) -> None:
     """ the CLI entry """
 
     options = SimpleNamespace(**ctx.params)
-
     check_args(options)
 
-    files = list(collect_python_files(map(Path, filepaths)))
+    # First confirmation prompt
+    if bypass_prompt:
+        ans = click.confirm(
+            "Are you sure you want to bypass all confirmation prompts? "
+            "(Dangerous, not recommended)"
+        )
+        if not ans:
+            bypass_prompt = False
 
+    # Second confirmation prompt
+    if bypass_prompt:
+        ans = click.confirm(
+            "Are you REALLY REALLY REALLY sure you want to bypass all confirmation prompts? "
+            "(Dangerous, not recommended)"
+        )
+        if not ans:
+            bypass_prompt = False
+
+    files = list(collect_python_files(map(Path, filepaths)))
     if not files:
         print("No file is found")
         return
-
     print(f"Found {len(files)} files")
+
+    format_option = FormatOption(  # type: ignore
+        no_aggressive=no_aggressive,
+        reverse=reverse,
+        no_fix_main_to_bottom=no_fix_main_to_bottom,
+    )
+
+    if display_diff:
+        file_action = FileAction.DIFF
+    elif in_place:
+        file_action = FileAction.WRITE
+    elif check:
+        file_action = FileAction.CHECK
+    else:
+        file_action = FileAction.PRINT
 
     verboseness_context_manager = silent_context() if quiet else contextlib.nullcontext()
 
@@ -859,7 +914,16 @@ def main(
 
     with verboseness_context_manager, colorness_context_manager:
 
-        digest = absort_files(files, options)
+        digest = absort_files(
+            files,
+            encoding,
+            bypass_prompt,
+            verbose,
+            file_action,
+            py_version,
+            comment_strategy,
+            format_option,
+        )
 
         display_summary(digest)
 
