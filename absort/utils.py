@@ -63,6 +63,7 @@ __all__ = [
     "identifyfunc",
     "iequal",
     "on_except_return",
+    "contains",
 ]
 
 
@@ -488,3 +489,9 @@ class on_except_return:
                 return self._return
 
         return wrapper
+
+
+def contains(
+    container: Any, elem: Any, equal: Callable[[Any, Any], bool] = operator.eq
+) -> bool:
+    return any(equal(elem, value) for value in container)

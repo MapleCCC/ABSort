@@ -1,10 +1,9 @@
 import ast
-import operator
 from pathlib import Path
-from typing import Any, Callable
 
 from absort.__main__ import NameRedefinition, absort_str
 from absort.ast_utils import ast_deep_equal
+from absort.utils import contains
 
 
 # Use third-party library hypothesmith to generate random valid Python source code, to
@@ -13,12 +12,6 @@ from absort.ast_utils import ast_deep_equal
 
 
 TEST_DATA_DIR = Path(__file__).with_name("data")
-
-
-def contains(
-    container: Any, elem: Any, equal: Callable[[Any, Any], bool] = operator.eq
-) -> bool:
-    return any(equal(elem, value) for value in container)
 
 
 def test_absort_str() -> None:
