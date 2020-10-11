@@ -113,7 +113,10 @@ def tree_edit_distance(
         rename_cost = default_rename_cost
 
     orig_rec_limit = sys.getrecursionlimit()
-    sys.setrecursionlimit(math.inf)
+    # In Python 3, integer value is in principle unbounded.
+    # However the CPython implementation and the OS platform might impose additional restrictions.
+    # We could just use sys.maxsize, which is guaranteed to be larger than any Python container size.
+    sys.setrecursionlimit(sys.maxsize)
 
     result = forest_distance([tree1], [tree2])
 
