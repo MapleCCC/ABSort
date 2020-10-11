@@ -56,6 +56,7 @@ __all__ = [
     "CommentStrategy",
     "FormatOption",
     "FileAction",
+    "NameRedefinition",
 ]
 
 
