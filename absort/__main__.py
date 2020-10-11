@@ -566,7 +566,14 @@ async def absort_file(file: Path, options: SimpleNamespace) -> Digest:
         """ Sort the source in string, including exception handling """
 
         try:
-            return absort_str(old_source, **options.__dict__)
+            format_option = FormatOption(
+                no_aggressive=options.no_aggressive,
+                reverse=options.reverse,
+                no_fix_main_to_bottom=options.no_fix_main_to_bottom,
+            )
+            return absort_str(
+                old_source, **options.__dict__, format_option=format_option
+            )
         except SyntaxError as exc:
             # if re.fullmatch(r"Missing parentheses in call to 'print'. Did you mean print(.*)\?", exc.msg):
             #     pass
