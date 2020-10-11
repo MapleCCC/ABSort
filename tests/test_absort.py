@@ -1,9 +1,7 @@
 import ast
 import operator
+from pathlib import Path
 from typing import Any, Callable
-
-from hypothesis import given, settings, HealthCheck
-from hypothesmith import from_grammar, from_node
 
 from absort.__main__ import absort_str
 from absort.ast_utils import ast_deep_equal
@@ -14,21 +12,24 @@ from absort.ast_utils import ast_deep_equal
 # The guy who use such tool to test on black library and CPython stdlib and report issues is Zac-HD (https://github.com/Zac-HD).
 
 
+TEST_DATA_DIR = Path(__file__).with_name("data")
+
+
 def contains(
     container: Any, elem: Any, equal: Callable[[Any, Any], bool] = operator.eq
 ) -> bool:
     return any(equal(elem, value) for value in container)
 
 
-@settings(suppress_health_check=[HealthCheck.too_slow])
-@given(from_grammar())
-# @given(from_node())
-def test_absort_str(source: str) -> None:
-    new_source = absort_str(source)
+def test_absort_str() -> None:
+    for test_sample in TEST_DATA_DIR.iterdir():
+        if test_sample.suffix == ".py":
+            source = test_sample.read_text(encoding="utf-8")
+            new_source = absort_str(source)
 
-    old_ast = ast.parse(source)
-    new_ast = ast.parse(new_source)
+            old_ast = ast.parse(source)
+            new_ast = ast.parse(new_source)
 
-    assert len(old_ast.body) == len(new_ast.body)
-    for stmt in old_ast.body:
-        assert contains(new_ast.body, stmt, equal=ast_deep_equal)
+            assert len(old_ast.body) == len(new_ast.body)
+            for stmt in old_ast.body:
+                assert contains(new_ast.body, stmt, equal=ast_deep_equal)
