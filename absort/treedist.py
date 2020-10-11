@@ -2,7 +2,7 @@ import math
 import sys
 from typing import Callable, List, TypeVar
 
-from .utils import constantfunc, lru_cache_with_key
+from .utils import constantfunc, lru_cache_with_key, on_except_return
 
 
 __all__ = ["tree_edit_distance"]
@@ -45,6 +45,7 @@ def tree_edit_distance(
     )
 
     @lru_cache_with_key(key=calculate_cache_key, maxsize=None)
+    @on_except_return(RecursionError, returns=0)
     def forest_distance(forest1: Forest, forest2: Forest) -> float:
 
         # Uncomment the following lines to activate debug mode

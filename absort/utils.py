@@ -20,6 +20,7 @@ from typing import (
     List,
     Optional,
     Sequence,
+    Type,
     TypeVar,
     Union,
     overload,
@@ -61,6 +62,7 @@ __all__ = [
     "constantfunc",
     "identifyfunc",
     "iequal",
+    "on_except_return",
 ]
 
 
@@ -470,3 +472,20 @@ def iequal(
         list1 = list(iterable1)
         list2 = list(iterable2)
         return len(list1) == len(list2) and all(map(equal, list1, list2))
+
+
+class on_except_return:
+    def __init__(self, exception: Type[Exception], returns: Any=None)->None:
+        self._exception = exception
+        self._return = returns
+
+    def __call__(self, func: Callable)->Callable:
+
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs)->T:
+            try:
+                return func(*args, **kwargs)
+            except self._exception:
+                return self._return
+
+        return wrapper
