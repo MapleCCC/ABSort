@@ -3,7 +3,7 @@ from typing import Callable, List, TypeVar
 from .utils import constantfunc, lru_cache_with_key
 
 
-__all__ = ["tree_distance"]
+__all__ = ["tree_edit_distance"]
 
 
 # TODO use collections.UserList to add new Forest type, instead of using Forest as a type alias of the List type
@@ -16,7 +16,7 @@ EmptyForest = []
 contains_one_tree = lambda forest: len(forest) == 1
 
 
-def tree_distance(
+def tree_edit_distance(
     tree1: Tree,
     tree2: Tree,
     children: Callable[[Tree], Forest] = None,

@@ -16,7 +16,7 @@ from typing import (
     Union,
 )
 
-from .treedist import tree_distance
+from .treedist import tree_edit_distance
 from .utils import (
     beginswith,
     cached_splitlines,
@@ -39,7 +39,7 @@ __all__ = [
     "ast_get_source_lines",
     "cached_ast_iter_child_nodes",
     "ast_iter_non_node_fields",
-    "ast_tree_distance",
+    "ast_tree_edit_distance",
     "ast_shallow_equal",
     "ast_deep_equal",
 ]
@@ -215,7 +215,7 @@ def ast_iter_non_node_fields(
             yield getattr(node, name)
 
 
-def ast_tree_distance(
+def ast_tree_edit_distance(
     node1: ast.AST,
     node2: ast.AST,
     insert_cost: Callable[[ast.AST], float] = None,
@@ -240,7 +240,7 @@ def ast_tree_distance(
 
         rename_cost = default_rename_cost
 
-    return tree_distance(
+    return tree_edit_distance(
         node1,
         node2,
         children=compose(list, ast.iter_child_nodes),
