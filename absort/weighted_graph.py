@@ -30,6 +30,9 @@ class WeightedGraph(Generic[Node]):
 
     __slots__ = ["_adjacency_list", "_weight_table"]
 
+    def add_node(self, v: Node) -> None:
+        self._adjacency_list[v]
+
     def add_edge(self, v: Node, w: Node, weight: Weight) -> None:
         if v == w:
             raise ValueError("Self loop is not supported")
@@ -59,6 +62,10 @@ class WeightedGraph(Generic[Node]):
             return self._weight_table[edge]
         except KeyError:
             raise ValueError(f"{{{v}, {w}}} is not an edge in the graph")
+
+    def clear(self) -> None:
+        self._adjacency_list.clear()
+        self._weight_table.clear()
 
     def copy(self) -> WeightedGraph:
         """

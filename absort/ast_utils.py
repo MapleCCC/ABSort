@@ -3,17 +3,7 @@ import copy
 import re
 from collections import deque
 from numbers import Number
-from typing import (
-    Deque,
-    FrozenSet,
-    Iterator,
-    List,
-    Optional,
-    Set,
-    Tuple,
-    Type,
-    Union,
-)
+from typing import Deque, FrozenSet, Iterator, List, Optional, Set, Tuple, Type, Union
 
 from .treedist import tree_edit_distance
 from .utils import (

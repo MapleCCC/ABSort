@@ -1,4 +1,3 @@
-import math
 import sys
 from typing import Callable, List, TypeVar
 
@@ -14,8 +13,8 @@ __all__ = ["tree_edit_distance"]
 
 Tree = TypeVar("Tree")
 Forest = List[Tree]
-EmptyForest = []
-contains_one_tree = lambda forest: len(forest) == 1
+EmptyForest: Forest = []
+contains_one_tree: Callable[[Forest], bool] = lambda forest: len(forest) == 1
 
 
 def tree_edit_distance(
@@ -33,6 +32,12 @@ def tree_edit_distance(
 
     Note that the rename_cost function **should** return 0 for identical nodes.
     """
+
+    def tree_size(tree: Tree) -> int:
+        return 1 + sum(map(tree_size, children(tree)))
+
+    def forest_size(forest: Forest) -> int:
+        return sum(map(tree_size, forest))
 
     def remove_rightmost_root(forest: Forest) -> Forest:
         rightmost_tree = forest[-1]

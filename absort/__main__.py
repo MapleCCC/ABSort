@@ -716,7 +716,7 @@ def display_summary(digest: Digest) -> None:
     print(", ".join(summary) + ".")
 
 
-def check_args(options: SimpleNamespace) -> None:
+def validate_args(options: SimpleNamespace) -> None:
     """ Preliminary check of the validness of the CLI argument """
 
     # FIXME use click library's builtin mechanism to specify mutually exclusive options
@@ -865,7 +865,7 @@ def main(
     """ the CLI entry """
 
     options = SimpleNamespace(**ctx.params)
-    check_args(options)
+    validate_args(options)
 
     # First confirmation prompt
     if bypass_prompt:

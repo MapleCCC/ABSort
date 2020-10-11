@@ -475,14 +475,13 @@ def iequal(
 
 
 class on_except_return:
-    def __init__(self, exception: Type[Exception], returns: Any=None)->None:
+    def __init__(self, exception: Type[Exception], returns: Any = None) -> None:
         self._exception = exception
         self._return = returns
 
-    def __call__(self, func: Callable)->Callable:
-
+    def __call__(self, func: Callable) -> Callable:
         @functools.wraps(func)
-        def wrapper(*args, **kwargs)->T:
+        def wrapper(*args, **kwargs) -> T:
             try:
                 return func(*args, **kwargs)
             except self._exception:

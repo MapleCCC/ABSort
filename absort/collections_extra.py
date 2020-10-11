@@ -1,13 +1,8 @@
 from collections import OrderedDict
 from itertools import repeat
-from typing import (
-    Iterable,
-    Iterator,
-    MutableSet,
-    TypeVar,
-    OrderedDict as OrderedDictType,
-)
-
+from typing import Iterable, Iterator, MutableSet
+from typing import OrderedDict as OrderedDictType
+from typing import TypeVar
 
 __all__ = ["OrderedSet"]
 
