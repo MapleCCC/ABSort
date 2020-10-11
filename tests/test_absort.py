@@ -3,7 +3,7 @@ import operator
 from pathlib import Path
 from typing import Any, Callable
 
-from absort.__main__ import absort_str
+from absort.__main__ import NameRedefinition, absort_str
 from absort.ast_utils import ast_deep_equal
 
 
@@ -24,12 +24,15 @@ def contains(
 def test_absort_str() -> None:
     for test_sample in TEST_DATA_DIR.iterdir():
         if test_sample.suffix == ".py":
-            source = test_sample.read_text(encoding="utf-8")
-            new_source = absort_str(source)
+            try:
+                source = test_sample.read_text(encoding="utf-8")
+                new_source = absort_str(source)
 
-            old_ast = ast.parse(source)
-            new_ast = ast.parse(new_source)
+                old_ast = ast.parse(source)
+                new_ast = ast.parse(new_source)
 
-            assert len(old_ast.body) == len(new_ast.body)
-            for stmt in old_ast.body:
-                assert contains(new_ast.body, stmt, equal=ast_deep_equal)
+                assert len(old_ast.body) == len(new_ast.body)
+                for stmt in old_ast.body:
+                    assert contains(new_ast.body, stmt, equal=ast_deep_equal)
+            except (SyntaxError, NameRedefinition):
+                pass
