@@ -1,4 +1,6 @@
-from typing import Callable, List, Tuple, TypeVar
+import math
+import sys
+from typing import Callable, List, TypeVar
 
 from .utils import constantfunc, lru_cache_with_key
 
@@ -42,11 +44,6 @@ def tree_edit_distance(
         tuple(map(id, forest2)),
     )
 
-    class NotCompleted(Exception):
-        pass
-
-    call_stack: List[Tuple[Forest, Forest]] = []
-
     @lru_cache_with_key(key=calculate_cache_key, maxsize=None)
     def forest_distance(forest1: Forest, forest2: Forest) -> float:
 
@@ -65,44 +62,16 @@ def tree_edit_distance(
 
         elif not forest1:
             new_forest2 = remove_rightmost_root(forest2)
-
-            if (
-                calculate_cache_key(forest1, new_forest2)
-                not in forest_distance.__cache__
-            ):
-                call_stack.append((forest1, forest2))
-                call_stack.append((forest1, new_forest2))
-                raise NotCompleted
-
             return forest_distance(forest1, new_forest2) + insert_cost(forest2[-1])
 
         elif not forest2:
             new_forest1 = remove_rightmost_root(forest1)
-
-            if (
-                calculate_cache_key(new_forest1, forest2)
-                not in forest_distance.__cache__
-            ):
-                call_stack.append((forest1, forest2))
-                call_stack.append((new_forest1, forest2))
-                raise NotCompleted
-
             return forest_distance(new_forest1, forest2) + delete_cost(forest1[-1])
 
         elif contains_one_tree(forest1) and contains_one_tree(forest2):
             new_forest1 = remove_rightmost_root(forest1)
             new_forest2 = remove_rightmost_root(forest2)
             candidates: List[float] = [None] * 3  # type: ignore
-
-            if (
-                calculate_cache_key(new_forest1, forest2)
-                not in forest_distance.__cache__
-            ):
-                call_stack.append((forest1, forest2))
-                call_stack.append((new_forest1, forest2))
-                call_stack.append((forest1, new_forest2))
-                call_stack.append((new_forest1, new_forest2))
-                raise NotCompleted
 
             candidates[0] = forest_distance(new_forest1, forest2) + delete_cost(
                 forest1[-1]
@@ -119,17 +88,6 @@ def tree_edit_distance(
             new_forest1 = remove_rightmost_root(forest1)
             new_forest2 = remove_rightmost_root(forest2)
             candidates: List[float] = [None] * 3  # type: ignore
-
-            if (
-                calculate_cache_key(new_forest1, forest2)
-                not in forest_distance.__cache__
-            ):
-                call_stack.append((forest1, forest2))
-                call_stack.append((new_forest1, forest2))
-                call_stack.append((forest1, new_forest2))
-                call_stack.append((forest1[:-1], forest2[:-1]))
-                call_stack.append(([forest1[-1]], [forest2[-1]]))
-                raise NotCompleted
 
             candidates[0] = forest_distance(new_forest1, forest2) + delete_cost(
                 forest1[-1]
@@ -154,12 +112,11 @@ def tree_edit_distance(
 
         rename_cost = default_rename_cost
 
-    call_stack.append(([tree1], [tree2]))
-    while True:
-        args = call_stack.pop()
-        try:
-            result = forest_distance(*args)
-            if not call_stack:
-                return result
-        except NotCompleted:
-            continue
+    orig_rec_limit = sys.getrecursionlimit()
+    sys.setrecursionlimit(math.inf)
+
+    result = forest_distance([tree1], [tree2])
+
+    sys.setrecursionlimit(orig_rec_limit)
+
+    return result
