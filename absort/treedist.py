@@ -129,9 +129,9 @@ DUMMY_LABEL = object()
 def pqgram(
     tree1: Tree,
     tree2: Tree,
-    p: int,
-    q: int,
     children: Callable[[Tree], Iterable[Tree]],
+    p: int = 2,
+    q: int = 3,
     label: Callable[[Tree], Label] = identityfunc,
 ) -> float:
     """
