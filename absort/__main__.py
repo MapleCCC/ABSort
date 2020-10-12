@@ -28,6 +28,7 @@ from .ast_utils import (
     ast_get_leading_comment_source_lines,
     ast_get_source_lines,
     ast_tree_edit_distance,
+    ast_tree_size,
 )
 from .async_utils import run_in_event_loop
 from .directed_graph import DirectedGraph
@@ -233,9 +234,13 @@ def sort_decls_by_syntax_tree_similarity(
         yield decls[0]
         return
 
+    algorithm = "ZhangShasha"
+    if any(map(lambda size: size > 50, map(ast_tree_size, decls))):
+        algorithm = "PQGram"
+
     graph: WeightedGraph[DeclarationType] = WeightedGraph()
     for decl1, decl2 in combinations(decls, 2):
-        distance = ast_tree_edit_distance(decl1, decl2)
+        distance = ast_tree_edit_distance(decl1, decl2, algorithm)
         graph.add_edge(decl1, decl2, distance)
     yield from graph.minimum_spanning_tree()
 

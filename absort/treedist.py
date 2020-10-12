@@ -12,7 +12,7 @@ from .utils import (
 )
 
 
-__all__ = ["tree_edit_distance", "pqgram"]
+__all__ = ["zhangshasha", "pqgram"]
 
 
 # TODO use collections.UserList to add new Forest type, instead of using Forest as a type alias of the List type
@@ -25,7 +25,7 @@ EmptyForest: Forest = []
 contains_one_tree: Callable[[Forest], bool] = lambda forest: len(forest) == 1
 
 
-def tree_edit_distance(
+def zhangshasha(
     tree1: Tree,
     tree2: Tree,
     children: Callable[[Tree], Iterable[Tree]],

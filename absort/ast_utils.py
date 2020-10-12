@@ -5,7 +5,7 @@ from collections import deque
 from numbers import Number
 from typing import Deque, FrozenSet, Iterator, List, Optional, Set, Tuple, Type, Union
 
-from .treedist import tree_edit_distance
+from .treedist import pqgram, zhangshasha
 from .utils import (
     beginswith,
     cached_splitlines,
@@ -32,6 +32,7 @@ __all__ = [
     "ast_tree_edit_distance",
     "ast_shallow_equal",
     "ast_deep_equal",
+    "ast_tree_size",
 ]
 
 
@@ -205,7 +206,9 @@ def ast_iter_non_node_fields(
             yield getattr(node, name)
 
 
-def ast_tree_edit_distance(node1: ast.AST, node2: ast.AST) -> float:
+def ast_tree_edit_distance(
+    node1: ast.AST, node2: ast.AST, algorithm: str = "ZhangShasha"
+) -> float:
     """
     Implementation is Zhang-Shasha's tree edit distance algorithm.
 
@@ -216,18 +219,25 @@ def ast_tree_edit_distance(node1: ast.AST, node2: ast.AST) -> float:
 
     # Note: one important thing to note here is that, ast.AST() != ast.AST().
 
-    # hopefully a sane default
-    def rename_cost(node1: ast.AST, node2: ast.AST) -> float:
-        return 1 - ast_shallow_equal(node1, node2)
+    if algorithm == "ZhangShasha":
+        # hopefully a sane default
+        def rename_cost(node1: ast.AST, node2: ast.AST) -> float:
+            return 1 - ast_shallow_equal(node1, node2)
 
-    return tree_edit_distance(
-        node1,
-        node2,
-        children=ast.iter_child_nodes,
-        insert_cost=constantfunc(1),
-        delete_cost=constantfunc(1),
-        rename_cost=rename_cost,
-    )
+        return zhangshasha(
+            node1,
+            node2,
+            children=ast.iter_child_nodes,
+            insert_cost=constantfunc(1),
+            delete_cost=constantfunc(1),
+            rename_cost=rename_cost,
+        )
+
+    elif algorithm == "PQGram":
+        return pqgram(node1, node2, children=ast.iter_child_nodes, label=type)
+
+    else:
+        raise ValueError("Invalid value for the algorithm argument")
 
 
 def ast_shallow_equal(node1: ast.AST, node2: ast.AST) -> float:
@@ -266,3 +276,7 @@ def ast_deep_equal(node1: ast.AST, node2: ast.AST) -> bool:
         equal=ast_deep_equal,
         strict=True,
     )
+
+
+def ast_tree_size(node: ast.AST) -> int:
+    return 1 + sum(map(ast_tree_size, ast.iter_child_nodes(node)))
