@@ -20,7 +20,7 @@ contains_one_tree: Callable[[Forest], bool] = lambda forest: len(forest) == 1
 def tree_edit_distance(
     tree1: Tree,
     tree2: Tree,
-    children: Callable[[Tree], Forest] = None,
+    children: Callable[[Tree], Forest],
     insert_cost: Callable[[Tree], float] = constantfunc(1),
     delete_cost: Callable[[Tree], float] = constantfunc(1),
     rename_cost: Callable[[Tree, Tree], float] = lambda x, y: int(x != y),
