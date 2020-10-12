@@ -150,16 +150,16 @@ def pqgram(
             children_count = 0
             for child in children(tree):
                 base.append(label(child))
-                index[tuple(*stem, *base)] += 1
+                index[(*stem, *base)] += 1
                 index += rec_pqgram_index(child)
                 children_count += 1
 
             if children_count:
                 for _ in range(q - 1):
                     base.append(DUMMY_LABEL)
-                    index[tuple(*stem, *base)] += 1
+                    index[(*stem, *base)] += 1
             else:
-                index[tuple(*stem, *base)] += 1
+                index[(*stem, *base)] += 1
 
             return index
 
