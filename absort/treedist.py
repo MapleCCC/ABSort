@@ -1,10 +1,12 @@
 import sys
-from typing import Callable, Iterable, List, TypeVar
+from collections import Counter, deque
+from itertools import repeat
+from typing import Callable, Deque, Iterable, List, Tuple, TypeVar
 
-from .utils import constantfunc, lru_cache_with_key, on_except_return
+from .utils import constantfunc, identityfunc, lru_cache_with_key, on_except_return
 
 
-__all__ = ["tree_edit_distance"]
+__all__ = ["tree_edit_distance", "pqgram"]
 
 
 # TODO use collections.UserList to add new Forest type, instead of using Forest as a type alias of the List type
@@ -116,3 +118,64 @@ def tree_edit_distance(
     sys.setrecursionlimit(orig_rec_limit)
 
     return result
+
+
+Label = TypeVar("Label")
+LabelTuple = Tuple[Label, ...]
+Register = Deque[Label]
+Index = Counter[LabelTuple]
+
+DUMMY_LABEL = object()
+
+
+def pqgram(
+    tree1: Tree,
+    tree2: Tree,
+    p: int,
+    q: int,
+    children: Callable[[Tree], Iterable[Tree]],
+    label: Callable[[Tree], Label] = identityfunc,
+) -> float:
+    """
+    Implementation of PQ-Gram tree distance algorithm.
+    Reference: https://dl.acm.org/doi/abs/10.1145/1670243.1670247
+
+    Additional details: the output is normalized pqgram distance, i.e. between 0 and 1.
+    """
+
+    def pqgram_index(tree: Tree) -> Index:
+        def rec_pqgram_index(tree: Tree) -> Index:
+            base: Register = deque(repeat(DUMMY_LABEL, q), maxlen=q)
+            stem.append(label(tree))
+            index: Index = Counter()
+
+            children_count = 0
+            for child in children(tree):
+                base.append(label(child))
+                index[tuple(*stem, *base)] += 1
+                index += rec_pqgram_index(child)
+                children_count += 1
+
+            if children_count:
+                for _ in range(q - 1):
+                    base.append(DUMMY_LABEL)
+                    index[tuple(*stem, *base)] += 1
+            else:
+                index[tuple(*stem, *base)] += 1
+
+            return index
+
+        stem: Register = deque(repeat(DUMMY_LABEL, p), maxlen=p)
+        return rec_pqgram_index(tree)
+
+    assert p > 0 and q > 0
+
+    index1 = pqgram_index(tree1)
+    index2 = pqgram_index(tree2)
+
+    symmetric_diff = sum(((index1 - index2) + (index2 - index1)).values())
+    total = sum((index1 | index2).values())
+
+    if not total:
+        return 0
+    return symmetric_diff / total
