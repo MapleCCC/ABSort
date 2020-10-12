@@ -21,9 +21,9 @@ def tree_edit_distance(
     tree1: Tree,
     tree2: Tree,
     children: Callable[[Tree], Forest] = None,
-    insert_cost: Callable[[Tree], float] = None,
-    delete_cost: Callable[[Tree], float] = None,
-    rename_cost: Callable[[Tree, Tree], float] = None,
+    insert_cost: Callable[[Tree], float] = constantfunc(1),
+    delete_cost: Callable[[Tree], float] = constantfunc(1),
+    rename_cost: Callable[[Tree, Tree], float] = lambda x, y: int(x != y),
 ) -> float:
     """
     Implementation is Zhang-Shasha's tree edit distance algorithm.
@@ -105,18 +105,6 @@ def tree_edit_distance(
                 forest1[:-1], forest2[:-1]
             ) + forest_distance([forest1[-1]], [forest2[-1]])
             return min(candidates)
-
-    if insert_cost is None:
-        insert_cost = constantfunc(1)
-    if delete_cost is None:
-        delete_cost = constantfunc(1)
-    if rename_cost is None:
-
-        # hopefully a sane default
-        def default_rename_cost(tree1: Tree, tree2: Tree) -> float:
-            return int(tree1 != tree2)
-
-        rename_cost = default_rename_cost
 
     orig_rec_limit = sys.getrecursionlimit()
     # 2147483647 is the largest integer that sys.setrecursionlimit() accepts in my development environment.
