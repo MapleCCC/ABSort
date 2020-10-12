@@ -115,7 +115,9 @@ def tree_edit_distance(
             return min(candidates)
 
     with larger_recursion_limit():
-        return forest_distance([tree1], [tree2])
+        result = forest_distance([tree1], [tree2])
+
+    return result
 
 
 Label = TypeVar("Label")
