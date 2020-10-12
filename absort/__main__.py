@@ -384,12 +384,14 @@ def absort_str(
     # doesn't parse the source string "#\x0c0" as containing an expression.
     new_source_lines = strict_splitlines(old_source)
 
+    offset = 0
     for lineno, end_lineno, decls in blocks:
         sorted_decls = list(absort_decls(decls, py_version, format_option))
         source_lines = get_related_source_lines_of_block(
             old_source, sorted_decls, comment_strategy, format_option
         )
-        new_source_lines[lineno - 1 : end_lineno] = source_lines
+        new_source_lines[lineno - 1 + offset : end_lineno + offset] = source_lines
+        offset += len(source_lines) - (end_lineno - lineno + 1)
 
     new_source = "\n".join(new_source_lines) + "\n"
 
