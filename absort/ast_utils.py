@@ -4,7 +4,6 @@ import re
 from collections import deque
 from numbers import Number
 from typing import (
-    Callable,
     Deque,
     FrozenSet,
     Iterator,
@@ -21,6 +20,7 @@ from .utils import (
     beginswith,
     cached_splitlines,
     compose,
+    constantfunc,
     hamming_distance,
     identityfunc,
     iequal,
@@ -215,13 +215,7 @@ def ast_iter_non_node_fields(
             yield getattr(node, name)
 
 
-def ast_tree_edit_distance(
-    node1: ast.AST,
-    node2: ast.AST,
-    insert_cost: Callable[[ast.AST], float] = None,
-    delete_cost: Callable[[ast.AST], float] = None,
-    rename_cost: Callable[[ast.AST, ast.AST], float] = None,
-) -> float:
+def ast_tree_edit_distance(node1: ast.AST, node2: ast.AST) -> float:
     """
     Implementation is Zhang-Shasha's tree edit distance algorithm.
 
@@ -232,20 +226,16 @@ def ast_tree_edit_distance(
 
     # Note: one important thing to note here is that, ast.AST() != ast.AST().
 
-    if rename_cost is None:
-
-        # hopefully a sane default
-        def default_rename_cost(node1: ast.AST, node2: ast.AST) -> float:
-            return 1 - ast_shallow_equal(node1, node2)
-
-        rename_cost = default_rename_cost
+    # hopefully a sane default
+    def rename_cost(node1: ast.AST, node2: ast.AST) -> float:
+        return 1 - ast_shallow_equal(node1, node2)
 
     return tree_edit_distance(
         node1,
         node2,
         children=compose(list, ast.iter_child_nodes),
-        insert_cost=insert_cost,
-        delete_cost=delete_cost,
+        insert_cost=constantfunc(1),
+        delete_cost=constantfunc(1),
         rename_cost=rename_cost,
     )
 
