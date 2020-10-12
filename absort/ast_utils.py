@@ -223,7 +223,7 @@ def ast_tree_edit_distance(node1: ast.AST, node2: ast.AST) -> float:
     return tree_edit_distance(
         node1,
         node2,
-        children=compose(list, ast.iter_child_nodes),
+        children=ast.iter_child_nodes,
         insert_cost=constantfunc(1),
         delete_cost=constantfunc(1),
         rename_cost=rename_cost,

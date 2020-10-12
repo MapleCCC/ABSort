@@ -1,5 +1,5 @@
 import sys
-from typing import Callable, List, TypeVar
+from typing import Callable, Iterable, List, TypeVar
 
 from .utils import constantfunc, lru_cache_with_key, on_except_return
 
@@ -20,7 +20,7 @@ contains_one_tree: Callable[[Forest], bool] = lambda forest: len(forest) == 1
 def tree_edit_distance(
     tree1: Tree,
     tree2: Tree,
-    children: Callable[[Tree], Forest],
+    children: Callable[[Tree], Iterable[Tree]],
     insert_cost: Callable[[Tree], float] = constantfunc(1),
     delete_cost: Callable[[Tree], float] = constantfunc(1),
     rename_cost: Callable[[Tree, Tree], float] = lambda x, y: int(x != y),
@@ -41,7 +41,7 @@ def tree_edit_distance(
 
     def remove_rightmost_root(forest: Forest) -> Forest:
         rightmost_tree = forest[-1]
-        rightmost_tree_children = children(rightmost_tree)
+        rightmost_tree_children = list(children(rightmost_tree))
         return forest[:-1] + rightmost_tree_children
 
     calculate_cache_key = lambda forest1, forest2: (
