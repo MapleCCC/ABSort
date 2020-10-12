@@ -3,7 +3,13 @@ from collections import Counter, deque
 from itertools import repeat
 from typing import Callable, Deque, Iterable, List, Tuple, TypeVar
 
-from .utils import constantfunc, identityfunc, lru_cache_with_key, on_except_return
+from .utils import (
+    constantfunc,
+    identityfunc,
+    larger_recursion_limit,
+    lru_cache_with_key,
+    on_except_return,
+)
 
 
 __all__ = ["tree_edit_distance", "pqgram"]
@@ -108,16 +114,8 @@ def tree_edit_distance(
             ) + forest_distance([forest1[-1]], [forest2[-1]])
             return min(candidates)
 
-    orig_rec_limit = sys.getrecursionlimit()
-    # 2147483647 is the largest integer that sys.setrecursionlimit() accepts in my development environment.
-    # FIXME Does the Python language specification say anything about the largest number acceptable as argument to sys.setrecursionlimit()?
-    sys.setrecursionlimit(2147483647)
-
-    result = forest_distance([tree1], [tree2])
-
-    sys.setrecursionlimit(orig_rec_limit)
-
-    return result
+    with larger_recursion_limit():
+        return forest_distance([tree1], [tree2])
 
 
 Label = TypeVar("Label")

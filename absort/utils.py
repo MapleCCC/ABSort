@@ -64,6 +64,7 @@ __all__ = [
     "iequal",
     "on_except_return",
     "contains",
+    "larger_recursion_limit",
 ]
 
 
@@ -495,3 +496,17 @@ def contains(
     container: Any, elem: Any, equal: Callable[[Any, Any], bool] = operator.eq
 ) -> bool:
     return any(equal(elem, value) for value in container)
+
+
+@contextlib.contextmanager
+def larger_recursion_limit() -> Iterator:
+    orig_rec_limit = sys.getrecursionlimit()
+
+    # 2147483647 is the largest integer that sys.setrecursionlimit() accepts in my development environment.
+    # FIXME Does the Python language specification say anything about the largest number acceptable as argument to sys.setrecursionlimit()?
+    sys.setrecursionlimit(2147483647)
+
+    try:
+        yield
+    finally:
+        sys.setrecursionlimit(orig_rec_limit)
