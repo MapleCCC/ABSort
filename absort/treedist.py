@@ -1,7 +1,7 @@
 import sys
 from collections import Counter, deque
 from itertools import repeat
-from typing import Callable, Deque, Iterable, List, Tuple, TypeVar
+from typing import Callable, Counter as CounterType, Deque, Iterable, List, Tuple, TypeVar
 
 from .utils import (
     constantfunc,
@@ -123,7 +123,7 @@ def zhangshasha(
 Label = TypeVar("Label")
 LabelTuple = Tuple[Label, ...]
 Register = Deque[Label]
-Index = Counter[LabelTuple]
+Index = CounterType[LabelTuple]
 
 DUMMY_LABEL = object()
 
