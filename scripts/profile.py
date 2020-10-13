@@ -7,8 +7,6 @@ from shutil import copy2
 from subprocess import CalledProcessError
 from tempfile import TemporaryDirectory
 
-# TODO remove the astor dependency after the ast.unparse() land on Python 3.9
-import astor
 
 ISORT_MAIN_FILEPATH = "D:/Program Files/Python39/Lib/site-packages/isort/main.py"
 ISORT_CODE_DIR = "D:/Program Files/Python39/Lib/site-packages/isort"
@@ -63,7 +61,7 @@ def preprocess(p: Path) -> None:
 
     new_tree = ast.fix_missing_locations(new_tree)
 
-    new_content = astor.to_source(new_tree)
+    new_content = ast.unparse(new_tree)
 
     p.write_text(new_content, encoding="utf-8")
 
