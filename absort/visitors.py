@@ -93,11 +93,8 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
 
         self._namespaces.append({})
 
-        if self._py_version >= (3, 9):
-            self._visit(node.args)
-        else:
-            for name in retrieve_names_from_args(node.args):
-                self._namespaces[-1][name] = BogusNode()
+        for name in retrieve_names_from_args(node.args):
+            self._namespaces[-1][name] = BogusNode()
 
         self._visit(node.body)
 
@@ -113,11 +110,8 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
 
         self._namespaces.append({})
 
-        if self._py_version >= (3, 9):
-            self._visit(node.args)
-        else:
-            for name in retrieve_names_from_args(node.args):
-                self._namespaces[-1][name] = BogusNode()
+        for name in retrieve_names_from_args(node.args):
+            self._namespaces[-1][name] = BogusNode()
 
         self._visit(node.body)
 
