@@ -2,21 +2,26 @@ from __future__ import annotations
 
 import math
 from collections.abc import Iterator
-from typing import Any, Optional
+from typing import Generic, Optional, TypeVar
 
 __all__ = ["LFU"]
+
+
+T = TypeVar("T")
+KT = TypeVar("KT")
+VT = TypeVar("VT")
 
 
 # A singleton object to denote an element with maximum priority in PriorityQueue
 max_priority_sentinel = object()
 
 
-class PriorityQueue:
+class PriorityQueue(Generic[T]):
     """ A min-heap """
 
     def __init__(self) -> None:
-        self._storage: list = []
-        self._priority_table: dict[Any, int] = dict()
+        self._storage: list[T] = []
+        self._priority_table: dict[T, int] = dict()
         self._priority_table[max_priority_sentinel] = math.inf  # type: ignore
 
     __slots__ = ("_storage", "_priority_table")
@@ -25,7 +30,7 @@ class PriorityQueue:
     def size(self) -> int:
         return len(self._storage)
 
-    def increment(self, elem: Any) -> None:
+    def increment(self, elem: T) -> None:
         if elem in self._priority_table:
             self._priority_table[elem] += 1
             index = self._storage.index(elem)
@@ -80,7 +85,7 @@ class PriorityQueue:
                 self._storage[index] = right
                 self._down(right_idx)
 
-    def pop(self) -> Any:
+    def pop(self) -> T:
         if self.size == 0:
             raise IndexError("pop from empty PriorityQueue")
 
@@ -93,7 +98,7 @@ class PriorityQueue:
             self._down(0)
         return elem
 
-    def top(self) -> Any:
+    def top(self) -> T:
         if self.size == 0:
             raise IndexError("empty PriorityQueur has no top")
 
@@ -104,19 +109,19 @@ class PriorityQueue:
         self._priority_table.clear()
         self._priority_table[max_priority_sentinel] = math.inf  # type: ignore
 
-    def copy(self) -> PriorityQueue:
-        new = PriorityQueue()
+    def copy(self) -> PriorityQueue[T]:
+        new: PriorityQueue[T] = PriorityQueue()
         new._storage = self._storage.copy()
         new._priority_table = self._priority_table.copy()
         return new
 
-    def __iter__(self) -> Iterator:
+    def __iter__(self) -> Iterator[T]:
         temp = self.copy()
         while temp.size:
             yield temp.pop()
 
 
-class LFU:
+class LFU(Generic[KT, VT]):
     """ A lightweight and efficient data structure that implements the LFU mechanism. """
 
     def __init__(self, maxsize: Optional[int] = 128) -> None:
@@ -126,8 +131,8 @@ class LFU:
             raise ValueError("maxsize shoule be positive number")
         self._maxsize: int = maxsize  # type: ignore
 
-        self._storage: dict = dict()
-        self._frequency: PriorityQueue = PriorityQueue()
+        self._storage: dict[KT, VT] = dict()
+        self._frequency: PriorityQueue[KT] = PriorityQueue()
 
     __slots__ = ("_maxsize", "_storage", "_frequency")
 
@@ -144,7 +149,7 @@ class LFU:
 
     __repr__ = __str__
 
-    def __setitem__(self, key: Any, value: Any) -> None:
+    def __setitem__(self, key: KT, value: VT) -> None:
         self._frequency.increment(key)
         self._storage[key] = value
 
@@ -152,13 +157,13 @@ class LFU:
             evicted = self._frequency.pop()
             del self._storage[evicted]
 
-    def __getitem__(self, key: Any) -> Any:
+    def __getitem__(self, key: KT) -> VT:
         try:
             return self._storage[key]
         except KeyError:
             raise KeyError(f"{key} not in LFU")
 
-    def __contains__(self, key: Any) -> bool:
+    def __contains__(self, key: KT) -> bool:
         return key in self._storage
 
     def clear(self) -> None:

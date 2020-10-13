@@ -1,12 +1,16 @@
 from __future__ import annotations
 
 import math
-from typing import Any, Optional
+from typing import Generic, Optional, TypeVar
 
 from .profile_tools import add_profile_decorator_to_class_methods
 
 
 __all__ = ["LRU"]
+
+
+KT = TypeVar("KT")
+VT = TypeVar("VT")
 
 
 MAXIMUM_RECENCY_LIST_SIZE = 1000
@@ -28,7 +32,7 @@ _BOGUS_CELL = BogusCell()
 
 
 @add_profile_decorator_to_class_methods
-class LRU:
+class LRU(Generic[KT, VT]):
     """ An lightweight and efficient data structure that implements the LRU mechanims """
 
     def __init__(self, maxsize: Optional[int] = 128) -> None:
@@ -36,10 +40,11 @@ class LRU:
             maxsize = math.inf  # type: ignore
         if maxsize <= 0:
             raise ValueError("maxsize should be positive integer")
+
         self._maxsize: int = maxsize  # type: ignore
-        self._storage: dict = dict()
-        self._recency: list = list()
-        self._indexer: dict[Any, int] = dict()
+        self._storage: dict[KT, VT] = dict()
+        self._recency: list[KT] = list()
+        self._indexer: dict[KT, int] = dict()
         self._offset: int = 0
 
     __slots__ = ("_maxsize", "_storage", "_recency", "_indexer", "_offset")
@@ -59,7 +64,7 @@ class LRU:
 
     __repr__ = __str__
 
-    def __setitem__(self, key: Any, value: Any) -> None:
+    def __setitem__(self, key: KT, value: VT) -> None:
         if key in self._indexer:
             index = self._indexer[key]
             self._recency[index] = _BOGUS_CELL
@@ -82,10 +87,10 @@ class LRU:
         if len(self._recency) > MAXIMUM_RECENCY_LIST_SIZE:
             self._reconstruct()
 
-    def __contains__(self, key: Any) -> bool:
+    def __contains__(self, key: KT) -> bool:
         return key in self._storage
 
-    def __getitem__(self, key: Any) -> Any:
+    def __getitem__(self, key: KT) -> VT:
         try:
             return self._storage[key]
         except KeyError:
