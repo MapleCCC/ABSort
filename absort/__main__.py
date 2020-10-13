@@ -431,14 +431,14 @@ def get_related_source_lines_of_block(
             # A heuristic. If only whitespaces are present, compress to two blank lines.
             # Because it's visually bad to have zero or too many blank lines between
             # two declarations. So we explicitly add it. Two blank lines between
-            # declarations are black style (https://github.com/psf/black.)
+            # declarations is PEP8 style (https://pep8.org/#blank-lines)
             source_lines += "\n\n".splitlines()
 
         elif related_source_lines[0].strip():
 
             # A heuristic. It's visually bad to have no blank lines
             # between two declarations. So we explicitly add it. Two blank lines between
-            # declarations are black style (https://github.com/psf/black.)
+            # declarations is PEP8 style (https://pep8.org/#blank-lines)
             source_lines += "\n\n".splitlines() + related_source_lines
 
         else:
