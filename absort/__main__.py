@@ -235,13 +235,9 @@ def sort_decls_by_syntax_tree_similarity(
         yield decls[0]
         return
 
-    algorithm = "ZhangShasha"
-    if any(map(lambda size: size > 50, map(ast_tree_size, decls))):
-        algorithm = "PQGram"
-
     graph: WeightedGraph[DeclarationType] = WeightedGraph()
     for decl1, decl2 in combinations(decls, 2):
-        distance = ast_tree_edit_distance(decl1, decl2, algorithm)
+        distance = ast_tree_edit_distance(decl1, decl2, algorithm="PQGram")
         graph.add_edge(decl1, decl2, distance)
     yield from graph.minimum_spanning_tree()
 
