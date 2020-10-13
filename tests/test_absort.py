@@ -60,5 +60,5 @@ def test_absort_str() -> None:
             assert len(old_ast.body) == len(new_ast.body)
             for stmt in old_ast.body:
                 assert contains(new_ast.body, stmt, equal=ast_deep_equal)
-        except (SyntaxError, NameRedefinition):
+        except (SyntaxError, NameRedefinition, UnicodeDecodeError):
             pass
