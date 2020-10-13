@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 import shutil
+from collections.abc import AsyncIterator
 from os import stat_result
 from pathlib import Path as SyncPath
-from typing import AsyncIterator, Type, Union
+from typing import Union
 
 import aiofiles
 
@@ -50,11 +51,11 @@ class AsyncPath:
             yield AsyncPath(p)
 
     @classmethod
-    async def home(cls: Type) -> AsyncPath:
+    async def home(cls: type) -> AsyncPath:
         return AsyncPath(await run_async(SyncPath.home))
 
     @classmethod
-    def sync_home(cls: Type) -> AsyncPath:
+    def sync_home(cls: type) -> AsyncPath:
         return AsyncPath(SyncPath.home())
 
     def __truediv__(self, other: Union[str, SyncPath]) -> AsyncPath:

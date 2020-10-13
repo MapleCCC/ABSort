@@ -1,14 +1,12 @@
-from typing import (
-    Any,
+from collections.abc import (
     AsyncGenerator,
     AsyncIterator,
     Callable,
     Coroutine,
     Generator,
     Iterator,
-    TypeVar,
-    overload,
 )
+from typing import Any, TypeVar, overload
 
 T = TypeVar("T")
 @overload

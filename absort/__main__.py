@@ -8,12 +8,13 @@ import contextlib
 import re
 import sys
 from collections import Counter
+from collections.abc import AsyncIterator, Iterable, Iterator
 from datetime import datetime
 from enum import Enum
 from itertools import combinations
 from operator import itemgetter
 from types import SimpleNamespace
-from typing import Any, AsyncIterator, Iterable, Iterator, List, Set, Tuple
+from typing import Any
 
 import attr
 import cchardet
@@ -119,7 +120,7 @@ CACHE_MAX_SIZE = 400000  # unit is byte
 # Types
 #
 
-PyVersion = Tuple[int, int]
+PyVersion = tuple[int, int]
 
 #
 # Global Variables
@@ -192,7 +193,7 @@ class PyVersionParamType(click.ParamType):
             )
 
 
-def get_dependency_of_decl(decl: DeclarationType, py_version: PyVersion) -> Set[str]:
+def get_dependency_of_decl(decl: DeclarationType, py_version: PyVersion) -> set[str]:
     """ Calculate the dependencies (as set of symbols) of the declaration """
 
     temp_module = ast.Module(body=[decl], type_ignores=[])
@@ -201,7 +202,7 @@ def get_dependency_of_decl(decl: DeclarationType, py_version: PyVersion) -> Set[
 
 
 def generate_dependency_graph(
-    decls: List[DeclarationType], py_version: PyVersion
+    decls: list[DeclarationType], py_version: PyVersion
 ) -> DirectedGraph[str]:
     """ Generate a dependency graph from a continguous block of declarations """
 
@@ -228,7 +229,7 @@ def generate_dependency_graph(
 
 
 def sort_decls_by_syntax_tree_similarity(
-    decls: List[DeclarationType],
+    decls: list[DeclarationType],
 ) -> Iterator[DeclarationType]:
     if len(decls) == 1:
         yield decls[0]
@@ -247,11 +248,11 @@ def sort_decls_by_syntax_tree_similarity(
 
 @profile  # type: ignore
 def absort_decls(
-    decls: List[DeclarationType], py_version: PyVersion, format_option: FormatOption
+    decls: list[DeclarationType], py_version: PyVersion, format_option: FormatOption
 ) -> Iterator[DeclarationType]:
     """ Sort a continguous block of declarations """
 
-    def same_abstract_level_sorter(names: List[str]) -> List[str]:
+    def same_abstract_level_sorter(names: list[str]) -> list[str]:
         """ Specify how to sort declarations within the same abstract level """
 
         # Currently sort by retaining their original relative order, to reduce diff size.
@@ -307,7 +308,7 @@ def absort_decls(
 @profile  # type: ignore
 def get_related_source_lines_of_decl(
     source: str, node: ast.AST, comment_strategy: CommentStrategy
-) -> List[str]:
+) -> list[str]:
     """ Retrieve source lines corresponding to the AST node, from the source """
 
     source_lines = []
@@ -327,8 +328,8 @@ def get_related_source_lines_of_decl(
 
 
 def find_continguous_decls(
-    stmts: List[ast.stmt],
-) -> Iterator[Tuple[int, int, List[DeclarationType]]]:
+    stmts: list[ast.stmt],
+) -> Iterator[tuple[int, int, list[DeclarationType]]]:
     """ Yield blocks of continguous declarations """
 
     # WARNING: lineno and end_lineno are 1-indexed
@@ -341,7 +342,7 @@ def find_continguous_decls(
     tail_sentinel.lineno = tail_sentinel.end_lineno = stmts[-1].end_lineno + 1
     stmts.append(tail_sentinel)
 
-    buffer: List[DeclarationType] = []
+    buffer: list[DeclarationType] = []
     last_nondecl_stmt = head_sentinel
     lineno: int = 0
     end_lineno: int = 0
@@ -368,7 +369,7 @@ def absort_str(
 ) -> str:
     """ Sort the source code in string """
 
-    def preliminary_sanity_check(top_level_stmts: List[ast.stmt]) -> None:
+    def preliminary_sanity_check(top_level_stmts: list[ast.stmt]) -> None:
         # TODO add more sanity checks
 
         decls = [stmt for stmt in top_level_stmts if isinstance(stmt, Declaration)]
@@ -409,10 +410,10 @@ def absort_str(
 
 def get_related_source_lines_of_block(
     source: str,
-    decls: List[DeclarationType],
+    decls: list[DeclarationType],
     comment_strategy: CommentStrategy,
     format_option: FormatOption,
-) -> List[str]:
+) -> list[str]:
     """ Retrieve source lines corresponding to the block of continguous declarations, from source """
 
     source_lines = []
@@ -507,7 +508,7 @@ async def shrink_cache() -> None:
 
     backup_filename_pattern = r".*\.(?P<timestamp>\d{14})\.backup"
 
-    files: List[Tuple[str, Path]] = []
+    files: list[tuple[str, Path]] = []
     async for f in CACHE_DIR.iterdir():
         if m := re.fullmatch(backup_filename_pattern, f.name):
             timestamp = m.group("timestamp")
@@ -677,7 +678,7 @@ async def absort_file(
 
 
 def absort_files(
-    files: List[Path],
+    files: list[Path],
     encoding: str = "utf-8",
     bypass_prompt: bool = False,
     verbose: bool = False,
@@ -760,7 +761,7 @@ def validate_args(options: SimpleNamespace) -> None:
     #
     # FIXME what's the semantic to specify allow_dash=True for click.Path when value is a directory?
     # FIXME what's the semantic to specify readable=True for click.Path when value is a directory?
-    # TODO use callback to transform filepaths from Tuple[str] to Tuple[Path]
+    # TODO use callback to transform filepaths from tuple[str] to tuple[Path]
     type=click.Path(
         exists=True, file_okay=True, dir_okay=True, readable=True, allow_dash=True
     ),
@@ -855,7 +856,7 @@ def validate_args(options: SimpleNamespace) -> None:
 @profile  # type: ignore
 def main(
     ctx: click.Context,
-    filepaths: Tuple[str, ...],
+    filepaths: tuple[str, ...],
     check: bool,
     display_diff: bool,
     in_place: bool,

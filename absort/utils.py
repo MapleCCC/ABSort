@@ -5,26 +5,12 @@ import itertools
 import operator
 import os
 import sys
-import typing
 from collections import OrderedDict
+from collections.abc import Callable, Hashable, Iterable, Iterator, Sequence
 from functools import partial
 from itertools import zip_longest
 from types import SimpleNamespace
-from typing import (
-    IO,
-    Any,
-    Callable,
-    Hashable,
-    Iterable,
-    Iterator,
-    List,
-    Optional,
-    Sequence,
-    Type,
-    TypeVar,
-    Union,
-    overload,
-)
+from typing import IO, Any, Optional, TypeVar, Union, overload
 
 import attr
 from colorama import Fore, Style
@@ -87,11 +73,11 @@ def ireverse(iterable: Iterable) -> Iterator:
 
 
 @overload
-def xreverse(iterable: Iterable[T]) -> List[T]:
+def xreverse(iterable: Iterable[T]) -> list[T]:
     ...
 
 
-def xreverse(iterable: Iterable) -> List:
+def xreverse(iterable: Iterable) -> list:
     """
     Similar to the builtin function reversed(), except accept iterable objects as input,
     and return non-lazy result
@@ -137,7 +123,7 @@ def bright_yellow(s: str) -> str:
 
 
 def colored_unified_diff(
-    a: List[str], b: List[str], *args: Any, **kwargs: Any
+    a: list[str], b: list[str], *args: Any, **kwargs: Any
 ) -> Iterator[str]:
     """ Return unified diff view between a and b, with color """
 
@@ -157,7 +143,7 @@ def colored_unified_diff(
 
 
 @functools.lru_cache(maxsize=None)
-def cached_splitlines(s: str) -> List[str]:
+def cached_splitlines(s: str) -> list[str]:
     """ A cached version of the `str.splitlines` method """
     return s.splitlines()
 
@@ -285,11 +271,11 @@ class Logger:
 
 
 @overload
-def concat(lists: Iterable[List[T]]) -> List[T]:
+def concat(lists: Iterable[list[T]]) -> list[T]:
     ...
 
 
-def concat(lists: Iterable[List]) -> List:
+def concat(lists: Iterable[list]) -> list:
     """ Concatenate multiple lists into one list """
     return list(itertools.chain.from_iterable(lists))
 
@@ -313,7 +299,7 @@ class compose:
         return self._fn1(self._fn2(*args, **kwargs))
 
 
-def whitespace_lines(lines: List[str]) -> bool:
+def whitespace_lines(lines: list[str]) -> bool:
     """ Return whether lines are all whitespaces """
     return all(not line.strip() for line in lines)
 
@@ -327,7 +313,7 @@ class dispatch:
     """
 
     def __init__(self, base_func: Callable) -> None:
-        self._regsitry: typing.OrderedDict[Predicate, Callable]
+        self._regsitry: OrderedDict[Predicate, Callable]
         self._registry = OrderedDict()
 
         self._base_func = base_func
@@ -428,7 +414,7 @@ def hamming_distance(
 
 
 # TODO add `keepends` argument
-def strict_splitlines(s: str) -> List[str]:
+def strict_splitlines(s: str) -> list[str]:
     """
     Similar to the str.splilines() function, except that the line boundaries are NOT a
     superset of universal newlines.
@@ -477,7 +463,7 @@ def iequal(
 
 
 class on_except_return:
-    def __init__(self, exception: Type[Exception], returns: Any = None) -> None:
+    def __init__(self, exception: type[Exception], returns: Any = None) -> None:
         self._exception = exception
         self._return = returns
 

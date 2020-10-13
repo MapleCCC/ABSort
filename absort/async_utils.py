@@ -1,16 +1,9 @@
 import asyncio
 import functools
 import inspect
+from collections.abc import AsyncGenerator, Callable, Coroutine, Generator
 from functools import partial
-from typing import (
-    Any,
-    AsyncGenerator,
-    Callable,
-    Coroutine,
-    Generator,
-    NoReturn,
-    TypeVar,
-)
+from typing import Any, NoReturn, TypeVar
 
 from .utils import dispatch
 

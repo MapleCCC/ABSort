@@ -1,5 +1,6 @@
 import ast
-from typing import Dict, List, Optional, Sequence, Set, Tuple, Union
+from collections.abc import Sequence
+from typing import Optional, Union
 
 from .profile_tools import add_profile_decorator_to_class_methods
 from .utils import identityfunc
@@ -15,8 +16,8 @@ except NameError:
     profile = identityfunc
 
 
-def retrieve_names_from_args(args: ast.arguments) -> Set[str]:
-    names: Set[str] = set()
+def retrieve_names_from_args(args: ast.arguments) -> set[str]:
+    names: set[str] = set()
     names.update(arg.arg for arg in args.posonlyargs)
     names.update(arg.arg for arg in args.args)
     names.update(arg.arg for arg in args.kwonlyargs)
@@ -44,10 +45,10 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
     ```
     """
 
-    def __init__(self, py_version: Tuple[int, int]) -> None:
-        self._undefined_vars: Set[str] = set()
-        self._namespaces: List[Dict[str, ast.AST]] = []
-        self._py_version: Tuple[int, int] = py_version
+    def __init__(self, py_version: tuple[int, int]) -> None:
+        self._undefined_vars: set[str] = set()
+        self._namespaces: list[dict[str, ast.AST]] = []
+        self._py_version: tuple[int, int] = py_version
 
     __slots__ = ("_undefined_vars", "_namespaces", "_py_version")
 
@@ -57,7 +58,7 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
                 return namespace[name]
         return None
 
-    def visit(self, node: ast.AST) -> Set[str]:
+    def visit(self, node: ast.AST) -> set[str]:
         super().visit(node)
         return self._undefined_vars
 

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import math
-from typing import Any, Dict, List, Optional, Type
+from typing import Any, Optional
 
 from .profile_tools import add_profile_decorator_to_class_methods
 
@@ -17,7 +17,7 @@ class BogusCell:
 
     _singleton = None
 
-    def __new__(cls: Type[BogusCell]) -> BogusCell:
+    def __new__(cls: type[BogusCell]) -> BogusCell:
         if cls._singleton is None:
             cls._singleton = object.__new__(cls)
         return cls._singleton
@@ -37,9 +37,9 @@ class LRU:
         if maxsize <= 0:
             raise ValueError("maxsize should be positive integer")
         self._maxsize: int = maxsize  # type: ignore
-        self._storage: Dict = dict()
-        self._recency: List = list()
-        self._indexer: Dict[Any, int] = dict()
+        self._storage: dict = dict()
+        self._recency: list = list()
+        self._indexer: dict[Any, int] = dict()
         self._offset: int = 0
 
     __slots__ = ("_maxsize", "_storage", "_recency", "_indexer", "_offset")

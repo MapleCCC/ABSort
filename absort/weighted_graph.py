@@ -2,8 +2,9 @@ from __future__ import annotations
 
 import pickle
 from collections import defaultdict
+from collections.abc import Iterator
 from hashlib import md5
-from typing import DefaultDict, Dict, FrozenSet, Generic, Iterator, Set, TypeVar
+from typing import Generic, TypeVar
 
 from .collections_extra import OrderedSet
 
@@ -18,15 +19,15 @@ __all__ = ["WeightedGraph"]
 # TODO: specify that Node type has to be hashable (constrained by current implementation,
 # though we may consider to rewrite the implementation to waive the constraint in the future)
 Node = TypeVar("Node")
-Edge = FrozenSet[Node]
+Edge = frozenset[Node]
 Weight = float
-AdjacencyList = DefaultDict[Node, Set[Node]]
+AdjacencyList = defaultdict[Node, set[Node]]
 
 
 class WeightedGraph(Generic[Node]):
     def __init__(self) -> None:
         self._adjacency_list: AdjacencyList = defaultdict(set)
-        self._weight_table: Dict[Edge, Weight] = {}
+        self._weight_table: dict[Edge, Weight] = {}
 
     __slots__ = ["_adjacency_list", "_weight_table"]
 

@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 import math
-from typing import Any, Dict, Iterator, List, Optional
+from collections.abc import Iterator
+from typing import Any, Optional
 
 __all__ = ["LFU"]
 
@@ -14,8 +15,8 @@ class PriorityQueue:
     """ A min-heap """
 
     def __init__(self) -> None:
-        self._storage: List = []
-        self._priority_table: Dict[Any, int] = dict()
+        self._storage: list = []
+        self._priority_table: dict[Any, int] = dict()
         self._priority_table[max_priority_sentinel] = math.inf  # type: ignore
 
     __slots__ = ("_storage", "_priority_table")
@@ -125,7 +126,7 @@ class LFU:
             raise ValueError("maxsize shoule be positive number")
         self._maxsize: int = maxsize  # type: ignore
 
-        self._storage: Dict = dict()
+        self._storage: dict = dict()
         self._frequency: PriorityQueue = PriorityQueue()
 
     __slots__ = ("_maxsize", "_storage", "_frequency")

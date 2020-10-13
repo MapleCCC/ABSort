@@ -2,8 +2,9 @@ import ast
 import copy
 import re
 from collections import deque
+from collections.abc import Iterator
 from numbers import Number
-from typing import Deque, FrozenSet, Iterator, List, Optional, Set, Tuple, Type, Union
+from typing import Optional, Union
 
 from .treedist import pqgram, zhangshasha
 from .utils import (
@@ -91,12 +92,12 @@ def ast_strip_location_info(node: ast.AST, in_place: bool = True) -> Optional[as
 @profile  # type: ignore
 def ast_get_leading_comment_and_decorator_list_source_lines(
     source: str, node: ast.AST
-) -> List[str]:
+) -> list[str]:
     # WARNING: ast.AST.lineno and ast.AST.end_lineno are 1-indexed
 
     above_lines = cached_splitlines(source)[: node.lineno - 1]
 
-    decorator_list_linenos: Set[int] = set()
+    decorator_list_linenos: set[int] = set()
     for decorator in getattr(node, "decorator_list", []):
         lineno, end_lineno = decorator.lineno, decorator.end_lineno
         decorator_list_linenos.update(range(lineno, end_lineno + 1))
@@ -117,17 +118,17 @@ def ast_get_leading_comment_and_decorator_list_source_lines(
 
 
 @profile  # type: ignore
-def ast_get_leading_comment_source_lines(source: str, node: ast.AST) -> List[str]:
+def ast_get_leading_comment_source_lines(source: str, node: ast.AST) -> list[str]:
     # WARNING: ast.AST.lineno and ast.AST.end_lineno are 1-indexed
 
     above_lines = cached_splitlines(source)[: node.lineno - 1]
 
-    decorator_list_linenos: Set[int] = set()
+    decorator_list_linenos: set[int] = set()
     for decorator in getattr(node, "decorator_list", []):
         lineno, end_lineno = decorator.lineno, decorator.end_lineno
         decorator_list_linenos.update(range(lineno, end_lineno + 1))
 
-    leading_comment_lines: Deque[str] = deque()
+    leading_comment_lines: deque[str] = deque()
     for lineno, line in ireverse(zip(range(1, node.lineno), above_lines)):
         if lineno in decorator_list_linenos:
             continue
@@ -140,7 +141,7 @@ def ast_get_leading_comment_source_lines(source: str, node: ast.AST) -> List[str
 
 
 @profile  # type: ignore
-def ast_get_decorator_list_source_lines(source: str, node: ast.AST) -> List[str]:
+def ast_get_decorator_list_source_lines(source: str, node: ast.AST) -> list[str]:
     """
     Return source lines of the decorator list that decorate a function/class as given
     by the node argument.
@@ -159,7 +160,7 @@ def ast_get_decorator_list_source_lines(source: str, node: ast.AST) -> List[str]
 
 
 @profile  # type: ignore
-def ast_get_source_lines(source: str, node: ast.AST) -> List[str]:
+def ast_get_source_lines(source: str, node: ast.AST) -> list[str]:
     # WARNING: ast.AST.lineno and ast.AST.end_lineno are 1-indexed
 
     whole_source_lines = cached_splitlines(source)
@@ -171,13 +172,13 @@ def ast_get_source_lines(source: str, node: ast.AST) -> List[str]:
 
 
 @lfu_cache_with_key(key=id, maxsize=None)
-def cached_ast_iter_child_nodes(node: ast.AST) -> List[ast.AST]:
+def cached_ast_iter_child_nodes(node: ast.AST) -> list[ast.AST]:
     """ A cached version of the `ast.iter_child_nodes` method """
     return list(ast.iter_child_nodes(node))
 
 
 @lfu_cache_with_key(key=id, maxsize=None)
-def ast_node_class_fields(ast_node_class: Type[ast.AST]) -> List[Tuple[str, str]]:
+def ast_node_class_fields(ast_node_class: type[ast.AST]) -> list[tuple[str, str]]:
     assert hasattr(ast_node_class, "__doc__")
     schema = ast_node_class.__doc__
     assert schema
@@ -193,12 +194,12 @@ def ast_node_class_fields(ast_node_class: Type[ast.AST]) -> List[Tuple[str, str]
 # Reference: https://docs.python.org/3/library/ast.html#abstract-grammar
 Terminals = ("identifier", "int", "string", "constant")
 # Reference: https://docs.python.org/3/library/ast.html#ast.Constant
-TerminalType = Union[str, Number, None, Tuple, FrozenSet]
+TerminalType = Union[str, Number, None, tuple, frozenset]
 
 
 def ast_iter_non_node_fields(
     node: ast.AST,
-) -> Iterator[Union[TerminalType, List[TerminalType], None]]:
+) -> Iterator[Union[TerminalType, list[TerminalType], None]]:
     """ Complement of the ast.iter_child_nodes function """
 
     for type, name in ast_node_class_fields(node.__class__):

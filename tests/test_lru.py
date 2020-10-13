@@ -1,4 +1,4 @@
-from typing import Any, List, Tuple
+from typing import Any
 
 from hypothesis import given
 from hypothesis.strategies import from_type, lists, tuples
@@ -12,7 +12,7 @@ anys = lambda: from_type(type)
 
 
 @given(lists(anys()))
-def test_size(l: List[Any]) -> None:
+def test_size(l: list) -> None:
     lru = LRU(maxsize=None)
     for elem in l:
         lru[elem] = None
@@ -20,7 +20,7 @@ def test_size(l: List[Any]) -> None:
 
 
 @given(lists(anys()))
-def test_contains(l: List[Any]) -> None:
+def test_contains(l: list) -> None:
     lru = LRU(maxsize=None)
     for elem in l:
         lru[elem] = None
@@ -29,7 +29,7 @@ def test_contains(l: List[Any]) -> None:
 
 
 @given(lists(tuples(anys(), anys())))
-def test_setitem_getitem(l: List[Tuple[Any, Any]]) -> None:
+def test_setitem_getitem(l: list[tuple[Any, Any]]) -> None:
     lru = LRU(maxsize=None)
     for key, value in l:
         lru[key] = value
@@ -39,7 +39,7 @@ def test_setitem_getitem(l: List[Tuple[Any, Any]]) -> None:
 
 
 @given(lists(anys()))
-def test_clear(l: List[Any]) -> None:
+def test_clear(l: list) -> None:
     lru = LRU(maxsize=None)
     for elem in l:
         lru[elem] = None

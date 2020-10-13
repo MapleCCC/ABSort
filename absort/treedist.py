@@ -1,7 +1,8 @@
 import sys
 from collections import Counter, deque
+from collections.abc import Callable, Iterable
 from itertools import repeat
-from typing import Callable, Counter as CounterType, Deque, Iterable, List, Tuple, TypeVar
+from typing import TypeVar
 
 from .utils import (
     constantfunc,
@@ -15,12 +16,12 @@ from .utils import (
 __all__ = ["zhangshasha", "pqgram"]
 
 
-# TODO use collections.UserList to add new Forest type, instead of using Forest as a type alias of the List type
+# TODO use collections.UserList to add new Forest type, instead of using Forest as a type alias of the list type
 
 # TODO use more advanced algorithms to replace the classic Zhang-Shasha algorithm. E.g. RTED, PQ-Gram, AP-TED+, etc.
 
 Tree = TypeVar("Tree")
-Forest = List[Tree]
+Forest = list[Tree]
 EmptyForest: Forest = []
 contains_one_tree: Callable[[Forest], bool] = lambda forest: len(forest) == 1
 
@@ -85,7 +86,7 @@ def zhangshasha(
         elif contains_one_tree(forest1) and contains_one_tree(forest2):
             new_forest1 = remove_rightmost_root(forest1)
             new_forest2 = remove_rightmost_root(forest2)
-            candidates: List[float] = [None] * 3  # type: ignore
+            candidates: list[float] = [None] * 3  # type: ignore
 
             candidates[0] = forest_distance(new_forest1, forest2) + delete_cost(
                 forest1[-1]
@@ -101,7 +102,7 @@ def zhangshasha(
         else:
             new_forest1 = remove_rightmost_root(forest1)
             new_forest2 = remove_rightmost_root(forest2)
-            candidates: List[float] = [None] * 3  # type: ignore
+            candidates: list[float] = [None] * 3  # type: ignore
 
             candidates[0] = forest_distance(new_forest1, forest2) + delete_cost(
                 forest1[-1]
@@ -121,9 +122,9 @@ def zhangshasha(
 
 
 Label = TypeVar("Label")
-LabelTuple = Tuple[Label, ...]
-Register = Deque[Label]
-Index = CounterType[LabelTuple]
+LabelTuple = tuple[Label, ...]
+Register = deque[Label]
+Index = Counter[LabelTuple]
 
 DUMMY_LABEL = object()
 

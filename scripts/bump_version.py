@@ -5,9 +5,10 @@ import re
 import subprocess
 import sys
 import time
+from collections.abc import Callable, Sequence
 from functools import partial
 from pathlib import Path
-from typing import Callable, List, Sequence, Type, TypeVar
+from typing import TypeVar
 
 import click
 import semver
@@ -83,7 +84,7 @@ def retry(
     func: Callable[..., T],
     total: int = 3,
     backoff_factor: float = 0.1,
-    on_except: List[Type[Exception]] = None,
+    on_except: list[type[Exception]] = None,
 ) -> Callable[..., T]:
     """
     Tips: Pass function arguments by functools.partial.

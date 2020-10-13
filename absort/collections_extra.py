@@ -1,7 +1,6 @@
 from collections import OrderedDict
+from collections.abc import Iterable, Iterator, MutableSet
 from itertools import repeat
-from typing import Iterable, Iterator, MutableSet
-from typing import OrderedDict as OrderedDictType
 from typing import TypeVar
 
 __all__ = ["OrderedSet"]
@@ -12,7 +11,7 @@ T = TypeVar("T")
 
 class _OrderedSet(MutableSet[T]):
     def __init__(self, iterable: Iterable[T] = tuple()) -> None:
-        self._data: OrderedDictType[T] = OrderedDict(zip(iterable, repeat(None)))
+        self._data: OrderedDict[T] = OrderedDict(zip(iterable, repeat(None)))
 
     __slots__ = ["_data"]
 
