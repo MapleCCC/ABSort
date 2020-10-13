@@ -9,3 +9,4 @@ exclude_lines =
     except
     raise
     if __name__ == .__main__.:
+    \.\.\.
