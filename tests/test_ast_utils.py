@@ -60,3 +60,5 @@ def test_ast_tree_edit_distance() -> None:
     node1 = Name("a", Load())
     node2 = Name("a", Load())
     assert ast_tree_edit_distance(node1, node2) == 0
+
+# TODO add test for different tree distance algorithm

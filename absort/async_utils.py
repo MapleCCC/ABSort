@@ -28,6 +28,8 @@ def run_async(func: Callable, *args, **kwargs):
 def asyncify(func: Any) -> NoReturn:
     """
     A wrapper to delegate the function job to thread pool, i.e., non-blocking.
+
+    Can be used as a decorator.
     """
 
     raise ValueError(f"Expect callable, got {type(func)}")

@@ -3,6 +3,7 @@ from collections.abc import Iterable, Iterator, MutableSet
 from itertools import repeat
 from typing import TypeVar
 
+
 __all__ = ["OrderedSet"]
 
 

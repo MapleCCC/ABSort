@@ -491,6 +491,7 @@ def larger_recursion_limit() -> Iterator:
 
     # 2147483647 is the largest integer that sys.setrecursionlimit() accepts in my development environment.
     # FIXME Does the Python language specification say anything about the largest number acceptable as argument to sys.setrecursionlimit()?
+    # Searching on all kinds of documents, it seems the number 2147483647 appears in https://docs.python.org/2.0/ref/integers.html, though it's a Python 2.0 doc.
     sys.setrecursionlimit(2147483647)
 
     try:

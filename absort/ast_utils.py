@@ -10,7 +10,6 @@ from .treedist import pqgram, zhangshasha
 from .utils import (
     beginswith,
     cached_splitlines,
-    compose,
     constantfunc,
     hamming_distance,
     identityfunc,

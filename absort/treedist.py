@@ -1,4 +1,3 @@
-import sys
 from collections import Counter, deque
 from collections.abc import Callable, Iterable
 from itertools import repeat

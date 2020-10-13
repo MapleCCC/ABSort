@@ -46,6 +46,8 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
     """
 
     def __init__(self, py_version: tuple[int, int]) -> None:
+        super().__init__()
+
         self._undefined_vars: set[str] = set()
         self._namespaces: list[dict[str, ast.AST]] = []
         self._py_version: tuple[int, int] = py_version

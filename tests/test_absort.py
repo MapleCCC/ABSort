@@ -24,9 +24,11 @@ STDLIB_DIR = Path(sys.executable).with_name("Lib")
 if os.getenv("CI") and os.getenv("TRAVIS"):
     py_version = os.getenv("TRAVIS_PYTHON_VERSION")
     assert py_version
+
     # Reference: https://docs.travis-ci.com/user/languages/python/#python-versions
     # Reference: https://docs.travis-ci.com/user/languages/python/#development-releases-support
     py_version_num = re.fullmatch(r"(?P<num>[0-9.]+)(?:-dev)?", py_version).group("num")
+
     STDLIB_DIR = Path(f"/opt/python/{py_version}/lib/python{py_version_num}/")
 
 
@@ -65,3 +67,6 @@ def test_absort_str() -> None:
         except AssertionError:
             print(f"Encountered AssertionError when sorting {test_sample}")
             raise
+
+# TODO add unit test for absort_file()
+# TODO add unit test for absort_files()
