@@ -305,7 +305,6 @@ def absort_decls(
         yield first_true(decls, pred=name_matcher)
 
 
-@profile  # type: ignore
 def get_related_source_lines_of_decl(
     source: str, node: ast.AST, comment_strategy: CommentStrategy
 ) -> list[str]:
@@ -565,6 +564,7 @@ class Digest:
         return Digest(**(c1 + c2))  # type: ignore
 
 
+@profile  # type: ignore
 async def absort_file(
     file: Path,
     encoding: str = "utf-8",

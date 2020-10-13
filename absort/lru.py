@@ -3,8 +3,6 @@ from __future__ import annotations
 import math
 from typing import Generic, Optional, TypeVar
 
-from .profile_tools import add_profile_decorator_to_class_methods
-
 
 __all__ = ["LRU"]
 
@@ -31,7 +29,6 @@ class BogusCell:
 _BOGUS_CELL = BogusCell()
 
 
-@add_profile_decorator_to_class_methods
 class LRU(Generic[KT, VT]):
     """ An lightweight and efficient data structure that implements the LRU mechanims """
 

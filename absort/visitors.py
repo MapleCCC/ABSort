@@ -2,7 +2,6 @@ import ast
 from collections.abc import Sequence
 from typing import Optional, Union
 
-from .profile_tools import add_profile_decorator_to_class_methods
 from .utils import identityfunc
 
 
@@ -34,7 +33,6 @@ class BogusNode(ast.AST):
 
 # TODO fill in docstring to elaborate on details
 # Class methods are ordered by their appearance order in https://docs.python.org/3/library/ast.html#abstract-grammar
-@add_profile_decorator_to_class_methods
 class GetUndefinedVariableVisitor(ast.NodeVisitor):
     """
     An ast node visitor that implements the logic to retrieve undefined variables.
