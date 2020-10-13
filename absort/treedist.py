@@ -8,7 +8,7 @@ from .utils import (
     constantfunc,
     identityfunc,
     larger_recursion_limit,
-    lru_cache_with_key,
+    memoization,
     on_except_return,
 )
 
@@ -58,7 +58,7 @@ def zhangshasha(
         tuple(map(id, forest2)),
     )
 
-    @lru_cache_with_key(key=calculate_cache_key, maxsize=None)
+    @memoization(key=calculate_cache_key)
     @on_except_return(RecursionError, returns=0)
     def forest_distance(forest1: Forest, forest2: Forest) -> float:
 

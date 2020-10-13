@@ -16,7 +16,7 @@ from .utils import (
     identityfunc,
     iequal,
     ireverse,
-    lfu_cache_with_key,
+    memoization,
 )
 
 
@@ -171,13 +171,13 @@ def ast_get_source_lines(source: str, node: ast.AST) -> list[str]:
     return source_lines
 
 
-@lfu_cache_with_key(key=id, maxsize=None)
+@memoization(key=id)
 def cached_ast_iter_child_nodes(node: ast.AST) -> list[ast.AST]:
     """ A cached version of the `ast.iter_child_nodes` method """
     return list(ast.iter_child_nodes(node))
 
 
-@lfu_cache_with_key(key=id, maxsize=None)
+@memoization(key=id)
 def ast_node_class_fields(ast_node_class: type[ast.AST]) -> list[tuple[str, str]]:
     assert hasattr(ast_node_class, "__doc__")
     schema = ast_node_class.__doc__

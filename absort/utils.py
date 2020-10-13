@@ -51,6 +51,7 @@ __all__ = [
     "on_except_return",
     "contains",
     "larger_recursion_limit",
+    "memoization",
 ]
 
 
@@ -496,3 +497,46 @@ def larger_recursion_limit() -> Iterator:
         yield
     finally:
         sys.setrecursionlimit(orig_rec_limit)
+
+
+def memoization(
+    key: Callable[..., Hashable]
+) -> Callable[[Callable[..., T]], Callable[..., T]]:
+    """ A decorator to apply memoization to function """
+
+    @attr.s(auto_attribs=True)
+    class CacheInfo:
+        hit: int = 0
+        miss: int = 0
+        currsize: int = 0
+
+    class decorator:
+        def __init__(self, func: Callable[..., T]) -> None:
+            self._func = func
+            self._cache: dict[Any, T] = {}
+            self._hit = 0
+            self._miss = 0
+
+        __slots__ = ("_func", "_cache", "_hit", "_miss")
+
+        def __call__(self, *args, **kwargs) -> T:
+            args_key = key(*args, **kwargs)
+
+            if args_key in self._cache:
+                return self._cache[args_key]
+            else:
+                result = self._func(*args, **kwargs)
+                self._cache[args_key] = result
+                return result
+
+        @property
+        def __cache__(self) -> dict[Any, T]:
+            return self._cache
+
+        def clear_cache(self) -> None:
+            self._cache.clear()
+
+        def cache_info(self) -> CacheInfo:
+            return CacheInfo(self._hit, self._miss, len(self._cache))  # type: ignore
+
+    return decorator
