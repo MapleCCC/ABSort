@@ -2,12 +2,12 @@
 
 <!-- TODO insert profile picture here -->
 
-<!-- TODO add badge about code coverage -->
 <!-- TODO add badge about requires.io -->
 <!-- TODO add badge about pylint rating -->
 <!-- TODO add compatible Python/PyPy versions -->
 [![License](https://img.shields.io/github/license/MapleCCC/ABSort?color=00BFFF)](LICENSE)
 [![Build Status](https://travis-ci.com/MapleCCC/ABSort.svg?branch=master)](https://travis-ci.com/MapleCCC/ABSort)
+[![Test Coverage](https://codecov.io/gh/MapleCCC/ABSort/branch/master/graph/badge.svg)](https://codecov.io/gh/MapleCCC/ABSort)
 <!-- [![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/MapleCCC/ABSort)](https://github.com/MapleCCC/ABSort/releases/latest) -->
 [![Semantic release](https://img.shields.io/badge/%20%20%F0%9F%93%A6%F0%9F%9A%80-semantic--release-e10079.svg)](https://github.com/semantic-release/semantic-release)
 [![LOC](https://sloc.xyz/github/MapleCCC/ABSort)](https://sloc.xyz/github/MapleCCC/ABSort)
@@ -56,14 +56,16 @@ For graph nodes within the same abstract level, they are in turn sorted in two o
 
 1. Quick and naïve: retain original order. This method requires less resources, and results in smaller diff size.
 
-2. Sophisticated: sorted by syntax tree similarity. The syntax tree similarity is calculated by an adoption of [the ZhangShasha algorithm](https://epubs.siam.org/doi/abs/10.1137/0218082). This method is more advanced, and results in better visual outcome.
+2. Sophisticated: sorted by syntax tree similarity. The syntax tree similarity is calculated by an adoption of the [ZhangShasha algorithm](https://epubs.siam.org/doi/abs/10.1137/0218082). This method is more advanced, and results in better visual outcome.
 
 The sophisticated method is by now the default behavior, unless the CLI option `--no-aggressive` is set.
+
+> Note that the ZhangShasha algorithm is expensive for large trees. To prevent performance regression, when large trees are detected, the faster approximate algorithm [PQ-Gram](https://dl.acm.org/doi/abs/10.1145/1670243.1670247) is used instead.
 
 
 ## Limitations
 
-The script is a static analysis tool. It's beyond the tool's capability and scope to handle some heavily dynamic behaviours, e.g. dynamic manipulation of the globals(), locals(), etc.
+The script is a static analysis tool. It's beyond the tool's capability and scope to handle some heavily dynamic behaviours, e.g. dynamic manipulation of the `globals()`, `locals()`, etc.
 
 
 ## Usage
@@ -193,12 +195,14 @@ print(add_three(1))
 
 ## Installation
 
+Prerequisite: Python>=3.9
+
 You may consider optionally installing [uvloop](https://github.com/magicstack/uvloop) and [orderedsort](https://github.com/simonpercivall/orderedset) to boost speed.
 
 ```bash
 # Optionally create a virtual environment for isolation purpose
 $ python -m virtualenv .venv
-$ source .venv/Scripts/activate
+$ source .venv/bin/activate
 
 $ python -m pip install git+https://github.com/MapleCCC/ABSort.git@v0.1.0#egg=ABSort
 ```
@@ -212,7 +216,7 @@ $ cd ABSort
 
 # Optionally create a virtual environment for isolation purpose
 $ python -m virtualenv .venv
-$ source .venv/Scripts/activate
+$ source .venv/bin/activate
 
 # Install install prerequisites
 $ python -m pip install -r requirements/install.txt
@@ -227,7 +231,7 @@ Alternatively, just a one-liner:
 ```bash
 # Optionally create a virtual environment for isolation purpose
 $ python -m virtualenv .venv
-$ source .venv/Scripts/activate
+$ source .venv/bin/activate
 
 $ python -m pip install -e git+https://github.com/MapleCCC/ABSort.git#egg=ABSort
 ```
