@@ -362,7 +362,7 @@ def find_continguous_decls(
 @profile  # type: ignore
 def absort_str(
     old_source: str,
-    py_version: PyVersion = (3, 8),
+    py_version: PyVersion = (3, 9),
     comment_strategy: CommentStrategy = CommentStrategy.ATTR_FOLLOW_DECL,
     format_option: FormatOption = FormatOption(),
 ) -> str:
@@ -570,7 +570,7 @@ async def absort_file(
     bypass_prompt: bool = False,
     verbose: bool = False,
     file_action: FileAction = FileAction.PRINT,
-    py_version: PyVersion = (3, 8),
+    py_version: PyVersion = (3, 9),
     comment_strategy: CommentStrategy = CommentStrategy.ATTR_FOLLOW_DECL,
     format_option: FormatOption = FormatOption(),
 ) -> Digest:
@@ -682,7 +682,7 @@ def absort_files(
     bypass_prompt: bool = False,
     verbose: bool = False,
     file_action: FileAction = FileAction.PRINT,
-    py_version: PyVersion = (3, 8),
+    py_version: PyVersion = (3, 9),
     comment_strategy: CommentStrategy = CommentStrategy.ATTR_FOLLOW_DECL,
     format_option: FormatOption = FormatOption(),
 ) -> Digest:
@@ -824,7 +824,7 @@ def validate_args(options: SimpleNamespace) -> None:
 @click.option(
     "--py",
     "py_version",
-    default="3.8",
+    default="3.9",
     show_default=True,
     type=PyVersionParamType(),
     help="Specify the version of Python abstract grammar being used in parsing input files.",

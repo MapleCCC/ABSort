@@ -20,8 +20,8 @@ test-cov:
 	# python -m webbrowser -n htmlcov/index.html
 
 stress-test:
-	cd "D:/Program Files/Python38/Lib/site-packages" && time absort --check .
-	# time python -m ${SRC_DIR} --check "D:\Program Files\Python38\Lib\site-packages\isort\main.py"
+	cd "D:/Program Files/Python39/Lib/site-packages" && time absort --check .
+	# time python -m ${SRC_DIR} --check "D:\Program Files\Python39\Lib\site-packages\isort\main.py"
 
 format:
 	autopep8 --in-place --recursive --aggressive --aggressive --select E501 --max-line-length 88 .

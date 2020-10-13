@@ -127,7 +127,7 @@ Options:
 
   --py PY_VERSION                 Specify the version of Python abstract
                                   grammar being used in parsing input files.
-                                  [default: 3.8]
+                                  [default: 3.9]
 
   -q, --quiet                     Suppress all output except the error
                                   channel. To also suppress error channel

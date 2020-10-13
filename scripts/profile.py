@@ -10,8 +10,8 @@ from tempfile import TemporaryDirectory
 # TODO remove the astor dependency after the ast.unparse() land on Python 3.9
 import astor
 
-ISORT_MAIN_FILEPATH = "D:/Program Files/Python38/Lib/site-packages/isort/main.py"
-ISORT_CODE_DIR = "D:/Program Files/Python38/Lib/site-packages/isort"
+ISORT_MAIN_FILEPATH = "D:/Program Files/Python39/Lib/site-packages/isort/main.py"
+ISORT_CODE_DIR = "D:/Program Files/Python39/Lib/site-packages/isort"
 ENTRY_SCRIPT_NAME = "__main__.py"
 PROFILE_RESULT_OUTPUT_FILE = "line-profiler-output.txt"
 
