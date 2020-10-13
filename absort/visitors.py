@@ -189,9 +189,6 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
         self._visit_comprehension(node, node.elt)
 
     def visit_Name(self, node: ast.Name) -> None:
-        # Expression context AugLoad and AugStore are never exposed. (https://bugs.python.org/issue39988)
-        # We only need to deal with Load, Store, Del, and Param.
-
         if isinstance(node.ctx, ast.Load):
             if not self._symbol_lookup(node.id):
                 self._undefined_vars.add(node.id)
@@ -204,7 +201,5 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
                 if node.id in namespace:
                     del namespace[node.id]
                     break
-        elif isinstance(node.ctx, ast.Param):
-            self._namespaces[-1][node.id] = node
         else:
             raise ValueError("Unknown name context")
