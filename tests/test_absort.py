@@ -62,3 +62,6 @@ def test_absort_str() -> None:
                 assert contains(new_ast.body, stmt, equal=ast_deep_equal)
         except (SyntaxError, NameRedefinition, UnicodeDecodeError):
             pass
+        except AssertionError:
+            print(f"Encountered AssertionError when sorting {test_sample}")
+            raise
