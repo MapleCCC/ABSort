@@ -144,16 +144,15 @@ def pqgram(
     """
 
     def pqgram_index(tree: Tree) -> Index:
-        def rec_pqgram_index(tree: Tree) -> Index:
+        def rec_pqgram_index(tree: Tree) -> None:
             base: Register = deque(repeat(DUMMY_LABEL, q), maxlen=q)
             stem.append(label(tree))
-            index: Index = Counter()
 
             children_count = 0
             for child in children(tree):
                 base.append(label(child))
                 index[(*stem, *base)] += 1
-                index += rec_pqgram_index(child)
+                rec_pqgram_index(child)
                 children_count += 1
 
             if children_count:
@@ -163,10 +162,10 @@ def pqgram(
             else:
                 index[(*stem, *base)] += 1
 
-            return index
-
+        index: Index = Counter()
         stem: Register = deque(repeat(DUMMY_LABEL, p), maxlen=p)
-        return rec_pqgram_index(tree)
+        rec_pqgram_index(tree)
+        return index
 
     assert p > 0 and q > 0
 
