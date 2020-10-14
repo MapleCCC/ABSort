@@ -123,7 +123,7 @@ def zhangshasha(
 Label = TypeVar("Label")
 LabelTuple = tuple[Label, ...]
 Register = deque[Label]
-Index = Counter[LabelTuple]
+Index = Counter[int]
 
 DUMMY_LABEL = object()
 
@@ -181,16 +181,16 @@ def pqgram_index(
         children_count = 0
         for child in children(tree):
             base.append(label(child))
-            index[(*stem, *base)] += 1
+            index[hash((*stem, *base))] += 1
             rec_pqgram_index(child)
             children_count += 1
 
         if children_count:
             for _ in range(q - 1):
                 base.append(DUMMY_LABEL)
-                index[(*stem, *base)] += 1
+                index[hash((*stem, *base))] += 1
         else:
-            index[(*stem, *base)] += 1
+            index[hash((*stem, *base))] += 1
 
     index: Index = Counter()
     stem: Register = deque(repeat(DUMMY_LABEL, p), maxlen=p)
