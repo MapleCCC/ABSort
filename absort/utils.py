@@ -524,8 +524,10 @@ def memoization(
             args_key = key(*args, **kwargs)
 
             if args_key in self._cache:
+                self._hit += 1
                 return self._cache[args_key]
             else:
+                self._miss += 1
                 result = self._func(*args, **kwargs)
                 self._cache[args_key] = result
                 return result
