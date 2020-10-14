@@ -1,5 +1,5 @@
 from collections import Counter, deque
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Hashable, Iterable
 from itertools import repeat
 from typing import TypeVar
 
@@ -143,34 +143,10 @@ def pqgram(
     Additional details: the output is normalized pqgram distance, i.e. between 0 and 1.
     """
 
-    def pqgram_index(tree: Tree) -> Index:
-        def rec_pqgram_index(tree: Tree) -> None:
-            base: Register = deque(repeat(DUMMY_LABEL, q), maxlen=q)
-            stem.append(label(tree))
-
-            children_count = 0
-            for child in children(tree):
-                base.append(label(child))
-                index[(*stem, *base)] += 1
-                rec_pqgram_index(child)
-                children_count += 1
-
-            if children_count:
-                for _ in range(q - 1):
-                    base.append(DUMMY_LABEL)
-                    index[(*stem, *base)] += 1
-            else:
-                index[(*stem, *base)] += 1
-
-        index: Index = Counter()
-        stem: Register = deque(repeat(DUMMY_LABEL, p), maxlen=p)
-        rec_pqgram_index(tree)
-        return index
-
     assert p > 0 and q > 0
 
-    index1 = pqgram_index(tree1)
-    index2 = pqgram_index(tree2)
+    index1 = pqgram_index(tree1, children, p, q, label)
+    index2 = pqgram_index(tree2, children, p, q, label)
 
     symmetric_diff = sum(((index1 - index2) + (index2 - index1)).values())
     total = sum((index1 | index2).values())
@@ -178,3 +154,45 @@ def pqgram(
     if not total:
         return 0
     return symmetric_diff / total
+
+
+def pqgram_index_calculate_key(
+    tree: Tree,
+    children: Callable[[Tree], Iterable[Tree]],
+    p: int,
+    q: int,
+    label: Callable[[Tree], Label],
+) -> Hashable:
+    return (id(tree), children, p, q, label)
+
+
+@memoization(key=pqgram_index_calculate_key)
+def pqgram_index(
+    tree: Tree,
+    children: Callable[[Tree], Iterable[Tree]],
+    p: int = 2,
+    q: int = 3,
+    label: Callable[[Tree], Label] = identityfunc,
+) -> Index:
+    def rec_pqgram_index(tree: Tree) -> None:
+        base: Register = deque(repeat(DUMMY_LABEL, q), maxlen=q)
+        stem.append(label(tree))
+
+        children_count = 0
+        for child in children(tree):
+            base.append(label(child))
+            index[(*stem, *base)] += 1
+            rec_pqgram_index(child)
+            children_count += 1
+
+        if children_count:
+            for _ in range(q - 1):
+                base.append(DUMMY_LABEL)
+                index[(*stem, *base)] += 1
+        else:
+            index[(*stem, *base)] += 1
+
+    index: Index = Counter()
+    stem: Register = deque(repeat(DUMMY_LABEL, p), maxlen=p)
+    rec_pqgram_index(tree)
+    return index
