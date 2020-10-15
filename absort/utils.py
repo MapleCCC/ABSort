@@ -512,13 +512,11 @@ def memoization(
         currsize: int = 0
 
     class wrapper_tuple:
-        def __init__(self, tup: tuple)->None:
+        def __init__(self, tup: tuple) -> None:
             self._tup = tup
-            self._hash = None
+            self._hash = hash(tup)
 
-        def __hash__(self)->int:
-            if self._hash is None:
-                self._hash = hash(self._tup)
+        def __hash__(self) -> int:
             return self._hash
 
     def default_key(*args, **kwargs) -> Hashable:
@@ -529,7 +527,11 @@ def memoization(
         if len(args_key) == 1 and isinstance(args_key[0], (int, str)):
             return args_key[0]
 
-        return wrapper_tuple(args_key)
+        try:
+            return wrapper_tuple(args_key)
+        except TypeError:
+            str_kwargs = [f"{key}={value}" for key, value in kwargs.items()]
+            raise TypeError(f"{(*args, *str_kwargs)} is unhashable")
 
     if key is None:
         key = default_key
