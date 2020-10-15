@@ -3,6 +3,7 @@ import copy
 import re
 from collections import deque
 from collections.abc import Iterator
+from functools import cache
 from numbers import Number
 from typing import Optional, Union
 
@@ -15,7 +16,6 @@ from .utils import (
     identityfunc,
     iequal,
     ireverse,
-    memoization,
 )
 
 
@@ -166,7 +166,7 @@ def ast_get_source_lines(source: str, node: ast.AST) -> list[str]:
     return source_lines
 
 
-@memoization()
+@cache
 def cached_ast_iter_child_nodes(node: ast.AST) -> list[ast.AST]:
     """ A cached version of the `ast.iter_child_nodes` method """
     return list(ast.iter_child_nodes(node))

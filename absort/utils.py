@@ -8,7 +8,7 @@ import random
 import sys
 from collections import OrderedDict, defaultdict
 from collections.abc import Callable, Hashable, Iterable, Iterator, Sequence
-from functools import partial
+from functools import cache, partial
 from itertools import chain, combinations, zip_longest
 from types import SimpleNamespace
 from typing import IO, Any, Optional, TypeVar, Union, overload
@@ -626,7 +626,7 @@ def chenyu(
     return rec_chenyu(points)
 
 
-@memoization()
+@cache
 def cached_splitlines(s: str) -> list[str]:
     """ A cached version of the `str.splitlines` method """
     return s.splitlines()

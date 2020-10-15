@@ -1,5 +1,6 @@
 from collections import Counter, deque
 from collections.abc import Callable, Iterable
+from functools import cache
 from itertools import repeat
 from typing import TypeVar, Union
 
@@ -153,7 +154,7 @@ def pqgram(
     return symmetric_diff / total
 
 
-@memoization()
+@cache
 def pqgram_index(
     tree: Tree,
     children: Callable[[Tree], Iterable[Tree]],
