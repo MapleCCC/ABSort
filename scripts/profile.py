@@ -2,16 +2,22 @@
 
 import ast
 import subprocess
+import sys
 from pathlib import Path
 from shutil import copy2
 from subprocess import CalledProcessError
 from tempfile import TemporaryDirectory
 
 
-ISORT_MAIN_FILEPATH = "D:/Program Files/Python39/Lib/site-packages/isort/main.py"
-ISORT_CODE_DIR = "D:/Program Files/Python39/Lib/site-packages/isort"
+STDLIB_DIR = Path(sys.executable).with_name("Lib")
+ISORT_SRC_DIR = STDLIB_DIR / "site-packages" / "isort"
+
+# TEST_FILES = ISORT_SRC_DIR.rglob("*.py")
+TEST_FILES = STDLIB_DIR.rglob("*.py")
+
 ENTRY_SCRIPT_NAME = "__main__.py"
-PROFILE_RESULT_OUTPUT_FILE = "line-profiler-output.txt"
+
+PROFILE_RESULT_OUTPUT_FILE = Path("line-profiler-output.txt")
 
 
 class RelativeImportTransformer(ast.NodeTransformer):
@@ -36,7 +42,7 @@ class AddProfileDecoratorToClassMethodTransformer(ast.NodeTransformer):
                 node.decorator_list.append(ast.Name("profile", ast.Load()))
             return node
 
-        node = self.generic_visit(node)
+        node = self.generic_visit(node)  # type: ignore
 
         criteria = (
             lambda decorator: isinstance(decorator, ast.Name)
@@ -88,7 +94,7 @@ def main() -> None:
                 "--builtin",
                 str(entry_script),
                 "--quiet",
-                ISORT_CODE_DIR,
+                *TEST_FILES,
             ],
             encoding="utf-8",
             # WARNING: don't specify capture_output if stderr or stdout is specified
@@ -102,8 +108,8 @@ def main() -> None:
             print("Profile failed.")
             print(stderr)
         else:
-            Path(PROFILE_RESULT_OUTPUT_FILE).write_text(stdout, encoding="utf-8")
-            print("Profile result data is written to line-profiler-output.txt")
+            PROFILE_RESULT_OUTPUT_FILE.write_text(stdout, encoding="utf-8")
+            print(f"Profile result data is written to {PROFILE_RESULT_OUTPUT_FILE}")
 
 
 if __name__ == "__main__":
