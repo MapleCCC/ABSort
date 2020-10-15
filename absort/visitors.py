@@ -202,4 +202,4 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
                     del namespace[node.id]
                     break
         else:
-            raise ValueError("Unknown name context")
+            raise RuntimeError("Unreachable")

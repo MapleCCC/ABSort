@@ -29,6 +29,7 @@ __all__ = [
     "ast_get_source_lines",
     "cached_ast_iter_child_nodes",
     "ast_iter_non_node_fields",
+    "fast_ast_iter_child_nodes",
     "ast_tree_edit_distance",
     "ast_shallow_equal",
     "ast_deep_equal",
@@ -169,7 +170,7 @@ def ast_get_source_lines(source: str, node: ast.AST) -> list[str]:
 @cache
 def cached_ast_iter_child_nodes(node: ast.AST) -> list[ast.AST]:
     """ A cached version of the `ast.iter_child_nodes` method """
-    return list(ast.iter_child_nodes(node))
+    return list(fast_ast_iter_child_nodes(node))
 
 
 class DeprecatedASTNodeError(Exception):

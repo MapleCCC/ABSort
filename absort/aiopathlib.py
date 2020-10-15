@@ -20,7 +20,7 @@ class AsyncPath:
     def __init__(self, s: Union[str, SyncPath]) -> None:
         self._path = SyncPath(s)
 
-    __slots__ = ["_path"]
+    __slots__ = ("_path",)
 
     def __str__(self) -> str:
         return str(self._path)

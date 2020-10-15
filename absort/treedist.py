@@ -163,6 +163,10 @@ def pqgram_index(
     label: Callable[[Tree], Label] = identityfunc,
     compact: bool = False,
 ) -> Index:
+    """
+    Setting the compact argument to True yields less space cost, with the tradeoff of precision lost due to possible hash collisions.
+    """
+
     def construct_index_entry(stem: Register, base: Register) -> Union[int, LabelTuple]:
         label_tuple = (*stem, *base)
 

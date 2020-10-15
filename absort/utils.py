@@ -503,7 +503,11 @@ _sentinel = object()
 def memoization(
     key: Callable[..., Hashable] = None,
 ) -> Callable[[Callable[..., T]], Callable[..., T]]:
-    """ A decorator to apply memoization to function """
+    """
+    A decorator to apply memoization to function.
+
+    A drop-in replacement of the builtin functools.cache, with the additional feature that the key caculation is customizable.
+    """
 
     @attr.s(auto_attribs=True)
     class CacheInfo:
@@ -520,7 +524,7 @@ def memoization(
             return self._hash
 
     def default_key(*args, **kwargs) -> Hashable:
-        # Duplicate the behavior of the builtin functools.lru_cache
+        # Duplicate the behavior of the builtin functools.cache
 
         args_key = (*args, _sentinel, *chain.from_iterable(kwargs))
 
