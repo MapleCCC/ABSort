@@ -1,7 +1,7 @@
 from collections import Counter, deque
 from collections.abc import Callable, Hashable, Iterable
 from itertools import repeat
-from typing import TypeVar
+from typing import TypeVar, Union
 
 from .utils import (
     constantfunc,
@@ -123,7 +123,7 @@ def zhangshasha(
 Label = TypeVar("Label")
 LabelTuple = tuple[Label, ...]
 Register = deque[Label]
-Index = Counter[int]
+Index = Counter[Union[int, LabelTuple]]
 
 DUMMY_LABEL = object()
 
@@ -145,8 +145,8 @@ def pqgram(
 
     assert p > 0 and q > 0
 
-    index1 = pqgram_index(tree1, children, p, q, label)
-    index2 = pqgram_index(tree2, children, p, q, label)
+    index1 = pqgram_index(tree1, children, p, q, label, compact=True)
+    index2 = pqgram_index(tree2, children, p, q, label, compact=True)
 
     symmetric_diff = sum(((index1 - index2) + (index2 - index1)).values())
     total = sum((index1 | index2).values())
@@ -173,7 +173,17 @@ def pqgram_index(
     p: int = 2,
     q: int = 3,
     label: Callable[[Tree], Label] = identityfunc,
+    compact: bool = False,
 ) -> Index:
+    def construct_index_entry(stem: Register, base: Register) -> Union[int, LabelTuple]:
+        label_tuple = (*stem, *base)
+
+        if compact:
+            # TODO possible micro-optimization: calculate tuple hash without actually constructing the tuple.
+            return hash(label_tuple)
+        else:
+            return label_tuple
+
     def rec_pqgram_index(tree: Tree) -> None:
         base: Register = deque(repeat(DUMMY_LABEL, q), maxlen=q)
         stem.append(label(tree))
@@ -181,16 +191,19 @@ def pqgram_index(
         children_count = 0
         for child in children(tree):
             base.append(label(child))
-            index[hash((*stem, *base))] += 1
+            entry = construct_index_entry(stem, base)
+            index[entry] += 1
             rec_pqgram_index(child)
             children_count += 1
 
         if children_count:
             for _ in range(q - 1):
                 base.append(DUMMY_LABEL)
-                index[hash((*stem, *base))] += 1
+                entry = construct_index_entry(stem, base)
+                index[entry] += 1
         else:
-            index[hash((*stem, *base))] += 1
+            entry = construct_index_entry(stem, base)
+            index[entry] += 1
 
     index: Index = Counter()
     stem: Register = deque(repeat(DUMMY_LABEL, p), maxlen=p)
