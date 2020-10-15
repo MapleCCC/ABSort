@@ -1,5 +1,5 @@
 from collections import Counter, deque
-from collections.abc import Callable, Hashable, Iterable
+from collections.abc import Callable, Iterable
 from itertools import repeat
 from typing import TypeVar, Union
 
@@ -52,10 +52,7 @@ def zhangshasha(
         rightmost_tree_children = list(children(rightmost_tree))
         return forest[:-1] + rightmost_tree_children
 
-    calculate_cache_key = lambda forest1, forest2: (
-        tuple(map(id, forest1)),
-        tuple(map(id, forest2)),
-    )
+    calculate_cache_key = lambda forest1, forest2: (*forest1, *forest2)
 
     @memoization(key=calculate_cache_key)
     @on_except_return(RecursionError, returns=0)
@@ -156,18 +153,7 @@ def pqgram(
     return symmetric_diff / total
 
 
-def pqgram_index_calculate_key(
-    tree: Tree,
-    children: Callable[[Tree], Iterable[Tree]],
-    p: int,
-    q: int,
-    label: Callable[[Tree], Label],
-    compact: bool,
-) -> Hashable:
-    return (id(tree), children, p, q, label, compact)
-
-
-@memoization(key=pqgram_index_calculate_key)
+@memoization()
 def pqgram_index(
     tree: Tree,
     children: Callable[[Tree], Iterable[Tree]],

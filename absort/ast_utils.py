@@ -166,7 +166,7 @@ def ast_get_source_lines(source: str, node: ast.AST) -> list[str]:
     return source_lines
 
 
-@memoization(key=id)
+@memoization()
 def cached_ast_iter_child_nodes(node: ast.AST) -> list[ast.AST]:
     """ A cached version of the `ast.iter_child_nodes` method """
     return list(ast.iter_child_nodes(node))
