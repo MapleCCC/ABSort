@@ -162,8 +162,9 @@ def pqgram_index_calculate_key(
     p: int,
     q: int,
     label: Callable[[Tree], Label],
+    compact: bool,
 ) -> Hashable:
-    return (id(tree), children, p, q, label)
+    return (id(tree), children, p, q, label, compact)
 
 
 @memoization(key=pqgram_index_calculate_key)
