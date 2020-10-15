@@ -9,7 +9,7 @@ import sys
 from collections import OrderedDict, defaultdict
 from collections.abc import Callable, Hashable, Iterable, Iterator, Sequence
 from functools import partial
-from itertools import combinations, zip_longest
+from itertools import chain, combinations, zip_longest
 from types import SimpleNamespace
 from typing import IO, Any, Optional, TypeVar, Union, overload
 
@@ -144,12 +144,6 @@ def colored_unified_diff(
             yield bright_red(line)
         else:
             raise RuntimeError("Unreachable")
-
-
-@functools.lru_cache(maxsize=None)
-def cached_splitlines(s: str) -> list[str]:
-    """ A cached version of the `str.splitlines` method """
-    return s.splitlines()
 
 
 @contextlib.contextmanager
@@ -503,8 +497,11 @@ def larger_recursion_limit() -> Iterator:
         sys.setrecursionlimit(orig_rec_limit)
 
 
+_sentinel = object()
+
+
 def memoization(
-    key: Callable[..., Hashable]
+    key: Callable[..., Hashable] = None,
 ) -> Callable[[Callable[..., T]], Callable[..., T]]:
     """ A decorator to apply memoization to function """
 
@@ -513,6 +510,19 @@ def memoization(
         hit: int = 0
         miss: int = 0
         currsize: int = 0
+
+    def default_key(*args, **kwargs) -> Hashable:
+        # Duplicate the behavior of the builtin functools.lru_cache
+
+        args_key = (*args, _sentinel, *chain.from_iterable(kwargs))
+
+        if len(args_key) == 1 and isinstance(args_key[0], (int, str)):
+            return args_key[0]
+
+        return args_key
+
+    if key is None:
+        key = default_key
 
     class decorator:
         def __init__(self, func: Callable[..., T]) -> None:
@@ -536,10 +546,14 @@ def memoization(
                 return result
 
         @property
+        def __wrapped__(self) -> Callable[..., T]:
+            return self._func
+
+        @property
         def __cache__(self) -> dict[Any, T]:
             return self._cache
 
-        def clear_cache(self) -> None:
+        def cache_clear(self) -> None:
             self._cache.clear()
 
         def cache_info(self) -> CacheInfo:
@@ -598,3 +612,9 @@ def chenyu(
 
     r = random.Random(len(points))
     return rec_chenyu(points)
+
+
+@memoization()
+def cached_splitlines(s: str) -> list[str]:
+    """ A cached version of the `str.splitlines` method """
+    return s.splitlines()
