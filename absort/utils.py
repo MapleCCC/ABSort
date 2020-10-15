@@ -4,11 +4,12 @@ import functools
 import itertools
 import operator
 import os
+import random
 import sys
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict
 from collections.abc import Callable, Hashable, Iterable, Iterator, Sequence
 from functools import partial
-from itertools import zip_longest
+from itertools import combinations, zip_longest
 from types import SimpleNamespace
 from typing import IO, Any, Optional, TypeVar, Union, overload
 
@@ -17,6 +18,7 @@ from colorama import Fore, Style
 
 from .lfu import LFU
 from .lru import LRU
+from .weighted_graph import WeightedGraph
 
 __all__ = [
     "ireverse",
@@ -52,6 +54,7 @@ __all__ = [
     "contains",
     "larger_recursion_limit",
     "memoization",
+    "chenyu",
 ]
 
 
@@ -543,3 +546,55 @@ def memoization(
             return CacheInfo(self._hit, self._miss, len(self._cache))  # type: ignore
 
     return decorator
+
+
+Point = TypeVar("Point")
+Cluster = list[Point]
+
+
+def chenyu(
+    points: Cluster, distance: Callable[[Point, Point], float], k: int
+) -> Iterator[Cluster]:
+    """
+    A derterministic divisive hierarchical clustering algorithm proposed by Chen Yu (https://github.com/vincentcheny)
+
+    The k argument is an algorithmic parameter to tune. Smaller k yields better clustering quality, while larger k yields less time complexity.
+
+    The points argument accepts a list of point object. The point object is required to be hashable.
+
+    The distance argument accepts a callable that returns the distance between two point objects.
+
+    Assuming that the distance calculation cost is expensive and dominant over other costs,
+    then the time complexity is O(k*n*(ln(n)/ln(k)-1)).
+    """
+
+    def rec_chenyu(points: Cluster) -> Iterator[Cluster]:
+        if len(points) < k:
+            yield points
+            return
+
+        centroids = r.sample(points, k)
+
+        clusters: defaultdict[Point, Cluster] = defaultdict(list)
+        for p in points:
+            nearest_centroid = min(centroids, key=lambda x: distance(x, p))
+            clusters[nearest_centroid].append(p)
+
+        # If all points overlap
+        if len(clusters) == 1:
+            yield next(iter(clusters.values()))
+            return
+
+        graph: WeightedGraph[Point] = WeightedGraph()
+        for c1, c2 in combinations(centroids, 2):
+            weight = distance(c1, c2)
+            graph.add_edge(c1, c2, weight)
+
+        for centroid in graph.minimum_spanning_tree():
+            cluster = clusters[centroid]
+            yield from rec_chenyu(cluster)
+
+    assert k >= 2, "k should be an integer larger than 1"
+
+    r = random.Random(len(points))
+    return rec_chenyu(points)

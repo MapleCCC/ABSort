@@ -11,7 +11,8 @@ from collections import Counter
 from collections.abc import AsyncIterator, Iterable, Iterator
 from datetime import datetime
 from enum import Enum
-from itertools import combinations
+from functools import partial
+from itertools import chain, combinations
 from operator import itemgetter
 from types import SimpleNamespace
 from typing import Any
@@ -37,6 +38,7 @@ from .typing_extra import Declaration, DeclarationType
 from .utils import (
     bright_green,
     bright_yellow,
+    chenyu,
     colored_unified_diff,
     compose,
     duplicated,
@@ -235,9 +237,22 @@ def sort_decls_by_syntax_tree_similarity(
         yield decls[0]
         return
 
+    algorithm = "ZhangShasha"
+    if any(ast_tree_size(decl) > 10 for decl in decls):
+        algorithm = "PQGram"
+
+    # Normalized PQGram distance and xxxxxxx has pseudo-metric properties. We can utilize this
+    # property to reduce time complexity when sorting decls. e.g. no need to calculate all
+    # n**2 distances.
+    if len(decls) > 10:
+        _ast_tree_edit_distance = partial(ast_tree_edit_distance, algorithm=algorithm)
+        clusters = chenyu(decls, _ast_tree_edit_distance, k=3)
+        yield from chain.from_iterable(clusters)
+        return
+
     graph: WeightedGraph[DeclarationType] = WeightedGraph()
     for decl1, decl2 in combinations(decls, 2):
-        distance = ast_tree_edit_distance(decl1, decl2, algorithm="PQGram")
+        distance = ast_tree_edit_distance(decl1, decl2, algorithm)
         graph.add_edge(decl1, decl2, distance)
     yield from graph.minimum_spanning_tree()
 
