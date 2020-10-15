@@ -511,6 +511,16 @@ def memoization(
         miss: int = 0
         currsize: int = 0
 
+    class wrapper_tuple:
+        def __init__(self, tup: tuple)->None:
+            self._tup = tup
+            self._hash = None
+
+        def __hash__(self)->int:
+            if self._hash is None:
+                self._hash = hash(self._tup)
+            return self._hash
+
     def default_key(*args, **kwargs) -> Hashable:
         # Duplicate the behavior of the builtin functools.lru_cache
 
@@ -519,7 +529,7 @@ def memoization(
         if len(args_key) == 1 and isinstance(args_key[0], (int, str)):
             return args_key[0]
 
-        return args_key
+        return wrapper_tuple(args_key)
 
     if key is None:
         key = default_key
