@@ -56,6 +56,14 @@ def test_absort_str() -> None:
                 format_option=format_option,
             )
 
+            second_run_new_source = absort_str(
+                source,
+                comment_strategy=comment_strategy,
+                format_option=format_option,
+            )
+            # Check that absort is deterministic and stable
+            assert new_source == second_run_new_source
+
             old_ast = ast.parse(source)
             new_ast = ast.parse(new_source)
 
