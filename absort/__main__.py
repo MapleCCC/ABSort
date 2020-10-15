@@ -234,8 +234,7 @@ def sort_decls_by_syntax_tree_similarity(
     decls: list[DeclarationType],
 ) -> Iterator[DeclarationType]:
     if len(decls) == 1:
-        yield decls[0]
-        return
+        return iter(decls)
 
     algorithm = "ZhangShasha"
     if any(ast_tree_size(decl) > 10 for decl in decls):
@@ -247,14 +246,13 @@ def sort_decls_by_syntax_tree_similarity(
     if len(decls) > 10:
         _ast_tree_edit_distance = partial(ast_tree_edit_distance, algorithm=algorithm)
         clusters = chenyu(decls, _ast_tree_edit_distance, k=3)
-        yield from chain.from_iterable(clusters)
-        return
+        return chain.from_iterable(clusters)
 
     graph: WeightedGraph[DeclarationType] = WeightedGraph()
     for decl1, decl2 in combinations(decls, 2):
         distance = ast_tree_edit_distance(decl1, decl2, algorithm)
         graph.add_edge(decl1, decl2, distance)
-    yield from graph.minimum_spanning_tree()
+    return graph.minimum_spanning_tree()
 
 
 @profile  # type: ignore
