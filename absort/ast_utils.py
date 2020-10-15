@@ -172,18 +172,244 @@ def cached_ast_iter_child_nodes(node: ast.AST) -> list[ast.AST]:
     return list(ast.iter_child_nodes(node))
 
 
-@memoization(key=id)
-def ast_node_class_fields(ast_node_class: type[ast.AST]) -> list[tuple[str, str]]:
-    assert hasattr(ast_node_class, "__doc__")
-    schema = ast_node_class.__doc__
-    assert schema
-    m = re.fullmatch(r"\w+(?:\((?P<attributes>.*)\))?", schema)
-    if m is None:
-        raise ValueError
+class DeprecatedASTNodeError(Exception):
+    pass
+
+
+Field = tuple[str, str]
+Fields = tuple[tuple[str, str], ...]
+
+
+def retrieve_ast_node_class_fields(
+    ast_node_class: type[ast.AST],
+) -> Fields:
+    if ast_node_class is ast.AST:
+        raise ValueError("Abstract node class has no fields")
+
+    doc = ast_node_class.__doc__
+    assert doc
+
+    if re.fullmatch(r"Deprecated AST node class\..*", doc):
+        raise DeprecatedASTNodeError(
+            f"The ast node class {ast_node_class} is deprecated"
+        )
+
+    concrete_class_doc_pattern = r"\w+(?: = )?(?:\((?:\w+[?*]? \w+, )*\w+[?*]? \w+\))?"
+    concrete_class_doc_pattern_with_name_group = (
+        r"\w+(?: = )?(?:\((?P<attributes>(?:\w+[?*]? \w+, )*\w+[?*]? \w+)\))?"
+    )
+    abstract_class_doc_pattern = (
+        r"\w+ = ("
+        + concrete_class_doc_pattern
+        + r"\s*\|\s*)*"
+        + concrete_class_doc_pattern
+    )
+
+    if re.fullmatch(abstract_class_doc_pattern, doc):
+        raise ValueError("Abstract node class has no fields")
+
+    m = re.fullmatch(concrete_class_doc_pattern_with_name_group, doc)
+    assert m, f"{ast_node_class} can't match"
+
     attributes = m.group("attributes")
+
     if attributes is None:
-        return []
-    return [tuple(attribute.split()) for attribute in attributes.split(",")]  # type: ignore
+        # Example: ast.Load, ast.Store, ast.Del, etc.
+        return ()
+
+    return tuple((*attribute.split(),) for attribute in attributes.split(","))  # type: ignore
+
+
+def all_ast_node_classes() -> Iterator[tuple[str, type[ast.AST]]]:
+    for name in dir(ast):
+        attr = getattr(ast, name)
+        try:
+            if issubclass(attr, ast.AST):
+                attr_name = str(attr)
+                m = re.fullmatch(r"<class 'ast.(?P<class_name>.*)'>", attr_name)
+                yield m.group("class_name"), attr
+        except TypeError:
+            pass
+
+
+def build_ast_node_class_fields_table() -> dict[str, tuple[tuple[str, str], ...]]:
+    table: dict[str, Fields] = {}
+    for name, cls in all_ast_node_classes():
+        try:
+            fields = retrieve_ast_node_class_fields(cls)
+        except (DeprecatedASTNodeError, ValueError):
+            continue
+        table[name] = fields
+    return table
+
+
+# The table is automatically built by calling the function build_ast_node_class_fields_table(),
+# as it will be too tedious to manually build and maintain the table.
+ast_node_class_fields_table = {
+    "Add": (),
+    "And": (),
+    "AnnAssign": (
+        ("expr", "target"),
+        ("expr", "annotation"),
+        ("expr?", "value"),
+        ("int", "simple"),
+    ),
+    "Assert": (("expr", "test"), ("expr?", "msg")),
+    "Assign": (("expr*", "targets"), ("expr", "value"), ("string?", "type_comment")),
+    "AsyncFor": (
+        ("expr", "target"),
+        ("expr", "iter"),
+        ("stmt*", "body"),
+        ("stmt*", "orelse"),
+        ("string?", "type_comment"),
+    ),
+    "AsyncFunctionDef": (
+        ("identifier", "name"),
+        ("arguments", "args"),
+        ("stmt*", "body"),
+        ("expr*", "decorator_list"),
+        ("expr?", "returns"),
+        ("string?", "type_comment"),
+    ),
+    "AsyncWith": (
+        ("withitem*", "items"),
+        ("stmt*", "body"),
+        ("string?", "type_comment"),
+    ),
+    "Attribute": (("expr", "value"), ("identifier", "attr"), ("expr_context", "ctx")),
+    "AugAssign": (("expr", "target"), ("operator", "op"), ("expr", "value")),
+    "Await": (("expr", "value"),),
+    "BinOp": (("expr", "left"), ("operator", "op"), ("expr", "right")),
+    "BitAnd": (),
+    "BitOr": (),
+    "BitXor": (),
+    "BoolOp": (("boolop", "op"), ("expr*", "values")),
+    "Break": (),
+    "Call": (("expr", "func"), ("expr*", "args"), ("keyword*", "keywords")),
+    "ClassDef": (
+        ("identifier", "name"),
+        ("expr*", "bases"),
+        ("keyword*", "keywords"),
+        ("stmt*", "body"),
+        ("expr*", "decorator_list"),
+    ),
+    "Compare": (("expr", "left"), ("cmpop*", "ops"), ("expr*", "comparators")),
+    "Constant": (("constant", "value"), ("string?", "kind")),
+    "Continue": (),
+    "Del": (),
+    "Delete": (("expr*", "targets"),),
+    "Dict": (("expr*", "keys"), ("expr*", "values")),
+    "DictComp": (("expr", "key"), ("expr", "value"), ("comprehension*", "generators")),
+    "Div": (),
+    "Eq": (),
+    "ExceptHandler": (("expr?", "type"), ("identifier?", "name"), ("stmt*", "body")),
+    "Expr": (("expr", "value"),),
+    "Expression": (("expr", "body"),),
+    "FloorDiv": (),
+    "For": (
+        ("expr", "target"),
+        ("expr", "iter"),
+        ("stmt*", "body"),
+        ("stmt*", "orelse"),
+        ("string?", "type_comment"),
+    ),
+    "FormattedValue": (
+        ("expr", "value"),
+        ("int?", "conversion"),
+        ("expr?", "format_spec"),
+    ),
+    "FunctionDef": (
+        ("identifier", "name"),
+        ("arguments", "args"),
+        ("stmt*", "body"),
+        ("expr*", "decorator_list"),
+        ("expr?", "returns"),
+        ("string?", "type_comment"),
+    ),
+    "FunctionType": (("expr*", "argtypes"), ("expr", "returns")),
+    "GeneratorExp": (("expr", "elt"), ("comprehension*", "generators")),
+    "Global": (("identifier*", "names"),),
+    "Gt": (),
+    "GtE": (),
+    "If": (("expr", "test"), ("stmt*", "body"), ("stmt*", "orelse")),
+    "IfExp": (("expr", "test"), ("expr", "body"), ("expr", "orelse")),
+    "Import": (("alias*", "names"),),
+    "ImportFrom": (("identifier?", "module"), ("alias*", "names"), ("int?", "level")),
+    "In": (),
+    "Interactive": (("stmt*", "body"),),
+    "Invert": (),
+    "Is": (),
+    "IsNot": (),
+    "JoinedStr": (("expr*", "values"),),
+    "LShift": (),
+    "Lambda": (("arguments", "args"), ("expr", "body")),
+    "List": (("expr*", "elts"), ("expr_context", "ctx")),
+    "ListComp": (("expr", "elt"), ("comprehension*", "generators")),
+    "Load": (),
+    "Lt": (),
+    "LtE": (),
+    "MatMult": (),
+    "Mod": (),
+    "Module": (("stmt*", "body"), ("type_ignore*", "type_ignores")),
+    "Mult": (),
+    "Name": (("identifier", "id"), ("expr_context", "ctx")),
+    "NamedExpr": (("expr", "target"), ("expr", "value")),
+    "Nonlocal": (("identifier*", "names"),),
+    "Not": (),
+    "NotEq": (),
+    "NotIn": (),
+    "Or": (),
+    "Pass": (),
+    "Pow": (),
+    "RShift": (),
+    "Raise": (("expr?", "exc"), ("expr?", "cause")),
+    "Return": (("expr?", "value"),),
+    "Set": (("expr*", "elts"),),
+    "SetComp": (("expr", "elt"), ("comprehension*", "generators")),
+    "Slice": (("expr?", "lower"), ("expr?", "upper"), ("expr?", "step")),
+    "Starred": (("expr", "value"), ("expr_context", "ctx")),
+    "Store": (),
+    "Sub": (),
+    "Subscript": (("expr", "value"), ("expr", "slice"), ("expr_context", "ctx")),
+    "Try": (
+        ("stmt*", "body"),
+        ("excepthandler*", "handlers"),
+        ("stmt*", "orelse"),
+        ("stmt*", "finalbody"),
+    ),
+    "Tuple": (("expr*", "elts"), ("expr_context", "ctx")),
+    "TypeIgnore": (("int", "lineno"), ("string", "tag")),
+    "UAdd": (),
+    "USub": (),
+    "UnaryOp": (("unaryop", "op"), ("expr", "operand")),
+    "While": (("expr", "test"), ("stmt*", "body"), ("stmt*", "orelse")),
+    "With": (("withitem*", "items"), ("stmt*", "body"), ("string?", "type_comment")),
+    "Yield": (("expr?", "value"),),
+    "YieldFrom": (("expr", "value"),),
+    "alias": (("identifier", "name"), ("identifier?", "asname")),
+    "arg": (
+        ("identifier", "arg"),
+        ("expr?", "annotation"),
+        ("string?", "type_comment"),
+    ),
+    "arguments": (
+        ("arg*", "posonlyargs"),
+        ("arg*", "args"),
+        ("arg?", "vararg"),
+        ("arg*", "kwonlyargs"),
+        ("expr*", "kw_defaults"),
+        ("arg?", "kwarg"),
+        ("expr*", "defaults"),
+    ),
+    "comprehension": (
+        ("expr", "target"),
+        ("expr", "iter"),
+        ("expr*", "ifs"),
+        ("int", "is_async"),
+    ),
+    "keyword": (("identifier?", "arg"), ("expr", "value")),
+    "withitem": (("expr", "context_expr"), ("expr?", "optional_vars")),
+}
 
 
 # Reference: https://docs.python.org/3/library/ast.html#abstract-grammar
@@ -197,9 +423,24 @@ def ast_iter_non_node_fields(
 ) -> Iterator[Union[TerminalType, list[TerminalType], None]]:
     """ Complement of the ast.iter_child_nodes function """
 
-    for type, name in ast_node_class_fields(node.__class__):
+    class_name = node.__class__.__name__
+    for type, name in ast_node_class_fields_table[class_name]:
         if type.rstrip("?*") in Terminals:
             yield getattr(node, name)
+
+
+def fast_ast_iter_child_nodes(node: ast.AST) -> Iterator[ast.AST]:
+    class_name = node.__class__.__name__
+    for type, name in ast_node_class_fields_table[class_name]:
+        if type.rstrip("?*") not in Terminals:
+            attr = getattr(node, name)
+            if type[-1] == "?":
+                if attr is not None:
+                    yield attr
+            elif type[-1] == "*":
+                yield from attr
+            else:
+                yield attr
 
 
 def ast_tree_edit_distance(
@@ -230,7 +471,7 @@ def ast_tree_edit_distance(
         )
 
     elif algorithm == "PQGram":
-        return pqgram(node1, node2, children=ast.iter_child_nodes, label=type)
+        return pqgram(node1, node2, children=fast_ast_iter_child_nodes, label=type)
 
     else:
         raise ValueError("Invalid value for the algorithm argument")
