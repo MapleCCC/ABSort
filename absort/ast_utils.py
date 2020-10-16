@@ -450,10 +450,16 @@ def fast_ast_iter_child_nodes(node: ast.AST) -> Iterator[ast.AST]:
 
             elif type[-1] == "*":
 
-                # Edge case: dict unpacking
+                # Edge case 1: dict unpacking
                 # Reference: "When doing dictionary unpacking using dictionary literals the expression to be expanded goes in the values list, with a None at the corresponding position in keys." from https://docs.python.org/3/library/ast.html#ast.Dict
                 if class_name == "Dict" and name == "keys":
                     yield from (expr for expr in attr if expr is not None)
+                    continue
+
+                # Edge case 2: required keyword argument default
+                # Reference: "kw_defaults is a list of default values for keyword-only arguments. If one is None, the corresponding argument is required." from https://docs.python.org/3/library/ast.html#ast.arguments
+                if class_name == "arguments" and name == "kw_defaults":
+                    yield from ()
                     continue
 
                 yield from attr
