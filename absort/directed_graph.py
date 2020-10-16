@@ -7,6 +7,7 @@ from collections import defaultdict, deque
 from collections.abc import Callable, Iterator
 from typing import Generic, Optional, TypeVar
 
+from .collections_extra import OrderedSet
 from .utils import identityfunc
 
 #
@@ -17,7 +18,7 @@ from .utils import identityfunc
 # though we may consider to rewrite the implementation to waive the constraint in the future)
 Node = TypeVar("Node")
 Edge = tuple[Node, Node]
-AdjacencyList = defaultdict[Node, set[Node]]
+AdjacencyList = defaultdict[Node, OrderedSet[Node]]
 
 
 __all__ = ["CircularDependencyError", "SelfLoopError", "DirectedGraph"]
@@ -34,7 +35,7 @@ class SelfLoopError(Exception):
 # Graph is represented internally as data structure adjacency list
 class DirectedGraph(Generic[Node]):
     def __init__(self) -> None:
-        self._adjacency_list: AdjacencyList = defaultdict(set)
+        self._adjacency_list: AdjacencyList = defaultdict(OrderedSet)
 
     __slots__ = "_adjacency_list"
 
@@ -113,7 +114,7 @@ class DirectedGraph(Generic[Node]):
         new_graph: DirectedGraph[Node] = DirectedGraph()
 
         for key in self._adjacency_list.keys():
-            new_graph._adjacency_list[key] = set()
+            new_graph._adjacency_list[key] = OrderedSet()
 
         for node, children in self._adjacency_list.items():
             for child in children:
@@ -144,10 +145,12 @@ class DirectedGraph(Generic[Node]):
     ) -> Iterator[Node]:
         """
         Note that `reversed(topological_sort)` is not equivalent to `topological_sort(reverse=True)`
+
+        For the same edge/node insertion order, the output is deterministic.
         """
 
-        def find_sources(graph: DirectedGraph[Node]) -> set[Node]:
-            sources: set[Node] = set(graph._adjacency_list.keys())
+        def find_sources(graph: DirectedGraph[Node]) -> OrderedSet[Node]:
+            sources: OrderedSet[Node] = OrderedSet(graph._adjacency_list.keys())
 
             for children in graph._adjacency_list.values():
                 sources -= children
@@ -160,8 +163,8 @@ class DirectedGraph(Generic[Node]):
 
             return sources
 
-        def find_sinks(graph: DirectedGraph[Node]) -> set[Node]:
-            sinks: set[Node] = set()
+        def find_sinks(graph: DirectedGraph[Node]) -> OrderedSet[Node]:
+            sinks: OrderedSet[Node] = OrderedSet()
 
             for node, children in graph._adjacency_list.items():
                 if not children:
@@ -175,7 +178,7 @@ class DirectedGraph(Generic[Node]):
 
             return sinks
 
-        def remove_sources(graph: DirectedGraph[Node]) -> set[Node]:
+        def remove_sources(graph: DirectedGraph[Node]) -> OrderedSet[Node]:
             srcs = find_sources(graph)
 
             for src in srcs:
@@ -186,7 +189,7 @@ class DirectedGraph(Generic[Node]):
 
             return srcs
 
-        def remove_sinks(graph: DirectedGraph[Node]) -> set[Node]:
+        def remove_sinks(graph: DirectedGraph[Node]) -> OrderedSet[Node]:
             sinks = find_sinks(graph)
 
             for sink in sinks:
@@ -218,10 +221,12 @@ class DirectedGraph(Generic[Node]):
         """
         A more relaxed topological sort. When there are no more source/sink node left, treat
         all leftover nodes as the same rank.
+
+        For the same edge/node insertion order, the output is deterministic.
         """
 
-        def find_sources(graph: DirectedGraph[Node]) -> set[Node]:
-            sources: set[Node] = set(graph._adjacency_list.keys())
+        def find_sources(graph: DirectedGraph[Node]) -> OrderedSet[Node]:
+            sources: OrderedSet[Node] = OrderedSet(graph._adjacency_list.keys())
 
             for children in graph._adjacency_list.values():
                 sources -= children
@@ -230,12 +235,12 @@ class DirectedGraph(Generic[Node]):
                 # Detected circular dependency
                 # When there are no more source node left, treat all leftover nodes as
                 # the same rank.
-                return set(graph._adjacency_list.keys())
+                return OrderedSet(graph._adjacency_list.keys())
 
             return sources
 
-        def find_sinks(graph: DirectedGraph[Node]) -> set[Node]:
-            sinks: set[Node] = set()
+        def find_sinks(graph: DirectedGraph[Node]) -> OrderedSet[Node]:
+            sinks: OrderedSet[Node] = OrderedSet()
 
             for node, children in graph._adjacency_list.items():
                 if not children:
@@ -245,11 +250,11 @@ class DirectedGraph(Generic[Node]):
                 # Detected circular dependency
                 # When there are no more sink node left, treat all leftover nodes as
                 # the same rank.
-                return set(graph._adjacency_list.keys())
+                return OrderedSet(graph._adjacency_list.keys())
 
             return sinks
 
-        def remove_sources(graph: DirectedGraph[Node]) -> set[Node]:
+        def remove_sources(graph: DirectedGraph[Node]) -> OrderedSet[Node]:
             srcs = find_sources(graph)
 
             for src in srcs:
@@ -260,7 +265,7 @@ class DirectedGraph(Generic[Node]):
 
             return srcs
 
-        def remove_sinks(graph: DirectedGraph[Node]) -> set[Node]:
+        def remove_sinks(graph: DirectedGraph[Node]) -> OrderedSet[Node]:
             sinks = find_sinks(graph)
 
             for sink in sinks:

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections import OrderedDict
-from collections.abc import Iterable, Iterator, MutableSet
+from collections.abc import Iterable, Iterator, MutableSet, Set
 from itertools import repeat
 from typing import TypeVar
 
@@ -26,6 +26,17 @@ class _OrderedSet(MutableSet[T]):
 
     def __len__(self) -> int:
         return len(self._data)
+
+    def __isub__(self, other: Set[T]) -> _OrderedSet[T]:
+        if not isinstance(other, _OrderedSet):
+            raise TypeError(
+                f"unsupported operand type(s) for -=: '{type(self)}' and '{type(other)}'"
+            )
+
+        for elem in other._data:
+            del self._data[elem]
+
+        return self
 
     def copy(self) -> _OrderedSet[T]:
         """ Shallow copy, not deep copy """
