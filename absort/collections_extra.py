@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections import OrderedDict
 from collections.abc import Iterable, Iterator, MutableSet
 from itertools import repeat
@@ -24,6 +26,13 @@ class _OrderedSet(MutableSet[T]):
 
     def __len__(self) -> int:
         return len(self._data)
+
+    def copy(self) -> _OrderedSet[T]:
+        """ Shallow copy, not deep copy """
+
+        new: _OrderedSet[T] = _OrderedSet()
+        new._data = self._data.copy()
+        return new
 
     def add(self, elem: T) -> None:
         self._data[elem] = None

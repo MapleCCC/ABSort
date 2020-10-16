@@ -21,12 +21,12 @@ __all__ = ["WeightedGraph"]
 Node = TypeVar("Node")
 Edge = frozenset[Node]
 Weight = float
-AdjacencyList = defaultdict[Node, set[Node]]
+AdjacencyList = defaultdict[Node, OrderedSet[Node]]
 
 
 class WeightedGraph(Generic[Node]):
     def __init__(self) -> None:
-        self._adjacency_list: AdjacencyList = defaultdict(set)
+        self._adjacency_list: AdjacencyList = defaultdict(OrderedSet)
         self._weight_table: dict[Edge, Weight] = {}
 
     __slots__ = ["_adjacency_list", "_weight_table"]
@@ -79,7 +79,7 @@ class WeightedGraph(Generic[Node]):
 
         new = WeightedGraph()
 
-        new_adjacency_list: AdjacencyList = defaultdict(set)
+        new_adjacency_list: AdjacencyList = defaultdict(OrderedSet)
         for node, nodes in self._adjacency_list.items():
             new_adjacency_list[node] = nodes.copy()
         new._adjacency_list = new_adjacency_list
@@ -95,6 +95,10 @@ class WeightedGraph(Generic[Node]):
             raise ValueError("No minimum edge in an empty or one-noded graph")
 
     def minimum_spanning_tree(self) -> Iterator[Node]:
+        """
+        For the same edge/node insertion order, output is deterministic.
+        """
+
         if self.num_edges == 0:
             # An empty or one-noded graph
             yield from self._adjacency_list.keys()
