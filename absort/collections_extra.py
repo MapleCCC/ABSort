@@ -34,7 +34,7 @@ class _OrderedSet(MutableSet[T]):
             )
 
         for elem in other._data:
-            del self._data[elem]
+            self._data.pop(elem, None)
 
         return self
 
