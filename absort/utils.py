@@ -55,6 +55,7 @@ __all__ = [
     "larger_recursion_limit",
     "memoization",
     "chenyu",
+    "no_color_context"
 ]
 
 
@@ -102,6 +103,10 @@ def bright_red(s: str) -> str:
     """
     Augment a string, so that when printed to console, the string is displayed in bright red color.
     """
+
+    if "NO_COLOR" in os.environ:
+        return s
+
     return Style.BRIGHT + Fore.RED + s + Style.RESET_ALL  # type: ignore
 
 
@@ -109,6 +114,10 @@ def bright_green(s: str) -> str:
     """
     Augment a string, so that when printed to console, the string is displayed in bright green color.
     """
+
+    if "NO_COLOR" in os.environ:
+        return s
+
     return Style.BRIGHT + Fore.GREEN + s + Style.RESET_ALL  # type: ignore
 
 
@@ -116,6 +125,10 @@ def bright_blue(s: str) -> str:
     """
     Augment a string, so that when printed to console, the string is displayed in bright blue color.
     """
+
+    if "NO_COLOR" in os.environ:
+        return s
+
     return Style.BRIGHT + Fore.BLUE + s + Style.RESET_ALL  # type: ignore
 
 
@@ -123,6 +136,10 @@ def bright_yellow(s: str) -> str:
     """
     Augment a string, so that when printed to console, the string is displayed in bright yellow color.
     """
+
+    if "NO_COLOR" in os.environ:
+        return s
+
     return Style.BRIGHT + Fore.YELLOW + s + Style.RESET_ALL  # type: ignore
 
 
@@ -647,3 +664,22 @@ def cached_splitlines(s: str, strict: bool=False) -> list[str]:
         return strict_splitlines(s)
     else:
         return s.splitlines()
+
+
+@contextlib.contextmanager
+def no_color_context() -> Iterator[None]:
+    """
+    Return a context manager. Within the context, the environment variable $NO_COLOR is set.
+    Utilities supporting the NO_COLOR movement (https://no-color.org/) should automatically adjust their color output behavior.
+    """
+
+    orig_value = os.environ.get("NO_COLOR", None)
+    os.environ["NO_COLOR"] = "true"
+
+    try:
+        yield
+    finally:
+        if orig_value is None:
+            del os.environ["NO_COLOR"]
+        else:
+            os.environ["NO_COLOR"] = orig_value

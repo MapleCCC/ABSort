@@ -44,6 +44,7 @@ from .utils import (
     duplicated,
     first_true,
     identityfunc,
+    no_color_context,
     silent_context,
     strict_splitlines,
     whitespace_lines,
@@ -393,8 +394,7 @@ def main(
     verboseness_context_manager = silent_context() if quiet else contextlib.nullcontext()
 
     # TODO test --color-off under different environments, eg. Linux, macOS, ...
-    color_off_context_manager = colorama_text(strip=True, convert=False, wrap=True)
-    colorness_context_manager = colorama_text() if not color_off else color_off_context_manager
+    colorness_context_manager = no_color_context() if color_off else colorama_text()
 
     with verboseness_context_manager, colorness_context_manager:
 
