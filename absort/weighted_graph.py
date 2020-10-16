@@ -40,12 +40,14 @@ class WeightedGraph(Generic[Node]):
 
         self._adjacency_list[v].add(w)
         self._adjacency_list[w].add(v)
+
         edge = frozenset({v, w})
         self._weight_table[edge] = weight
 
     def remove_edge(self, v: Node, w: Node) -> None:
         self._adjacency_list[v].discard(w)
         self._adjacency_list[w].discard(v)
+
         edge = frozenset({v, w})
         self._weight_table.pop(edge, None)
 
@@ -61,6 +63,7 @@ class WeightedGraph(Generic[Node]):
         try:
             edge = frozenset({v, w})
             return self._weight_table[edge]
+
         except KeyError:
             raise ValueError(f"{{{v}, {w}}} is not an edge in the graph")
 
@@ -68,7 +71,7 @@ class WeightedGraph(Generic[Node]):
         self._adjacency_list.clear()
         self._weight_table.clear()
 
-    def copy(self) -> WeightedGraph:
+    def copy(self) -> WeightedGraph[Node]:
         """
         Note that this is shallow copy, NOT deep copy.
 
@@ -77,20 +80,20 @@ class WeightedGraph(Generic[Node]):
         internal.
         """
 
-        new = WeightedGraph()
+        new: WeightedGraph[Node] = WeightedGraph()
 
-        new_adjacency_list: AdjacencyList = defaultdict(OrderedSet)
-        for node, nodes in self._adjacency_list.items():
-            new_adjacency_list[node] = nodes.copy()
-        new._adjacency_list = new_adjacency_list
+        for node, neighbors in self._adjacency_list.items():
+            new._adjacency_list[node] = neighbors.copy()
 
         new._weight_table = self._weight_table.copy()
+
         return new
 
     def find_minimum_edge(self) -> Edge:
         try:
             edges = self._weight_table.keys()
             return min(edges, key=lambda edge: self._weight_table[edge])
+
         except ValueError:
             raise ValueError("No minimum edge in an empty or one-noded graph")
 
@@ -101,8 +104,7 @@ class WeightedGraph(Generic[Node]):
 
         if self.num_edges == 0:
             # An empty or one-noded graph
-            yield from self._adjacency_list.keys()
-            return
+            return iter(self._adjacency_list.keys())
 
         _graph = self.copy()
         seen: OrderedSet[Node] = OrderedSet()
@@ -111,9 +113,11 @@ class WeightedGraph(Generic[Node]):
 
         # Make the order deterministic, instead of different for each call
         node1, node2 = minimum_edge
+
         # Additionally require the Node type to be pickable
         digest1 = md5(pickle.dumps(node1)).hexdigest()
         digest2 = md5(pickle.dumps(node2)).hexdigest()
+
         if digest1 > digest2:
             seen.update((node1, node2))
         elif digest1 < digest2:
@@ -125,6 +129,7 @@ class WeightedGraph(Generic[Node]):
 
         while len(seen) < _graph.num_nodes:
             candidate_edges = []
+
             for node in seen:
                 for neighbor in _graph._adjacency_list[node]:
                     if neighbor not in seen:
@@ -137,11 +142,11 @@ class WeightedGraph(Generic[Node]):
             seen.update(target_edge)
             _graph.remove_edge(*target_edge)
 
-        yield from seen
+        return iter(seen)
 
 
 if __name__ == "__main__":
-    g = WeightedGraph()
+    g: WeightedGraph[str] = WeightedGraph()
     g.add_edge("A", "B", 1)
     g.add_edge("A", "D", 3)
     g.add_edge("B", "D", 5)

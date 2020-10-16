@@ -75,6 +75,11 @@ def test_absort_str() -> None:
         except AssertionError:
             print(f"Encountered AssertionError when sorting {test_sample}")
             raise
+        except Exception as exc:
+            exc_cls_name = getattr(exc.__class__, "__name__", "some exception")
+            print(f"Encountered {exc_cls_name} when sorting {test_sample}")
+            raise
+
 
 # TODO add unit test for absort_file()
 # TODO add unit test for absort_files()

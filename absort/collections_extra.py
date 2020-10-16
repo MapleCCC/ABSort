@@ -14,7 +14,7 @@ T = TypeVar("T")
 
 class _OrderedSet(MutableSet[T]):
     def __init__(self, iterable: Iterable[T] = tuple()) -> None:
-        self._data: OrderedDict[T] = OrderedDict(zip(iterable, repeat(None)))
+        self._data: OrderedDict[T, None] = OrderedDict(zip(iterable, repeat(None)))
 
     __slots__ = ["_data"]
 
@@ -32,6 +32,7 @@ class _OrderedSet(MutableSet[T]):
 
         new: _OrderedSet[T] = _OrderedSet()
         new._data = self._data.copy()
+
         return new
 
     def add(self, elem: T) -> None:

@@ -164,7 +164,7 @@ def colored_unified_diff(
 
 
 @contextlib.contextmanager
-def silent_context() -> Iterator:
+def silent_context() -> Iterator[None]:
     """
     Return a context manager. Within the context, writting to `stdout` is discarded.
     """
@@ -652,7 +652,7 @@ def chenyu(
 
 
 @cache
-def cached_splitlines(s: str, strict: bool=False) -> list[str]:
+def cached_splitlines(s: str, strict: bool = False) -> list[str]:
     """
     A cached version of the `splitlines` method
 

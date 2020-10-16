@@ -41,8 +41,10 @@ class DirectedGraph(Generic[Node]):
     def add_edge(self, v: Node, w: Node) -> None:
         if v == w:
             raise SelfLoopError("Self-pointing dependency is not accepted")
+
         self._adjacency_list[v].add(w)
-        # add w to adjacency list. This line is necessary because without it, some
+
+        # Add w to adjacency list. This line is necessary because without it, some
         # nodes who are sinks of the graph (i.e., have zero out-going edge) would
         # not appear as keys in adjacency list.
         self._adjacency_list[w]
@@ -55,8 +57,10 @@ class DirectedGraph(Generic[Node]):
 
     def bfs(self, source: Node) -> Iterator[Node]:
         assert source in self._adjacency_list
-        queue = deque([source])
-        traversed = set()
+
+        queue: deque[Node] = deque([source])
+        traversed: set[Node] = set()
+
         while queue:
             node = queue.popleft()
             if node in traversed:
@@ -69,48 +73,55 @@ class DirectedGraph(Generic[Node]):
     # The main difference is whether user-maintained stack or runtime stack is
     # used to track information.
     def dfs(self, source: Node) -> Iterator[Node]:
-        traversed: set[Node] = set()
-        yield from self._dfs(source, traversed)
+        def rec_dfs(node: Node) -> Iterator[Node]:
+            if node in traversed:
+                return
+            yield node
+            traversed.add(node)
+            for child in self._adjacency_list[node]:
+                yield from rec_dfs(child)
 
-    def _dfs(self, node: Node, traversed: set[Node]) -> Iterator[Node]:
-        assert node in self._adjacency_list
-        if node in traversed:
-            return
-        yield node
-        traversed.add(node)
-        for child in self._adjacency_list[node]:
-            yield from self._dfs(child, traversed)
+        assert source in self._adjacency_list
+        traversed: set[Node] = set()
+        return rec_dfs(source)
 
     def detect_back_edge(self, source: Node) -> Optional[Edge]:
+        """ Return one back edge, or None if no back edge is found """
+
         assert source in self._adjacency_list
-        stack = [source]
+
+        stack: list[Node] = [source]
         current_path: list[Optional[Node]] = [None]
+
         while stack:
             node = stack[-1]
+
             if node != current_path[-1]:
                 current_path.append(node)
                 for child in self._adjacency_list[node]:
                     if child in current_path:
                         return (node, child)
                     stack.append(child)
+
             else:
                 stack.pop()
                 current_path.pop()
+
         return None
 
-    def get_invert_graph(self) -> DirectedGraph:
-        new_adjlist: AdjacencyList = defaultdict(set)
+    def get_invert_graph(self) -> DirectedGraph[Node]:
+        new_graph: DirectedGraph[Node] = DirectedGraph()
+
         for key in self._adjacency_list.keys():
-            new_adjlist[key] = set()
+            new_graph._adjacency_list[key] = set()
+
         for node, children in self._adjacency_list.items():
             for child in children:
-                new_adjlist[child].add(node)
+                new_graph._adjacency_list[child].add(node)
 
-        new_graph = DirectedGraph()
-        new_graph._adjacency_list = new_adjlist
         return new_graph
 
-    def copy(self) -> DirectedGraph:
+    def copy(self) -> DirectedGraph[Node]:
         """
         Note that this is shallow copy, NOT deep copy.
 
@@ -119,11 +130,11 @@ class DirectedGraph(Generic[Node]):
         internal.
         """
 
-        new_adjlist: AdjacencyList = defaultdict(set)
+        new_graph: DirectedGraph[Node] = DirectedGraph()
+
         for node, children in self._adjacency_list.items():
-            new_adjlist[node] = children.copy()
-        new_graph = DirectedGraph()
-        new_graph._adjacency_list = new_adjlist
+            new_graph._adjacency_list[node] = children.copy()
+
         return new_graph
 
     def topological_sort(
@@ -135,45 +146,55 @@ class DirectedGraph(Generic[Node]):
         Note that `reversed(topological_sort)` is not equivalent to `topological_sort(reverse=True)`
         """
 
-        def find_sources(graph: DirectedGraph) -> set[Node]:
-            adjlist = graph._adjacency_list
-            sources = set(adjlist.keys())
-            for children in adjlist.values():
+        def find_sources(graph: DirectedGraph[Node]) -> set[Node]:
+            sources: set[Node] = set(graph._adjacency_list.keys())
+
+            for children in graph._adjacency_list.values():
                 sources -= children
-            if not sources and adjlist:
+
+            if not sources and graph._adjacency_list:
                 raise CircularDependencyError(
                     "Circular dependency detected! "
                     + "Try to run the method detect_back_edge() to find back edges."
                 )
+
             return sources
 
-        def find_sinks(graph: DirectedGraph) -> set[Node]:
-            adjlist = graph._adjacency_list
-            sinks = set()
-            for node, children in adjlist.items():
+        def find_sinks(graph: DirectedGraph[Node]) -> set[Node]:
+            sinks: set[Node] = set()
+
+            for node, children in graph._adjacency_list.items():
                 if not children:
                     sinks.add(node)
-            if not sinks and adjlist:
+
+            if not sinks and graph._adjacency_list:
                 raise CircularDependencyError(
                     "Circular dependency detected! "
                     + "Try to run the method detect_back_edge() to find back edges."
                 )
+
             return sinks
 
-        def remove_sources(graph: DirectedGraph) -> set[Node]:
+        def remove_sources(graph: DirectedGraph[Node]) -> set[Node]:
             srcs = find_sources(graph)
+
             for src in srcs:
                 del graph._adjacency_list[src]
+
             for node in graph._adjacency_list:
                 graph._adjacency_list[node] -= srcs
+
             return srcs
 
-        def remove_sinks(graph: DirectedGraph) -> set[Node]:
+        def remove_sinks(graph: DirectedGraph[Node]) -> set[Node]:
             sinks = find_sinks(graph)
+
             for sink in sinks:
                 del graph._adjacency_list[sink]
+
             for node in graph._adjacency_list:
                 graph._adjacency_list[node] -= sinks
+
             return sinks
 
         if same_rank_sorter is None:
@@ -184,6 +205,7 @@ class DirectedGraph(Generic[Node]):
         if not reverse:
             while srcs := remove_sources(_graph):
                 yield from same_rank_sorter(list(srcs))
+
         else:
             while sinks := remove_sinks(_graph):
                 yield from same_rank_sorter(list(sinks))
@@ -198,45 +220,55 @@ class DirectedGraph(Generic[Node]):
         all leftover nodes as the same rank.
         """
 
-        def find_sources(graph: DirectedGraph) -> set[Node]:
-            adjlist = graph._adjacency_list
-            sources = set(adjlist.keys())
-            for children in adjlist.values():
+        def find_sources(graph: DirectedGraph[Node]) -> set[Node]:
+            sources: set[Node] = set(graph._adjacency_list.keys())
+
+            for children in graph._adjacency_list.values():
                 sources -= children
-            if not sources and adjlist:
+
+            if not sources and graph._adjacency_list:
                 # Detected circular dependency
                 # When there are no more source node left, treat all leftover nodes as
                 # the same rank.
-                return set(adjlist.keys())
+                return set(graph._adjacency_list.keys())
+
             return sources
 
-        def find_sinks(graph: DirectedGraph) -> set[Node]:
-            adjlist = graph._adjacency_list
-            sinks = set()
-            for node, children in adjlist.items():
+        def find_sinks(graph: DirectedGraph[Node]) -> set[Node]:
+            sinks: set[Node] = set()
+
+            for node, children in graph._adjacency_list.items():
                 if not children:
                     sinks.add(node)
-            if not sinks and adjlist:
+
+            if not sinks and graph._adjacency_list:
                 # Detected circular dependency
                 # When there are no more sink node left, treat all leftover nodes as
                 # the same rank.
-                return set(adjlist.keys())
+                return set(graph._adjacency_list.keys())
+
             return sinks
 
-        def remove_sources(graph: DirectedGraph) -> set[Node]:
+        def remove_sources(graph: DirectedGraph[Node]) -> set[Node]:
             srcs = find_sources(graph)
+
             for src in srcs:
                 del graph._adjacency_list[src]
+
             for node in graph._adjacency_list:
                 graph._adjacency_list[node] -= srcs
+
             return srcs
 
-        def remove_sinks(graph: DirectedGraph) -> set[Node]:
+        def remove_sinks(graph: DirectedGraph[Node]) -> set[Node]:
             sinks = find_sinks(graph)
+
             for sink in sinks:
                 del graph._adjacency_list[sink]
+
             for node in graph._adjacency_list:
                 graph._adjacency_list[node] -= sinks
+
             return sinks
 
         if same_rank_sorter is None:
@@ -261,7 +293,7 @@ class DirectedGraph(Generic[Node]):
 
 # TODO: move to unit test of Graph class
 if __name__ == "__main__":
-    g = DirectedGraph()
+    g: DirectedGraph[str] = DirectedGraph()
     g.add_edge("0", "1")
     g.add_edge("1", "2")
     g.add_edge("0", "3")

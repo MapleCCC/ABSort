@@ -774,6 +774,7 @@ def generate_dependency_graph(
     for decl in decls:
         deps = get_dependency_of_decl(decl, py_version)
         for dep in deps:
+
             # We don't add the dependency to the dependency graph, when:
             # 1. the dependency is not among the decls to sort;
             # 2. the dependency is of the same name with the decl itself. It can be inferred
@@ -781,6 +782,7 @@ def generate_dependency_graph(
             # the dependency graph anyway. One example: https://github.com/pytest-dev/py/blob/92e36e60b22e2520337748f950e3d885e0c7c551/py/_log/warning.py#L3
             if dep not in decl_names or dep == decl.name:
                 continue
+
             graph.add_edge(decl.name, dep)
 
         # Below line is necessary for adding node with zero out-degree to the graph.
