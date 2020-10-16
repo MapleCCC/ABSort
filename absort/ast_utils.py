@@ -443,11 +443,21 @@ def fast_ast_iter_child_nodes(node: ast.AST) -> Iterator[ast.AST]:
     for type, name in ast_node_class_fields_table[class_name]:
         if type.rstrip("?*") not in Terminals:
             attr = getattr(node, name)
+
             if type[-1] == "?":
                 if attr is not None:
                     yield attr
+
             elif type[-1] == "*":
+
+                # Edge case: dict unpacking
+                # Reference: "When doing dictionary unpacking using dictionary literals the expression to be expanded goes in the values list, with a None at the corresponding position in keys." from https://docs.python.org/3/library/ast.html#ast.Dict
+                if class_name == "Dict" and name == "keys":
+                    yield from (expr for expr in attr if expr is not None)
+                    continue
+
                 yield from attr
+
             else:
                 yield attr
 
