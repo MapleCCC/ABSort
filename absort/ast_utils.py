@@ -94,7 +94,9 @@ def ast_get_leading_comment_and_decorator_list_source_lines(
 ) -> list[str]:
     # WARNING: ast.AST.lineno and ast.AST.end_lineno are 1-indexed
 
-    above_lines = cached_splitlines(source)[: node.lineno - 1]
+    # Use strict_splitlines() instead of str.splitlines(), because CPython's ast.parse()
+    # doesn't parse the source string "#\x0c0" as containing an expression.
+    above_lines = cached_splitlines(source, strict=True)[: node.lineno - 1]
 
     decorator_list_linenos: set[int] = set()
     for decorator in getattr(node, "decorator_list", []):
@@ -119,7 +121,9 @@ def ast_get_leading_comment_and_decorator_list_source_lines(
 def ast_get_leading_comment_source_lines(source: str, node: ast.AST) -> list[str]:
     # WARNING: ast.AST.lineno and ast.AST.end_lineno are 1-indexed
 
-    above_lines = cached_splitlines(source)[: node.lineno - 1]
+    # Use strict_splitlines() instead of str.splitlines(), because CPython's ast.parse()
+    # doesn't parse the source string "#\x0c0" as containing an expression.
+    above_lines = cached_splitlines(source, strict=True)[: node.lineno - 1]
 
     decorator_list_linenos: set[int] = set()
     for decorator in getattr(node, "decorator_list", []):
@@ -146,7 +150,9 @@ def ast_get_decorator_list_source_lines(source: str, node: ast.AST) -> list[str]
 
     # WARNING: ast.AST.lineno and ast.AST.end_lineno are 1-indexed
 
-    source_lines = cached_splitlines(source)
+    # Use strict_splitlines() instead of str.splitlines(), because CPython's ast.parse()
+    # doesn't parse the source string "#\x0c0" as containing an expression.
+    source_lines = cached_splitlines(source, strict=True)
 
     decorator_list_lines = []
     for decorator in getattr(node, "decorator_list", []):
@@ -159,7 +165,9 @@ def ast_get_decorator_list_source_lines(source: str, node: ast.AST) -> list[str]
 def ast_get_source_lines(source: str, node: ast.AST) -> list[str]:
     # WARNING: ast.AST.lineno and ast.AST.end_lineno are 1-indexed
 
-    whole_source_lines = cached_splitlines(source)
+    # Use strict_splitlines() instead of str.splitlines(), because CPython's ast.parse()
+    # doesn't parse the source string "#\x0c0" as containing an expression.
+    whole_source_lines = cached_splitlines(source, strict=True)
 
     lineno, end_lineno = node.lineno, node.end_lineno
     source_lines = whole_source_lines[lineno - 1 : end_lineno]

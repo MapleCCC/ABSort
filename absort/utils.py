@@ -414,16 +414,20 @@ def hamming_distance(
 # TODO add `keepends` argument
 def strict_splitlines(s: str) -> list[str]:
     """
-    Similar to the str.splilines() function, except that the line boundaries are NOT a
+    Similar to the str.splitlines() function, except that the line boundaries are NOT a
     superset of universal newlines.
     """
+
+    # Some edge cases handling is necessary to be as closed to the behavior of str.splitlines() as possible
 
     if not s:
         return []
 
     res = s.split("\n")
+
     if res[-1] == "":
         res = res[:-1]
+
     return res
 
 
@@ -631,6 +635,15 @@ def chenyu(
 
 
 @cache
-def cached_splitlines(s: str) -> list[str]:
-    """ A cached version of the `str.splitlines` method """
-    return s.splitlines()
+def cached_splitlines(s: str, strict: bool=False) -> list[str]:
+    """
+    A cached version of the `splitlines` method
+
+    The strict flag controls whether a super set of universal newlines are deemed line boundaries.
+    When strict is set to True, only '\n' line feed character is deemed line boundary.
+    """
+
+    if strict:
+        return strict_splitlines(s)
+    else:
+        return s.splitlines()
