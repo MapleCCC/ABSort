@@ -45,5 +45,5 @@ hashables = constantfunc(
         dates(),
         datetimes(),
         functions(),
-    )
+    ).filter(lambda x: not x.is_snan())  # Signaling NaN is unhashable
 )
