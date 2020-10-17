@@ -47,6 +47,8 @@ def test_topological_sort_is_deterministic(
 
 @given(lists(hashables(), unique=True), lists(integers(min_value=0), unique=True))
 def test_topological_sort_order(node_pool: list[Hashable], indices: list[int]) -> None:
+    # No need to construct a connected graph, we only need to guarantee that it's acyclic.
+
     possible_edges = list(combinations(node_pool, 2))
 
     if len(possible_edges):
@@ -61,6 +63,9 @@ def test_topological_sort_order(node_pool: list[Hashable], indices: list[int]) -
     for edge in edges:
         graph.add_edge(*edge)
     nodes = list(graph.topological_sort())
+
+    assert len(nodes) == len(node_pool)
+    assert set(nodes) == set(node_pool)
 
     for u, v in edges:
         assert nodes.index(u) < nodes.index(v)
