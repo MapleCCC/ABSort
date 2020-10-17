@@ -37,11 +37,15 @@ def test_topological_sort_is_deterministic(
     edges = [possible_edges[index] for index in unique_indices]
 
     graph1 = DirectedGraph()
+    for node in node_pool:
+        graph1.add_node(node)
     for edge in edges:
         graph1.add_edge(*edge)
     result1 = graph1.topological_sort(reverse=reverse)
 
     graph2 = DirectedGraph()
+    for node in node_pool:
+        graph2.add_node(node)
     for edge in edges:
         graph2.add_edge(*edge)
     result2 = graph2.topological_sort(reverse=reverse)
