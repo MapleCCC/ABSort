@@ -57,6 +57,12 @@ class DirectedGraph(Generic[Node]):
         return node in self._adjacency_list
 
     def bfs(self, source: Node) -> Iterator[Node]:
+        """
+        Depending on the connectivity of the graph, it may not traverse all the nodes.
+        For the same edge/node insertion order, the output is deterministic.
+        """
+
+
         assert source in self._adjacency_list
 
         queue: deque[Node] = deque([source])
@@ -74,6 +80,11 @@ class DirectedGraph(Generic[Node]):
     # The main difference is whether user-maintained stack or runtime stack is
     # used to track information.
     def dfs(self, source: Node) -> Iterator[Node]:
+        """
+        Depending on the connectivity of the graph, it may not traverse all the nodes.
+        For the same edge/node insertion order, the output is deterministic.
+        """
+
         def rec_dfs(node: Node) -> Iterator[Node]:
             if node in traversed:
                 return
