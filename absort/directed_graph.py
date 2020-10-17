@@ -84,26 +84,24 @@ class DirectedGraph(Generic[Node]):
             traversed.add(node)
             queue.extend(self._adjacency_list[node])
 
-    # Optionally, we can implement dfs in iterative manner instead of recursive manner.
-    # The main difference is whether user-maintained stack or runtime stack is
-    # used to track information.
     def dfs(self, source: Node) -> Iterator[Node]:
         """
         Depending on the connectivity of the graph, it may not traverse all the nodes.
         For the same edge/node insertion order, the output is deterministic.
         """
 
-        def rec_dfs(node: Node) -> Iterator[Node]:
+        assert source in self._adjacency_list
+
+        stack: list[Node] = [source]
+        traversed: set[Node] = set()
+
+        while stack:
+            node = stack.pop()
             if node in traversed:
-                return
+                continue
             yield node
             traversed.add(node)
-            for child in self._adjacency_list[node]:
-                yield from rec_dfs(child)
-
-        assert source in self._adjacency_list
-        traversed: set[Node] = set()
-        return rec_dfs(source)
+            stack.extend(self._adjacency_list[node])
 
     def detect_back_edge(self, source: Node) -> Optional[Edge]:
         """
