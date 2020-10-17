@@ -1,5 +1,5 @@
 from collections.abc import Hashable
-from itertools import combinations
+from itertools import combinations, permutations
 
 from hypothesis import given
 from hypothesis.strategies import booleans, integers, lists
@@ -87,7 +87,7 @@ def test_topological_sort_order(
 
 @given(lists(hashables(), unique=True), lists(integers(min_value=0), unique=True))
 def test_bfs_is_deterministic(node_pool: list[Hashable], indices: list[int]) -> None:
-    possible_edges = list(combinations(node_pool, 2))
+    possible_edges = list(permutations(node_pool, 2))
 
     if len(possible_edges):
         unique_indices = set(index % len(possible_edges) for index in indices)
@@ -115,7 +115,7 @@ def test_bfs_is_deterministic(node_pool: list[Hashable], indices: list[int]) -> 
 
 @given(lists(hashables(), unique=True), lists(integers(min_value=0), unique=True))
 def test_dfs_is_deterministic(node_pool: list[Hashable], indices: list[int]) -> None:
-    possible_edges = list(combinations(node_pool, 2))
+    possible_edges = list(permutations(node_pool, 2))
 
     if len(possible_edges):
         unique_indices = set(index % len(possible_edges) for index in indices)
