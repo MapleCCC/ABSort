@@ -37,9 +37,9 @@ hashables = constantfunc(
         text(),
         binary(),
         fractions(),
-        decimals().filter(lambda x: not x.is_snan()),  # Signaling NaN is unhashable
-        floats(),
-        complex_numbers(),
+        decimals(allow_nan=False),
+        floats(allow_nan=False),
+        complex_numbers(allow_nan=False),
         timedeltas(),
         times(),
         dates(),
