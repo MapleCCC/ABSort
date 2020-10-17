@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from collections import OrderedDict
 from collections.abc import Iterable, Iterator, MutableSet, Set
 from itertools import repeat
 from typing import TypeVar
@@ -14,7 +13,7 @@ T = TypeVar("T")
 
 class _OrderedSet(MutableSet[T]):
     def __init__(self, iterable: Iterable[T] = tuple()) -> None:
-        self._data: OrderedDict[T, None] = OrderedDict.fromkeys(iterable)
+        self._data: dict[T, None] = dict.fromkeys(iterable)
 
     __slots__ = ["_data"]
 
