@@ -7,6 +7,8 @@ from collections import defaultdict, deque
 from collections.abc import Callable, Iterator
 from typing import Generic, Optional, TypeVar
 
+from more_itertools import first, ilen
+
 from .collections_extra import OrderedSet
 from .utils import identityfunc
 
@@ -56,12 +58,18 @@ class DirectedGraph(Generic[Node]):
     def __contains__(self, node: Node) -> bool:
         return node in self._adjacency_list
 
+    def connected(self) -> bool:
+        if not self._adjacency_list:
+            return True
+
+        entry = first(self._adjacency_list.keys())
+        return ilen(self.bfs(entry)) == len(self._adjacency_list)
+
     def bfs(self, source: Node) -> Iterator[Node]:
         """
         Depending on the connectivity of the graph, it may not traverse all the nodes.
         For the same edge/node insertion order, the output is deterministic.
         """
-
 
         assert source in self._adjacency_list
 
@@ -98,7 +106,13 @@ class DirectedGraph(Generic[Node]):
         return rec_dfs(source)
 
     def detect_back_edge(self, source: Node) -> Optional[Edge]:
-        """ Return one back edge, or None if no back edge is found """
+        """
+        Return one back edge, or None if no back edge is found.
+
+        Note that depending on the connectivity of the graph, this method may not traverse
+        all the nodes. So this method reporting no back edge found doesn't necessarily
+        imply that there is not cycle in the graph.
+        """
 
         assert source in self._adjacency_list
 
@@ -121,7 +135,7 @@ class DirectedGraph(Generic[Node]):
 
         return None
 
-    def get_invert_graph(self) -> DirectedGraph[Node]:
+    def get_transpose_graph(self) -> DirectedGraph[Node]:
         new_graph: DirectedGraph[Node] = DirectedGraph()
 
         for key in self._adjacency_list.keys():
@@ -158,6 +172,8 @@ class DirectedGraph(Generic[Node]):
         Note that `reversed(topological_sort)` is not equivalent to `topological_sort(reverse=True)`
 
         For the same edge/node insertion order, the output is deterministic.
+
+        This method traverses all the nodes regardless of the connectivity of the graph.
         """
 
         def find_sources(graph: DirectedGraph[Node]) -> OrderedSet[Node]:
