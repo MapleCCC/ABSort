@@ -11,4 +11,4 @@ def test_chenyu_is_deterministic(points: list[tuple[int, int]], k: int)->None:
     clusters1 = chenyu(points, distance, k)
     clusters2 = chenyu(points, distance, k)
 
-    assert iequal(clusters1, clusters2)
+    assert iequal(clusters1, clusters2, strict=True)
