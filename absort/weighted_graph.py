@@ -6,6 +6,8 @@ from collections.abc import Iterator
 from hashlib import md5
 from typing import Generic, TypeVar
 
+from more_itertools import first
+
 from .collections_extra import OrderedSet
 
 
@@ -99,37 +101,22 @@ class WeightedGraph(Generic[Node]):
 
     def minimum_spanning_tree(self) -> Iterator[Node]:
         """
-        For the same edge/node insertion order, output is deterministic.
+        For the same edge/node insertion order, output is guaranteed to be deterministic.
+
+        The output is ordered in such a way that, except the first one, the smallest candidate edge is always greedily picked first.
 
         For disconnected graph, ValueError is raised.
 
         Every connected graph has a minimum spanning tree. (may not be unique)
         """
 
-        if self.num_edges == 0:
-            # An empty or one-noded graph
-            return iter(self._adjacency_list.keys())
+        if self.num_nodes == 0:
+            return
 
         _graph = self.copy()
         seen: OrderedSet[Node] = OrderedSet()
 
-        minimum_edge = _graph.find_minimum_edge()
-
-        # Make the order deterministic, instead of different for each call
-        node1, node2 = minimum_edge
-
-        # Additionally require the Node type to be pickable
-        digest1 = md5(pickle.dumps(node1)).hexdigest()
-        digest2 = md5(pickle.dumps(node2)).hexdigest()
-
-        if digest1 > digest2:
-            seen.update((node1, node2))
-        elif digest1 < digest2:
-            seen.update((node2, node1))
-        else:
-            raise RuntimeError("Unlikely hash collision encountered")
-
-        _graph.remove_edge(*minimum_edge)
+        seen.add(first(_graph._adjacency_list.keys()))
 
         while len(seen) < _graph.num_nodes:
             candidate_edges = []
@@ -149,7 +136,7 @@ class WeightedGraph(Generic[Node]):
         if len(seen) < len(self._adjacency_list):
             raise ValueError("Disconnected graph doesn't have minimum spanning tree")
 
-        return iter(seen)
+        yield from seen
 
 
 if __name__ == "__main__":
