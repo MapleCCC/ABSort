@@ -50,7 +50,7 @@
 
 ## Internal Algorithm
 
-The sorting algorithm is currently a reversed topological sort on the dependency graph, with function/class definitions as graph nodes, and their dependency relations as graph edges.
+The sorting algorithm is a topological sort on the directed acyclic graph formed by strongly connected components of the dependency graph, with function definitions and class definitions as graph nodes, their dependency relations as graph edges.
 
 For graph nodes within the same abstract level, they are in turn sorted in two options:
 

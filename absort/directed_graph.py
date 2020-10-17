@@ -4,7 +4,7 @@
 from __future__ import annotations
 
 from collections import defaultdict, deque
-from collections.abc import Callable, Iterator
+from collections.abc import Callable, Iterator, Sequence
 from typing import Generic, Optional, TypeVar
 
 from more_itertools import first, ilen
@@ -21,6 +21,7 @@ from .utils import identityfunc
 Node = TypeVar("Node")
 Edge = tuple[Node, Node]
 AdjacencyList = defaultdict[Node, OrderedSet[Node]]
+SCC = Sequence[Node]  # strongly connected components
 
 
 __all__ = ["CircularDependencyError", "SelfLoopError", "DirectedGraph"]
@@ -242,80 +243,45 @@ class DirectedGraph(Generic[Node]):
             while sinks := remove_sinks(_graph):
                 yield from same_rank_sorter(list(sinks))
 
-    def relaxed_topological_sort(
-        self,
-        reverse: bool = False,
-        same_rank_sorter: Callable[[list[Node]], list[Node]] = None,
-    ) -> Iterator[Node]:
+    def strongly_connected_components(self) -> Iterator[SCC]:
         """
-        A more relaxed topological sort. When there are no more source/sink node left, treat
-        all leftover nodes as the same rank.
+        Find all strongly connected components.
 
-        For the same edge/node insertion order, the output is deterministic.
+        The implementation is Tarjan's algorithm.
+
+        It fallbacks to topological sort for a DAG.
+
+        The output order is the reverse topological sort of the DAG formed by the SCCs.
         """
 
-        def find_sources(graph: DirectedGraph[Node]) -> OrderedSet[Node]:
-            sources: OrderedSet[Node] = OrderedSet(graph._adjacency_list.keys())
+        def rec_scc(node: Node) -> Iterator[SCC]:
+            nonlocal count, stack
 
-            for children in graph._adjacency_list.values():
-                sources -= children
+            indexer[node] = count
+            lowlinks[node] = count
+            count += 1
+            stack.append(node)
 
-            if not sources and graph._adjacency_list:
-                # Detected circular dependency
-                # When there are no more source node left, treat all leftover nodes as
-                # the same rank.
-                return OrderedSet(graph._adjacency_list.keys())
+            for child in self._adjacency_list[node]:
+                if child not in indexer:
+                    yield from rec_scc(child)
+                    lowlinks[node] = min(lowlinks[node], lowlinks[child])
 
-            return sources
+                elif child in stack:
+                    lowlinks[node] = min(lowlinks[node], indexer[child])
 
-        def find_sinks(graph: DirectedGraph[Node]) -> OrderedSet[Node]:
-            sinks: OrderedSet[Node] = OrderedSet()
+            if lowlinks[node] == indexer[node]:
+                stack, scc = stack[: stack.index(node)], stack[stack.index(node) :]
+                yield scc
 
-            for node, children in graph._adjacency_list.items():
-                if not children:
-                    sinks.add(node)
+        count = 0
+        stack: list[Node] = []
+        indexer: dict[Node, int] = {}
+        lowlinks: dict[Node, int] = {}
 
-            if not sinks and graph._adjacency_list:
-                # Detected circular dependency
-                # When there are no more sink node left, treat all leftover nodes as
-                # the same rank.
-                return OrderedSet(graph._adjacency_list.keys())
-
-            return sinks
-
-        def remove_sources(graph: DirectedGraph[Node]) -> OrderedSet[Node]:
-            srcs = find_sources(graph)
-
-            for src in srcs:
-                del graph._adjacency_list[src]
-
-            for node in graph._adjacency_list:
-                graph._adjacency_list[node] -= srcs
-
-            return srcs
-
-        def remove_sinks(graph: DirectedGraph[Node]) -> OrderedSet[Node]:
-            sinks = find_sinks(graph)
-
-            for sink in sinks:
-                del graph._adjacency_list[sink]
-
-            for node in graph._adjacency_list:
-                graph._adjacency_list[node] -= sinks
-
-            return sinks
-
-        if same_rank_sorter is None:
-            same_rank_sorter = identityfunc
-
-        _graph = self.copy()
-
-        if not reverse:
-            while srcs := remove_sources(_graph):
-                yield from same_rank_sorter(list(srcs))
-        else:
-            while sinks := remove_sinks(_graph):
-                yield from same_rank_sorter(list(sinks))
+        for node in self._adjacency_list.keys():
+            if node not in indexer:
+                yield from rec_scc(node)
 
     def __str__(self) -> str:
         return "Graph({})".format(dict(self._adjacency_list))
