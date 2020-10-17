@@ -103,13 +103,6 @@ class CommentStrategy(Enum):
     IGNORE = "ignore"
 
 
-@attr.s(auto_attribs=True, frozen=True)
-class FormatOption:
-    no_aggressive: bool = False
-    reverse: bool = False
-    no_fix_main_to_bottom: bool = False
-
-
 #
 # Constants
 #
@@ -137,13 +130,14 @@ PyVersion = tuple[int, int]
 class NameRedefinition(Exception):
     """ An exception to signal that duplicate name definitions are detected """
 
-    pass
-
 
 class ABSortFail(Exception):
     """ An exception to signal that sorting fails """
 
-    pass
+
+#
+# Utility Classes
+#
 
 
 @attr.s(auto_attribs=True, slots=True)
@@ -163,6 +157,13 @@ class Digest:
         c1 = Counter(attr.asdict(self))
         c2 = Counter(attr.asdict(other))
         return Digest(**(c1 + c2))  # type: ignore
+
+
+@attr.s(auto_attribs=True, frozen=True)
+class FormatOption:
+    no_aggressive: bool = False
+    reverse: bool = False
+    no_fix_main_to_bottom: bool = False
 
 
 class CommentStrategyParamType(click.ParamType):
@@ -226,7 +227,7 @@ class PyVersionParamType(click.ParamType):
     context_settings=dict(help_option_names=["-h", "--help", "/?"]),
     epilog="While the tool is in the experimental stage, all files are backuped to a local cache before processing. "
     "If something goes wrong or regret hits you, it's always possible to safely recover the original files. "
-    f"The location of the backup cache is {CACHE_DIR}.",
+    'The location of the backup cache is "~/.absort_cache".',
 )
 @click.argument(
     "filepaths",

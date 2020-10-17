@@ -20,6 +20,7 @@ from hypothesis.strategies import (
 
 from absort.utils import constantfunc
 
+
 __all__ = ["anys", "hashables"]
 
 

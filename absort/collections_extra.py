@@ -14,7 +14,7 @@ T = TypeVar("T")
 
 class _OrderedSet(MutableSet[T]):
     def __init__(self, iterable: Iterable[T] = tuple()) -> None:
-        self._data: OrderedDict[T, None] = OrderedDict(zip(iterable, repeat(None)))
+        self._data: OrderedDict[T, None] = OrderedDict.fromkeys(iterable)
 
     __slots__ = ["_data"]
 

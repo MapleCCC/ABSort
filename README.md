@@ -262,7 +262,17 @@ Note: special attention needs to be paid to that 1. line-profiler is not able to
 
 ## Contribution
 
-Go to [issues](https://github.com/MapleCCC/ABSort/issues) to send issues or feedbacks. Pull requests are welcome.
+Go to [issues](https://github.com/MapleCCC/ABSort/issues) to send issues or feedbacks.
+
+Pull requests are welcome. It's recommended to make sure test coverage rate is not lower than before.
+
+Some good first issues are:
+
+1. Add more unit tests, especially for those interface not thoroughly covered. Property-based testing is recommended.
+
+2. Fix errors in documents, comments, and type annotations.
+
+3. Refactor existing code to be more concise and readable.
 
 
 ## License

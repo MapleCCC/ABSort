@@ -55,7 +55,7 @@ __all__ = [
     "larger_recursion_limit",
     "memoization",
     "chenyu",
-    "no_color_context"
+    "no_color_context",
 ]
 
 
@@ -609,7 +609,10 @@ def chenyu(
     """
     A derterministic divisive hierarchical clustering algorithm proposed by Chen Yu (https://github.com/vincentcheny)
 
-    The k argument is an algorithmic parameter to tune. Smaller k yields better clustering quality, while larger k yields less time complexity.
+    The output is a sequence of clusters (a cluster is a list of points), where consecutive clusters are closer.
+
+    The k argument is an algorithmic parameter to tune. k has to be an integer larger than 1.
+    Smaller k yields better clustering quality, while larger k yields less time complexity.
 
     The points argument accepts a list of point object. The point object is required to be hashable.
 

@@ -67,7 +67,7 @@ def ast_pretty_dump(
 
 def ast_ordered_walk(node: ast.AST) -> Iterator[ast.AST]:
     """ Depth-First Traversal of the AST """
-    children = ast.iter_child_nodes(node)
+    children = fast_ast_iter_child_nodes(node)
     for child in children:
         yield child
         yield from ast_ordered_walk(child)
@@ -177,7 +177,7 @@ def ast_get_source_lines(source: str, node: ast.AST) -> list[str]:
 
 @cache
 def cached_ast_iter_child_nodes(node: ast.AST) -> list[ast.AST]:
-    """ A cached version of the `ast.iter_child_nodes` method """
+    """ A cached version of the `fast_ast_iter_child_nodes` method """
     return list(fast_ast_iter_child_nodes(node))
 
 
@@ -489,7 +489,7 @@ def ast_tree_edit_distance(
         return zhangshasha(
             node1,
             node2,
-            children=ast.iter_child_nodes,
+            children=fast_ast_iter_child_nodes,
             insert_cost=constantfunc(1),
             delete_cost=constantfunc(1),
             rename_cost=rename_cost,
@@ -533,12 +533,12 @@ def ast_deep_equal(node1: ast.AST, node2: ast.AST) -> bool:
         return False
 
     return iequal(
-        ast.iter_child_nodes(node1),
-        ast.iter_child_nodes(node2),
+        fast_ast_iter_child_nodes(node1),
+        fast_ast_iter_child_nodes(node2),
         equal=ast_deep_equal,
         strict=True,
     )
 
 
 def ast_tree_size(node: ast.AST) -> int:
-    return 1 + sum(map(ast_tree_size, ast.iter_child_nodes(node)))
+    return 1 + sum(map(ast_tree_size, fast_ast_iter_child_nodes(node)))

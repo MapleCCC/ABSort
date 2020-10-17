@@ -2,14 +2,12 @@ from collections.abc import Hashable
 from itertools import combinations
 
 from hypothesis import given
-from hypothesis.strategies import booleans, floats, from_type, integers, lists, one_of
+from hypothesis.strategies import booleans, integers, lists
 
 from absort.directed_graph import DirectedGraph
-from absort.utils import constantfunc, iequal
+from absort.utils import iequal
 
-
-anys = constantfunc(from_type(type))
-hashables = constantfunc(one_of(integers()))  # TODO
+from .strategies import hashables
 
 
 # TODO use hypothesis GhostWrite to create test of topological_sort against graphlib.TopologicalSorter
@@ -66,7 +64,7 @@ def test_topological_sort_order(
     possible_edges = list(combinations(node_pool, 2))
 
     if len(possible_edges):
-        unique_indices = set(index % len(possible_edges) for index in indices)  # type: ignore
+        unique_indices = set(index % len(possible_edges) for index in indices)
     else:
         # Empty or one-noded graph
         unique_indices = []
