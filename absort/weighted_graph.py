@@ -100,6 +100,10 @@ class WeightedGraph(Generic[Node]):
     def minimum_spanning_tree(self) -> Iterator[Node]:
         """
         For the same edge/node insertion order, output is deterministic.
+
+        For disconnected graph, ValueError is raised.
+
+        Every connected graph has a minimum spanning tree. (may not be unique)
         """
 
         if self.num_edges == 0:
@@ -141,6 +145,9 @@ class WeightedGraph(Generic[Node]):
             )
             seen.update(target_edge)
             _graph.remove_edge(*target_edge)
+
+        if len(seen) < len(self._adjacency_list):
+            raise ValueError("Disconnected graph doesn't have minimum spanning tree")
 
         return iter(seen)
 
