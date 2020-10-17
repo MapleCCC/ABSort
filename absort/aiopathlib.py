@@ -14,6 +14,9 @@ from .async_utils import run_async
 __all__ = ["AsyncPath"]
 
 
+# TODO it's inefficent to delegate all including some lightweight tiny system calls to the thread pool executor. It might very likely hurt the performance instead. Profile to compare.
+
+
 class AsyncPath:
     """ A thin wrapper on top of the pathlib.Path """
 

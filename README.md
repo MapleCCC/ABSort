@@ -148,7 +148,7 @@ Options:
   While the tool is in the experimental stage, all files are backuped to a
   local cache before processing. If something goes wrong or regret hits you,
   it's always possible to safely recover the original files. The location of
-  the backup cache is [CACHE_LOCATION].
+  the backup cache is "~/.absort_cache".
 ```
 
 Alternatively, you can pass Python code from `stdin`.

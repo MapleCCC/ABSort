@@ -1,7 +1,6 @@
 import contextlib
 import difflib
 import functools
-import itertools
 import operator
 import os
 import random
@@ -292,7 +291,7 @@ def concat(lists: Iterable[list[T]]) -> list[T]:
 
 def concat(lists: Iterable[list]) -> list:
     """ Concatenate multiple lists into one list """
-    return list(itertools.chain.from_iterable(lists))
+    return list(chain(*lists))
 
 
 @contextlib.contextmanager
@@ -619,7 +618,7 @@ def chenyu(
     The distance argument accepts a callable that returns the distance between two point objects.
 
     Assuming that the distance calculation cost is expensive and dominant over other costs,
-    then the time complexity is O(k*n*(ln(n)/ln(k)-1)).
+    then the time complexity is k*n*(ln(n)/ln(k)-1) = O(n*ln(n)).
     """
 
     def rec_chenyu(points: Cluster) -> Iterator[Cluster]:

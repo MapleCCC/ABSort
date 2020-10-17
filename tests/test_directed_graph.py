@@ -12,7 +12,6 @@ from .strategies import hashables
 
 # TODO use hypothesis GhostWrite to create test of topological_sort against graphlib.TopologicalSorter
 
-# TODO test on reverse=True
 # TODO test on relaxed_topological_sort()
 
 

@@ -78,8 +78,10 @@ class DirectedGraph(Generic[Node]):
 
         while queue:
             node = queue.popleft()
+
             if node in traversed:
                 continue
+
             yield node
             traversed.add(node)
             queue.extend(self._adjacency_list[node])
@@ -97,8 +99,10 @@ class DirectedGraph(Generic[Node]):
 
         while stack:
             node = stack.pop()
+
             if node in traversed:
                 continue
+
             yield node
             traversed.add(node)
             stack.extend(self._adjacency_list[node])

@@ -718,6 +718,12 @@ def absort_decls(
 
     graph = generate_dependency_graph(decls, py_version)
 
+    # If the dependency graph is a DAG, a straightforward topological sort suffices.
+    # Otherwise, several options are available:
+    # 1. Remove a minimal feedback arc set, resulting in a DAG.
+    # 2. Apply Tarjan's algorithm to find a DAG with strongly connected components as supernodes. Nodes within the same strongly connected components are deemed in the same abstract level.
+    # 3. Apply Kahn's algorithm until cycle is detected, then treat all remaining nodes as the same abstract level.
+
     sorted_names = xreverse(
         graph.relaxed_topological_sort(
             reverse=True, same_rank_sorter=compose(xreverse, same_abstract_level_sorter)
