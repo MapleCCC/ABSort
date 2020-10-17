@@ -40,15 +40,14 @@ from .utils import (
     bright_yellow,
     chenyu,
     colored_unified_diff,
-    compose,
     duplicated,
     first_true,
     identityfunc,
+    ireverse,
     no_color_context,
     silent_context,
     strict_splitlines,
     whitespace_lines,
-    xreverse,
 )
 from .visitors import GetUndefinedVariableVisitor
 from .weighted_graph import WeightedGraph
@@ -685,7 +684,7 @@ def absort_decls(
 ) -> Iterator[DeclarationType]:
     """ Sort a continguous block of declarations """
 
-    def same_abstract_level_sorter(names: list[str]) -> list[str]:
+    def same_abstract_level_sorter(names: Iterable[str]) -> Iterable[str]:
         """ Specify how to sort declarations within the same abstract level """
 
         # Currently sort by retaining their original relative order, to reduce diff size.
@@ -710,7 +709,7 @@ def absort_decls(
             name_lookup_table = {decl.name: decl for decl in decls}
             same_level_decls = [name_lookup_table[name] for name in names]
             sorted_decls = sort_decls_by_syntax_tree_similarity(same_level_decls)
-            return [decl.name for decl in sorted_decls]
+            return (decl.name for decl in sorted_decls)
 
     decl_names = [decl.name for decl in decls]
     if duplicated(decl_names):
@@ -718,7 +717,7 @@ def absort_decls(
 
     graph = generate_dependency_graph(decls, py_version)
 
-    sccs = xreverse(graph.strongly_connected_components())
+    sccs = ireverse(graph.strongly_connected_components())
     sorted_names = list(chain(*(same_abstract_level_sorter(scc) for scc in sccs)))
 
     if format_option.reverse:
