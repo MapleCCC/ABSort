@@ -139,3 +139,37 @@ def test_dfs_is_deterministic(node_pool: list[Hashable], indices: list[int]) -> 
 
     for node in node_pool:
         assert iequal(graph1.dfs(node), graph2.dfs(node), strict=True)
+
+
+@given(lists(hashables(), unique=True), lists(integers(min_value=0), unique=True))
+def test_strongly_connected_components_is_deterministic(
+    node_pool: list[Hashable], indices: list[int]
+) -> None:
+    possible_edges = list(permutations(node_pool, 2))
+
+    if len(possible_edges):
+        unique_indices = set(index % len(possible_edges) for index in indices)
+    else:
+        # Empty or one-noded graph
+        unique_indices = []
+
+    edges = [possible_edges[index] for index in unique_indices]
+
+    graph1 = DirectedGraph()
+    for node in node_pool:
+        graph1.add_node(node)
+    for edge in edges:
+        graph1.add_edge(*edge)
+
+    graph2 = DirectedGraph()
+    for node in node_pool:
+        graph2.add_node(node)
+    for edge in edges:
+        graph2.add_edge(*edge)
+
+    for node in node_pool:
+        assert iequal(
+            graph1.strongly_connected_components(),
+            graph2.strongly_connected_components(),
+            strict=True,
+        )
