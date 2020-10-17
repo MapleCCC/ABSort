@@ -60,6 +60,8 @@ def test_topological_sort_order(node_pool: list[Hashable], indices: list[int]) -
     edges = [possible_edges[index] for index in unique_indices]
 
     graph = DirectedGraph()
+    for node in node_pool:
+        graph.add_node(node)
     for edge in edges:
         graph.add_edge(*edge)
     nodes = list(graph.topological_sort())
