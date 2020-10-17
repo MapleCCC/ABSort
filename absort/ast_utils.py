@@ -459,7 +459,7 @@ def fast_ast_iter_child_nodes(node: ast.AST) -> Iterator[ast.AST]:
                 # Edge case 2: required keyword argument default
                 # Reference: "kw_defaults is a list of default values for keyword-only arguments. If one is None, the corresponding argument is required." from https://docs.python.org/3/library/ast.html#ast.arguments
                 if class_name == "arguments" and name == "kw_defaults":
-                    yield from ()
+                    yield from (expr for expr in attr if expr is not None)
                     continue
 
                 yield from attr
