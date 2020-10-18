@@ -3,7 +3,7 @@ from collections.abc import Hashable
 from hypothesis import given
 from hypothesis.strategies import integers, lists, tuples
 
-from absort.utils import chenyu, iequal
+from absort.utils import chenyu, iequal, is_nan
 
 from .strategies import hashables
 
@@ -20,7 +20,7 @@ def test_chenyu_is_deterministic_plane_points(
     assert iequal(clusters1, clusters2, strict=True)
 
 
-@given(lists(hashables()), integers(min_value=2))
+@given(lists(hashables().filter(lambda x: not is_nan(x))), integers(min_value=2))
 def test_chenyu_is_deterministic_hashables(points: list[Hashable], k: int) -> None:
     distance = lambda x, y: abs(hash(x) - hash(y))
 
