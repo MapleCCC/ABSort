@@ -26,13 +26,13 @@ class _OrderedSet(MutableSet[T]):
     def __len__(self) -> int:
         return len(self._data)
 
-    def __isub__(self, other: Set[T]) -> _OrderedSet[T]:
-        if not isinstance(other, _OrderedSet):
-            raise TypeError(
-                f"unsupported operand type(s) for -=: '{type(self)}' and '{type(other)}'"
-            )
+    def __sub__(self, other: Set[T])->_OrderedSet[T]:
+        new = self.copy()
+        new -= other
+        return new
 
-        for elem in other._data:
+    def __isub__(self, other: Set[T]) -> _OrderedSet[T]:
+        for elem in other:
             self._data.pop(elem, None)
 
         return self

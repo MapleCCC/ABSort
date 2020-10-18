@@ -772,20 +772,22 @@ def absort_decls(
         sources = list(graph.find_sources())
         num_src = len(sources)
 
-        sorted_names = []
-
         if num_src == 1:
             # 1. There is one entry point
             sorted_names = list(traverse_method(sources[0]))
 
         elif num_src > 1:
             # 2. There are more than one entry points
+            sorted_names = []
             for src in sources:
                 sorted_names.extend(traverse_method(src))
             sorted_names = list(OrderedSet(sorted_names))
 
-        if len(sorted_names) < len(decls):
-            raise ABSortFail("DFS/BFS can't traverse the whole graph")
+        else:
+            sorted_names = []
+
+        remaining_names = OrderedSet(decl_names) - sorted_names
+        sorted_names.extend(same_abstract_level_sorter(remaining_names))
 
     else:
         raise RuntimeError("Unreachable")
