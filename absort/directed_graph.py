@@ -249,6 +249,10 @@ class DirectedGraph(Generic[Node]):
         It fallbacks to topological sort for a DAG.
 
         The output order is the reverse topological sort of the DAG formed by the SCCs.
+
+        For the same edge/node insertion order, the output is deterministic.
+
+        This method traverses all the nodes regardless of the connectivity of the graph.
         """
 
         def rec_scc(node: Node) -> Iterator[SCC]:

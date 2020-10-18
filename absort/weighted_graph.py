@@ -1,9 +1,7 @@
 from __future__ import annotations
 
-import pickle
 from collections import defaultdict
 from collections.abc import Iterator
-from hashlib import md5
 from typing import Generic, TypeVar
 
 from more_itertools import first
@@ -60,6 +58,9 @@ class WeightedGraph(Generic[Node]):
     @property
     def num_edges(self) -> int:
         return len(self._weight_table)
+
+    def nodes(self) -> Iterator[Node]:
+        yield from self._adjacency_list
 
     def weight(self, v: Node, w: Node) -> Weight:
         try:

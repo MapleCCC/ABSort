@@ -439,6 +439,8 @@ def ast_iter_non_node_fields(
 
 
 def fast_ast_iter_child_nodes(node: ast.AST) -> Iterator[ast.AST]:
+    """ Faster version of ast.iter_child_nodes """
+
     class_name = node.__class__.__name__
     for type, name in ast_node_class_fields_table[class_name]:
         if type.rstrip("?*") not in Terminals:
