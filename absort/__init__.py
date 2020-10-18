@@ -2,6 +2,7 @@ from .__main__ import (
     CommentStrategy,
     FileAction,
     FormatOption,
+    SortOrder,
     NameRedefinition,
     absort_file,
     absort_files,
@@ -17,6 +18,7 @@ __all__ = [
     "CommentStrategy",
     "FormatOption",
     "FileAction",
+    "SortOrder",
     "NameRedefinition",
     "__version__",
 ]

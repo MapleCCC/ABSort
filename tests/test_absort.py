@@ -8,7 +8,13 @@ from pathlib import Path
 
 import attr
 
-from absort.__main__ import CommentStrategy, FormatOption, NameRedefinition, absort_str
+from absort.__main__ import (
+    CommentStrategy,
+    FormatOption,
+    NameRedefinition,
+    SortOrder,
+    absort_str,
+)
 from absort.ast_utils import ast_deep_equal
 from absort.utils import contains
 
@@ -43,23 +49,28 @@ def test_absort_str() -> None:
     all_format_options = (
         FormatOption(*c) for c in format_option_init_arg_options  # type: ignore
     )
-    all_arg_options = list(product(all_comment_strategies, all_format_options))
+    all_sort_orders = iter(SortOrder)
+    all_arg_options = list(
+        product(all_comment_strategies, all_sort_orders, all_format_options)
+    )
 
     for test_sample in TEST_FILES:
         try:
             source = test_sample.read_text(encoding="utf-8")
             arg_option = random.choice(all_arg_options)
-            comment_strategy, format_option = arg_option
+            comment_strategy, format_option, sort_order = arg_option
             new_source = absort_str(
                 source,
                 comment_strategy=comment_strategy,
                 format_option=format_option,
+                sort_order=sort_order,
             )
 
             second_run_new_source = absort_str(
                 source,
                 comment_strategy=comment_strategy,
                 format_option=format_option,
+                sort_order=sort_order,
             )
             # Check that absort is deterministic and stable
             assert new_source == second_run_new_source

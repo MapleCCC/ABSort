@@ -142,6 +142,8 @@ Options:
   -y, --yes                       Bypass all confirmation prompts. Dangerous
                                   option. Not recommended.
 
+  --dfs                           Sort in depth-first order.
+  --bfs                           Sort in breadth-first order.
   --version                       Show the version and exit.
   -h, /?, --help                  Show this message and exit.
 

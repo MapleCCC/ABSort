@@ -33,6 +33,7 @@ from .ast_utils import (
     ast_tree_size,
 )
 from .async_utils import run_in_event_loop
+from .collections_extra import OrderedSet
 from .directed_graph import DirectedGraph
 from .typing_extra import Declaration, DeclarationType
 from .utils import (
@@ -60,6 +61,7 @@ __all__ = [
     "CommentStrategy",
     "FormatOption",
     "FileAction",
+    "SortOrder",
     "NameRedefinition",
 ]
 
@@ -100,6 +102,14 @@ class CommentStrategy(Enum):
     PUSH_TOP = "push-top"
     ATTR_FOLLOW_DECL = "attr-follow-decl"
     IGNORE = "ignore"
+
+
+class SortOrder(Enum):
+    """"""
+
+    TOPOLOGICAL = 0
+    DEPTH_FIRST = 1
+    BREADTH_FIRST = 2
 
 
 #
@@ -325,6 +335,8 @@ class PyVersionParamType(click.ParamType):
     is_flag=True,
     help="Bypass all confirmation prompts. Dangerous option. Not recommended.",
 )
+@click.option("--dfs", is_flag=True, help="Sort in depth-first order.")
+@click.option("--bfs", is_flag=True, help="Sort in breadth-first order.")
 @click.version_option(__version__)
 @click.pass_context
 # TODO add command line option to ignore files specified by .gitignore
@@ -346,6 +358,8 @@ def main(
     verbose: bool,
     color_off: bool,
     bypass_prompt: bool,
+    dfs: bool,
+    bfs: bool,
 ) -> None:
     """ the CLI entry """
 
@@ -391,6 +405,13 @@ def main(
     else:
         file_action = FileAction.PRINT
 
+    if dfs:
+        sort_order = SortOrder.DEPTH_FIRST
+    elif bfs:
+        sort_order = SortOrder.BREADTH_FIRST
+    else:
+        sort_order = SortOrder.TOPOLOGICAL
+
     verboseness_context_manager = silent_context() if quiet else contextlib.nullcontext()
 
     # TODO test --color-off under different environments, eg. Linux, macOS, ...
@@ -407,6 +428,7 @@ def main(
             py_version,
             comment_strategy,
             format_option,
+            sort_order,
         )
 
         display_summary(digest)
@@ -417,13 +439,22 @@ def validate_args(options: SimpleNamespace) -> None:
 
     # FIXME use click library's builtin mechanism to specify mutually exclusive options
 
-    if sum([options.check, options.display_diff, options.in_place]) > 1:
-        raise ValueError(
-            "Only one of the `--check`, `--diff` and `--in-place` options can be specified at the same time"
-        )
+    def mutually_exclusive(*args: str) -> None:
+        if sum(bool(getattr(options, arg)) for arg in args) > 1:
+            if len(args) == 2:
+                raise ValueError(
+                    f"Can't specify both `{args[0]}` and `{args[1]}` options"
+                )
+            else:
+                fargs = [f"`{arg}`" for arg in args]
+                opts = ", ".join(fargs[:-1]) + " and " + fargs[-1]
+                raise ValueError(
+                    f"Only one of the {opts} options can be specified at the same time"
+                )
 
-    if options.quiet and options.verbose:
-        raise ValueError("Can't specify both `--quiet` and `--verbose` options")
+    mutually_exclusive("check", "display_diff", "in_place")
+    mutually_exclusive("quiet", "verbose")
+    mutually_exclusive("dfs", "bfs")
 
 
 @run_in_event_loop
@@ -459,6 +490,7 @@ def absort_files(
     py_version: PyVersion = (3, 9),
     comment_strategy: CommentStrategy = CommentStrategy.ATTR_FOLLOW_DECL,
     format_option: FormatOption = FormatOption(),
+    sort_order: SortOrder = SortOrder.TOPOLOGICAL,
 ) -> Digest:
     """ Sort a list of files """
 
@@ -475,6 +507,7 @@ def absort_files(
                 py_version,
                 comment_strategy,
                 format_option,
+                sort_order,
             )
             for file in files
         )
@@ -494,6 +527,7 @@ async def absort_file(
     py_version: PyVersion = (3, 9),
     comment_strategy: CommentStrategy = CommentStrategy.ATTR_FOLLOW_DECL,
     format_option: FormatOption = FormatOption(),
+    sort_order: SortOrder = SortOrder.TOPOLOGICAL,
 ) -> Digest:
     """ Sort the source in the given file """
 
@@ -519,7 +553,9 @@ async def absort_file(
         """ Sort the source in string, including exception handling """
 
         try:
-            return absort_str(old_source, py_version, comment_strategy, format_option)
+            return absort_str(
+                old_source, py_version, comment_strategy, format_option, sort_order
+            )
         except SyntaxError as exc:
             # if re.fullmatch(r"Missing parentheses in call to 'print'. Did you mean print(.*)\?", exc.msg):
             #     pass
@@ -603,6 +639,7 @@ def absort_str(
     py_version: PyVersion = (3, 9),
     comment_strategy: CommentStrategy = CommentStrategy.ATTR_FOLLOW_DECL,
     format_option: FormatOption = FormatOption(),
+    sort_order: SortOrder = SortOrder.TOPOLOGICAL,
 ) -> str:
     """ Sort the source code in string """
 
@@ -629,7 +666,7 @@ def absort_str(
 
     offset = 0
     for lineno, end_lineno, decls in blocks:
-        sorted_decls = list(absort_decls(decls, py_version, format_option))
+        sorted_decls = list(absort_decls(decls, py_version, format_option, sort_order))
         source_lines = get_related_source_lines_of_block(
             old_source, sorted_decls, comment_strategy, format_option
         )
@@ -680,7 +717,10 @@ def find_continguous_decls(
 
 @profile  # type: ignore
 def absort_decls(
-    decls: list[DeclarationType], py_version: PyVersion, format_option: FormatOption
+    decls: list[DeclarationType],
+    py_version: PyVersion,
+    format_option: FormatOption,
+    sort_order: SortOrder,
 ) -> Iterator[DeclarationType]:
     """ Sort a continguous block of declarations """
 
@@ -717,8 +757,38 @@ def absort_decls(
 
     graph = generate_dependency_graph(decls, py_version)
 
-    sccs = ireverse(graph.strongly_connected_components())
-    sorted_names = list(chain(*(same_abstract_level_sorter(scc) for scc in sccs)))
+    if sort_order is SortOrder.TOPOLOGICAL:
+        sccs = ireverse(graph.strongly_connected_components())
+        sorted_names = list(chain(*(same_abstract_level_sorter(scc) for scc in sccs)))
+
+    elif sort_order in (SortOrder.DEPTH_FIRST, SortOrder.BREADTH_FIRST):
+        if sort_order is SortOrder.DEPTH_FIRST:
+            traverse_method = graph.dfs
+        elif sort_order is SortOrder.BREADTH_FIRST:
+            traverse_method = graph.bfs
+        else:
+            raise RuntimeError("Unreachable")
+
+        sources = list(graph.find_sources())
+        num_src = len(sources)
+
+        sorted_names = []
+
+        if num_src == 1:
+            # 1. There is one entry point
+            sorted_names = list(traverse_method(sources[0]))
+
+        elif num_src > 1:
+            # 2. There are more than one entry points
+            for src in sources:
+                sorted_names.extend(traverse_method(src))
+            sorted_names = list(OrderedSet(sorted_names))
+
+        if len(sorted_names) < len(decls):
+            raise ABSortFail("DFS/BFS can't traverse the whole graph")
+
+    else:
+        raise RuntimeError("Unreachable")
 
     if format_option.reverse:
         sorted_names.reverse()
