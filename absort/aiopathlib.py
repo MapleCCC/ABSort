@@ -31,6 +31,9 @@ class AsyncPath:
     def __repr__(self) -> str:
         return repr(self._path)
 
+    def with_name(self, name: str) -> AsyncPath:
+        return AsyncPath(self._path.with_name(name))
+
     async def stat(self) -> stat_result:
         return await run_async(self._path.stat)
 
@@ -51,6 +54,10 @@ class AsyncPath:
 
     async def rglob(self, pattern: str) -> AsyncIterator[AsyncPath]:
         async for p in run_async(self._path.rglob, pattern):
+            yield AsyncPath(p)
+
+    async def glob(self, pattern: str) -> AsyncIterator[AsyncPath]:
+        async for p in run_async(self._path.glob, pattern):
             yield AsyncPath(p)
 
     @classmethod
