@@ -21,6 +21,7 @@ import attr
 import cchardet
 import click
 from colorama import colorama_text
+from more_itertools import first_true
 
 from .__version__ import __version__
 from .aiopathlib import AsyncPath as Path
@@ -43,7 +44,6 @@ from .utils import (
     chenyu,
     colored_unified_diff,
     duplicated,
-    first_true,
     identityfunc,
     ireverse,
     no_color_context,
@@ -824,7 +824,7 @@ def absort_decls(
     # short-circuit to optimize.
     for name in sorted_names:
         name_matcher = lambda decl: decl.name == name
-        yield first_true(decls, pred=name_matcher)
+        yield first_true(decls, pred=name_matcher)  # type: ignore
 
 
 def sort_decls_by_syntax_tree_similarity(

@@ -34,7 +34,6 @@ __all__ = [
     "lru_cache_with_key",
     "lfu_cache_with_key",
     "apply",
-    "first_true",
     "Logger",
     "concat",
     "SingleThreadPoolExecutor",
@@ -42,8 +41,6 @@ __all__ = [
     "whitespace_lines",
     "dispatch",
     "duplicated",
-    "nth",
-    "nths",
     "hamming_distance",
     "strict_splitlines",
     "nullfunc",
@@ -245,24 +242,6 @@ def apply(fn: Callable[..., T], *args: Any, **kwargs: Any) -> T:
     return fn(*args, **kwargs)
 
 
-@overload
-def first_true(
-    iterable: Iterable[T], *, default: Any = None, pred: Callable[[T], bool] = bool
-) -> Any:
-    ...
-
-
-def first_true(
-    iterable: Iterable, *, default: Any = None, pred: Callable[..., bool] = bool
-) -> Any:
-    """ Equivalent to more-itertools library's `first_true` function """
-
-    for elem in iterable:
-        if pred(elem):
-            return elem
-    return default
-
-
 class Logger:
     """
     A lightweight logger.
@@ -379,29 +358,6 @@ def duplicated(sequence: Sequence) -> bool:
                 seen.append(elem)
         return False
 
-
-@overload
-def nth(iterable: Iterable[T], n: int) -> T:
-    ...
-
-
-def nth(iterable: Iterable, n: int):
-    count = 0
-    for elem in iterable:
-        if count == n:
-            return elem
-        count += 1
-    raise ValueError(f"Iterable doesn't have {n}-th element")
-
-
-@overload
-def nths(iterable: Iterable[Iterable[T]], n: int) -> Iterator[T]:
-    ...
-
-
-def nths(iterable: Iterable, n: int = 0) -> Iterator:
-    for sub_iterable in iterable:
-        yield nth(sub_iterable, n)
 
 
 @overload
