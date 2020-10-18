@@ -26,12 +26,12 @@ class _OrderedSet(MutableSet[T]):
     def __len__(self) -> int:
         return len(self._data)
 
-    def __sub__(self, other: Set[T])->_OrderedSet[T]:
+    def __sub__(self, other: Iterable[T])->_OrderedSet[T]:
         new = self.copy()
         new -= other
         return new
 
-    def __isub__(self, other: Set[T]) -> _OrderedSet[T]:
+    def __isub__(self, other: Iterable[T]) -> _OrderedSet[T]:
         for elem in other:
             self._data.pop(elem, None)
 
