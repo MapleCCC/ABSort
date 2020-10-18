@@ -15,6 +15,7 @@ from typing import IO, Any, Optional, TypeVar, Union, overload
 import attr
 from colorama import Fore, Style
 
+from .exceptions import Unreachable
 from .lfu import LFU
 from .lru import LRU
 from .weighted_graph import WeightedGraph
@@ -159,7 +160,7 @@ def colored_unified_diff(
         elif code == "-":
             yield bright_red(line)
         else:
-            raise RuntimeError("Unreachable")
+            raise Unreachable
 
 
 @contextlib.contextmanager

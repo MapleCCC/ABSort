@@ -2,6 +2,7 @@ import ast
 from collections.abc import Sequence
 from typing import Optional, Union
 
+from .exceptions import Unreachable
 from .utils import identityfunc
 
 
@@ -202,4 +203,4 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
                     del namespace[node.id]
                     break
         else:
-            raise RuntimeError("Unreachable")
+            raise Unreachable
