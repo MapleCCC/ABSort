@@ -1,14 +1,17 @@
 import contextlib
 import difflib
 import functools
+import math
 import operator
 import os
 import random
 import sys
 from collections import OrderedDict, defaultdict
 from collections.abc import Callable, Hashable, Iterable, Iterator, Sequence
+from decimal import Decimal
 from functools import cache, partial
 from itertools import chain, combinations, zip_longest
+from numbers import Complex, Number
 from types import SimpleNamespace
 from typing import IO, Any, Optional, TypeVar, Union, overload
 
@@ -53,6 +56,7 @@ __all__ = [
     "memoization",
     "chenyu",
     "no_color_context",
+    "is_nan",
 ]
 
 
@@ -642,3 +646,18 @@ def no_color_context() -> Iterator[None]:
             del os.environ["NO_COLOR"]
         else:
             os.environ["NO_COLOR"] = orig_value
+
+
+def is_nan(x: Any) -> bool:
+    """ Try best effort to detect NaN """
+
+    # Alternative implementation is `is_nan = lambda x: x != x`
+
+    if isinstance(x, Decimal):
+        return x.is_nan()
+    elif isinstance(x, Complex):
+        return math.isnan(x.real) or math.isnan(x.imag)
+    elif isinstance(x, Number):
+        return math.isnan(x)  # type: ignore
+    else:
+        return False

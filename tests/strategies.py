@@ -1,8 +1,5 @@
-import math
 from collections.abc import Hashable
-from decimal import Decimal
 from itertools import combinations, permutations
-from numbers import Complex, Number
 from typing import Union
 
 from hypothesis.strategies import (
@@ -18,7 +15,7 @@ from hypothesis.strategies import (
 )
 
 from absort.directed_graph import DirectedGraph
-from absort.utils import constantfunc
+from absort.utils import constantfunc, is_nan
 from absort.weighted_graph import WeightedGraph
 
 
@@ -40,12 +37,6 @@ def hashables(compound: bool = False) -> SearchStrategy[Hashable]:
 
 def nodes() -> SearchStrategy:
     def filter_func(x):
-        if isinstance(x, Decimal):
-            return not x.is_nan()
-        elif isinstance(x, Complex):
-            return not math.isnan(x.real) and not math.isnan(x.imag)
-        elif isinstance(x, Number):
-            return not math.isnan(x)
 
         # Hypothesis doesn't generate numpy.dtype when numpy is not installed in the environment
         try:
@@ -55,6 +46,9 @@ def nodes() -> SearchStrategy:
         else:
             if isinstance(x, numpy.dtype):
                 return False
+
+        if is_nan(x):
+            return False
 
         return True
 
