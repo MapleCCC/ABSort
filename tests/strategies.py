@@ -1,22 +1,6 @@
-from hypothesis.strategies import (
-    binary,
-    booleans,
-    characters,
-    complex_numbers,
-    dates,
-    datetimes,
-    decimals,
-    floats,
-    fractions,
-    from_type,
-    functions,
-    integers,
-    none,
-    one_of,
-    text,
-    timedeltas,
-    times,
-)
+from collections.abc import Hashable
+
+from hypothesis.strategies import from_type, frozensets, lists, recursive
 
 from absort.utils import constantfunc
 
@@ -27,24 +11,11 @@ __all__ = ["anys", "hashables"]
 anys = constantfunc(from_type(type))
 
 
-# TODO add more hashable types to draw from.
-# Remember that the less complex one should be located at the front. Quote "In order to get good shrinking behaviour, try to put simpler strategies first" from https://hypothesis.readthedocs.io/en/latest/data.html#hypothesis.strategies.one_of
-hashables = constantfunc(
-    one_of(
-        none(),
-        booleans(),
-        integers(),
-        characters(),
-        text(),
-        binary(),
-        fractions(),
-        decimals(allow_nan=False),
-        floats(allow_nan=False),
-        complex_numbers(allow_nan=False),
-        timedeltas(),
-        times(),
-        dates(),
-        datetimes(),
-        functions(),
-    )
-)
+# Reference: https://github.com/HypothesisWorks/hypothesis/issues/2324#issuecomment-573873111
+def hashables(compound: bool = False) -> SearchStrategy[Hashable]:
+    if compound:
+        return recursive(
+            from_type(Hashable), lambda x: frozensets(x) | lists(x).map(tuple)
+        )
+    else:
+        return from_type(Hashable)
