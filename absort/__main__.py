@@ -8,7 +8,7 @@ import contextlib
 import re
 import sys
 from collections import Counter
-from collections.abc import AsyncIterator, Iterable, Iterator
+from collections.abc import AsyncIterator, Iterable, Iterator, Sequence
 from datetime import datetime
 from enum import Enum
 from functools import partial
@@ -174,6 +174,7 @@ class FormatOption:
     no_aggressive: bool = False
     reverse: bool = False
     no_fix_main_to_bottom: bool = False
+    separate_class_and_function: bool = False
 
 
 class CommentStrategyParamType(click.ParamType):
@@ -338,6 +339,11 @@ class PyVersionParamType(click.ParamType):
 )
 @click.option("--dfs", is_flag=True, help="Sort in depth-first order.")
 @click.option("--bfs", is_flag=True, help="Sort in breadth-first order.")
+@click.option(
+    "--separate-class-and-function",
+    is_flag=True,
+    help="Specify that class definitions and function definitions should be separated into respective sections.",
+)
 @click.version_option(__version__)
 @click.pass_context
 # TODO add command line option to ignore files specified by .gitignore
@@ -361,6 +367,7 @@ def main(
     bypass_prompt: bool,
     dfs: bool,
     bfs: bool,
+    separate_class_and_function: bool,
 ) -> None:
     """ the CLI entry """
 
@@ -395,6 +402,7 @@ def main(
         no_aggressive=no_aggressive,
         reverse=reverse,
         no_fix_main_to_bottom=no_fix_main_to_bottom,
+        separate_class_and_function=separate_class_and_function,
     )
 
     if display_diff:
@@ -718,7 +726,7 @@ def find_continguous_decls(
 
 @profile  # type: ignore
 def absort_decls(
-    decls: list[DeclarationType],
+    decls: Sequence[DeclarationType],
     py_version: PyVersion,
     format_option: FormatOption,
     sort_order: SortOrder,
@@ -751,6 +759,18 @@ def absort_decls(
             same_level_decls = [name_lookup_table[name] for name in names]
             sorted_decls = sort_decls_by_syntax_tree_similarity(same_level_decls)
             return (decl.name for decl in sorted_decls)
+
+    if format_option.separate_class_and_function:
+        class_decls = [decl for decl in decls if isinstance(decl, ast.ClassDef)]
+        func_decls = [
+            decl
+            for decl in decls
+            if isinstance(decl, (ast.FunctionDef, ast.AsyncFunctionDef))
+        ]
+        if class_decls and func_decls:
+            yield from absort_decls(class_decls, py_version, format_option, sort_order)
+            yield from absort_decls(func_decls, py_version, format_option, sort_order)
+            return
 
     decl_names = [decl.name for decl in decls]
     if duplicated(decl_names):
@@ -833,7 +853,7 @@ def sort_decls_by_syntax_tree_similarity(
 
 
 def generate_dependency_graph(
-    decls: list[DeclarationType], py_version: PyVersion
+    decls: Sequence[DeclarationType], py_version: PyVersion
 ) -> DirectedGraph[str]:
     """ Generate a dependency graph from a continguous block of declarations """
 

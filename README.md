@@ -144,6 +144,10 @@ Options:
 
   --dfs                           Sort in depth-first order.
   --bfs                           Sort in breadth-first order.
+  --separate-class-and-function   Specify that class definitions and function
+                                  definitions should be separated into
+                                  respective sections.
+
   --version                       Show the version and exit.
   -h, /?, --help                  Show this message and exit.
 
