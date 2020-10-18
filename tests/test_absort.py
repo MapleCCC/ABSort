@@ -51,7 +51,7 @@ def test_absort_str() -> None:
     )
     all_sort_orders = iter(SortOrder)
     all_arg_options = list(
-        product(all_comment_strategies, all_sort_orders, all_format_options)
+        product(all_comment_strategies, all_format_options, all_sort_orders)
     )
 
     for test_sample in TEST_FILES:
