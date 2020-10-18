@@ -7,6 +7,8 @@ from itertools import combinations_with_replacement, product
 from pathlib import Path
 
 import attr
+from hypothesis import given
+from hypothesis.strategies import sampled_from
 
 from absort.__main__ import (
     CommentStrategy,
@@ -38,10 +40,11 @@ if os.getenv("CI") and os.getenv("TRAVIS"):
     STDLIB_DIR = Path(f"/opt/python/{py_version}/lib/python{py_version_num}/")
 
 
-TEST_FILES = STDLIB_DIR.rglob("*.py")
+TEST_FILES = list(STDLIB_DIR.rglob("*.py"))
 
 
-def test_absort_str() -> None:
+@given(sampled_from(TEST_FILES))
+def test_absort_str(test_sample: Path) -> None:
     all_comment_strategies = iter(CommentStrategy)
     format_option_init_arg_options = combinations_with_replacement(
         (True, False), len(attr.fields(FormatOption))
@@ -54,39 +57,38 @@ def test_absort_str() -> None:
         product(all_comment_strategies, all_format_options, all_sort_orders)
     )
 
-    for test_sample in TEST_FILES:
-        try:
-            source = test_sample.read_text(encoding="utf-8")
-            arg_option = random.choice(all_arg_options)
-            comment_strategy, format_option, sort_order = arg_option
-            new_source = absort_str(
-                source,
-                comment_strategy=comment_strategy,
-                format_option=format_option,
-                sort_order=sort_order,
-            )
+    try:
+        source = test_sample.read_text(encoding="utf-8")
+        arg_option = random.choice(all_arg_options)
+        comment_strategy, format_option, sort_order = arg_option
+        new_source = absort_str(
+            source,
+            comment_strategy=comment_strategy,
+            format_option=format_option,
+            sort_order=sort_order,
+        )
 
-            second_run_new_source = absort_str(
-                source,
-                comment_strategy=comment_strategy,
-                format_option=format_option,
-                sort_order=sort_order,
-            )
-            # Check that absort is deterministic and stable
-            assert new_source == second_run_new_source
+        second_run_new_source = absort_str(
+            source,
+            comment_strategy=comment_strategy,
+            format_option=format_option,
+            sort_order=sort_order,
+        )
+        # Check that absort is deterministic and stable
+        assert new_source == second_run_new_source
 
-            old_ast = ast.parse(source)
-            new_ast = ast.parse(new_source)
+        old_ast = ast.parse(source)
+        new_ast = ast.parse(new_source)
 
-            assert len(old_ast.body) == len(new_ast.body)
-            for stmt in old_ast.body:
-                assert contains(new_ast.body, stmt, equal=ast_deep_equal)
-        except (SyntaxError, NameRedefinition, UnicodeDecodeError):
-            pass
-        except Exception as exc:
-            exc_cls_name = getattr(exc.__class__, "__name__", "some exception")
-            print(f"Encountered {exc_cls_name} when sorting {test_sample}")
-            raise
+        assert len(old_ast.body) == len(new_ast.body)
+        for stmt in old_ast.body:
+            assert contains(new_ast.body, stmt, equal=ast_deep_equal)
+    except (SyntaxError, NameRedefinition, UnicodeDecodeError):
+        pass
+    except Exception as exc:
+        exc_cls_name = getattr(exc.__class__, "__name__", "some exception")
+        print(f"Encountered {exc_cls_name} when sorting {test_sample}")
+        raise
 
 
 # TODO add unit test for absort_file()
