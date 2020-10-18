@@ -1,14 +1,12 @@
 import ast
+import asyncio
 import os
 import random
 import re
 import sys
 from itertools import combinations_with_replacement, product
-from pathlib import Path
 
 import attr
-from hypothesis import given
-from hypothesis.strategies import sampled_from
 
 from absort.__main__ import (
     CommentStrategy,
@@ -17,6 +15,7 @@ from absort.__main__ import (
     SortOrder,
     absort_str,
 )
+from absort.aiopathlib import AsyncPath as Path
 from absort.ast_utils import ast_deep_equal
 from absort.utils import contains
 
@@ -40,11 +39,10 @@ if os.getenv("CI") and os.getenv("TRAVIS"):
     STDLIB_DIR = Path(f"/opt/python/{py_version}/lib/python{py_version_num}/")
 
 
-TEST_FILES = list(STDLIB_DIR.rglob("*.py"))
+TEST_FILES = STDLIB_DIR.rglob("*.py")
 
 
-@given(sampled_from(TEST_FILES))
-def test_absort_str(test_sample: Path) -> None:
+def test_absort_str() -> None:
     all_comment_strategies = iter(CommentStrategy)
     format_option_init_arg_options = combinations_with_replacement(
         (True, False), len(attr.fields(FormatOption))
@@ -57,9 +55,22 @@ def test_absort_str(test_sample: Path) -> None:
         product(all_comment_strategies, all_format_options, all_sort_orders)
     )
 
+    async def entry() -> None:
+        tasks = []
+        async for test_sample in TEST_FILES:
+            arg_option = random.choice(all_arg_options)
+            task = helper(test_sample, arg_option)
+            tasks.append(task)
+        await asyncio.gather(*tasks)
+
+    asyncio.run(entry())
+
+
+async def helper(
+    test_sample: Path, arg_option: tuple[CommentStrategy, FormatOption, SortOrder]
+) -> None:
     try:
-        source = test_sample.read_text(encoding="utf-8")
-        arg_option = random.choice(all_arg_options)
+        source = await test_sample.read_text(encoding="utf-8")
         comment_strategy, format_option, sort_order = arg_option
         new_source = absort_str(
             source,
