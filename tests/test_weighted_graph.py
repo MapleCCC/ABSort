@@ -1,4 +1,12 @@
+from hypothesis import given
+
+from absort.utils import iequal
 from absort.weighted_graph import WeightedGraph
+
+from .strategies import graphs
+
+
+# FIXME it's actually problematic to use the WeightedGraph itself to test itself.
 
 
 def test_minimum_spanning_tree() -> None:
@@ -14,8 +22,23 @@ def test_minimum_spanning_tree() -> None:
     g.add_edge("C", "F", 2)
     g.add_edge("E", "F", 4)
     g.add_edge("E", "C", 5)
-    assert list(g.minimum_spanning_tree()) == ["B", "A", "E", "D", "F", "C"]
+    assert list(g.minimum_spanning_tree()) == ["A", "B", "E", "D", "F", "C"]
 
     g.clear()
     g.add_node("A")
     assert list(g.minimum_spanning_tree()) == ["A"]
+
+
+@given(graphs(directed=False, connected=True))
+def test_minimum_spanning_tree_porperty_based(graph: WeightedGraph) -> None:
+    mst = list(graph.minimum_spanning_tree())
+    nodes = list(graph.nodes())
+    assert len(mst) == len(nodes)
+    assert set(mst) == set(nodes)
+
+
+@given(graphs(directed=False, connected=True))
+def test_minimum_spanning_tree_deterministic(graph: WeightedGraph) -> None:
+    assert iequal(
+        graph.minimum_spanning_tree(), graph.minimum_spanning_tree(), strict=True
+    )

@@ -8,11 +8,13 @@ from typing import Union
 from hypothesis.strategies import (
     SearchStrategy,
     composite,
+    floats,
     from_type,
     frozensets,
     integers,
     lists,
     recursive,
+    sampled_from,
 )
 
 from absort.directed_graph import DirectedGraph
@@ -89,4 +91,42 @@ def graphs(
         return graph
 
     else:
-        raise NotImplementedError
+        if acyclic:
+            raise NotImplementedError
+
+        if not connected:
+            raise NotImplementedError
+
+        node_pools = draw(lists(nodes(), unique=True))
+
+        graph = WeightedGraph()
+        if not len(node_pools):
+            return graph
+        for node in node_pools:
+            graph.add_node(node)
+
+        possible_edges = [{n1, n2} for n1, n2 in combinations(node_pools, 2)]
+
+        edges = []
+        spanning_tree, not_in_tree = node_pools[:1], node_pools[1:]
+        for _ in range(len(node_pools) - 1):
+            one_end = draw(sampled_from(spanning_tree))
+            the_other_end = draw(sampled_from(not_in_tree))
+            edge = {one_end, the_other_end}
+            edges.append(edge)
+            possible_edges.remove(edge)
+            spanning_tree.append(the_other_end)
+            not_in_tree.remove(the_other_end)
+
+        n = len(possible_edges)
+        if n:
+            indices = draw(lists(integers(min_value=0, max_value=n-1), unique=True))
+        else:
+            indices = []
+        edges.extend(possible_edges[index] for index in indices)
+
+        for edge in edges:
+            weight = draw(floats())
+            graph.add_edge(*edge, weight)
+
+        return graph
