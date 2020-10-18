@@ -40,16 +40,22 @@ def hashables(compound: bool = False) -> SearchStrategy[Hashable]:
 
 def nodes() -> SearchStrategy:
     def filter_func(x):
-        import numpy
-
         if isinstance(x, Decimal):
             return not x.is_nan()
         elif isinstance(x, Complex):
             return not math.isnan(x.real) and not math.isnan(x.imag)
         elif isinstance(x, Number):
             return not math.isnan(x)
-        elif isinstance(x, numpy.dtype):
-            return False
+
+        # Hypothesis doesn't generate numpy.dtype when numpy is not installed in the environment
+        try:
+            import numpy
+        except ImportError:
+            pass
+        else:
+            if isinstance(x, numpy.dtype):
+                return False
+
         return True
 
     return hashables().filter(filter_func)
@@ -120,7 +126,7 @@ def graphs(
 
         n = len(possible_edges)
         if n:
-            indices = draw(lists(integers(min_value=0, max_value=n-1), unique=True))
+            indices = draw(lists(integers(min_value=0, max_value=n - 1), unique=True))
         else:
             indices = []
         edges.extend(possible_edges[index] for index in indices)
