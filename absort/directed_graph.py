@@ -234,7 +234,7 @@ class DirectedGraph(Generic[Node]):
             while sinks := remove_sinks(_graph):
                 yield from same_rank_sorter(list(sinks))
 
-        if self._adjacency_list:
+        if _graph._adjacency_list:
             raise CircularDependencyError(
                 "Circular dependency detected! "
                 + "Try to run the method detect_back_edge() to find back edges."
