@@ -59,6 +59,9 @@ class DirectedGraph(Generic[Node]):
     def __contains__(self, node: Node) -> bool:
         return node in self._adjacency_list
 
+    def nodes(self)->Iterator[Node]:
+        yield from self._adjacency_list.keys()
+
     def connected(self) -> bool:
         if not self._adjacency_list:
             return True
