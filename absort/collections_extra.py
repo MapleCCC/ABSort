@@ -18,10 +18,10 @@ class _OrderedSet(MutableSet[T]):
     __slots__ = ["_data"]
 
     def __contains__(self, elem: T) -> bool:
-        return elem in self._data.keys()
+        return elem in self._data
 
     def __iter__(self) -> Iterator[T]:
-        yield from self._data.keys()
+        yield from self._data
 
     def __len__(self) -> int:
         return len(self._data)

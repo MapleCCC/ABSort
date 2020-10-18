@@ -59,18 +59,18 @@ class DirectedGraph(Generic[Node]):
     def __contains__(self, node: Node) -> bool:
         return node in self._adjacency_list
 
-    def nodes(self)->Iterator[Node]:
-        yield from self._adjacency_list.keys()
+    def nodes(self) -> Iterator[Node]:
+        yield from self._adjacency_list
 
     def connected(self) -> bool:
         if not self._adjacency_list:
             return True
 
-        entry = first(self._adjacency_list.keys())
+        entry = first(self._adjacency_list)
         return ilen(self.bfs(entry)) == len(self._adjacency_list)
 
     def find_sources(self) -> OrderedSet[Node]:
-        sources: OrderedSet[Node] = OrderedSet(self._adjacency_list.keys())
+        sources: OrderedSet[Node] = OrderedSet(self._adjacency_list)
 
         for children in self._adjacency_list.values():
             sources -= children
@@ -161,8 +161,8 @@ class DirectedGraph(Generic[Node]):
     def get_transpose_graph(self) -> DirectedGraph[Node]:
         new_graph: DirectedGraph[Node] = DirectedGraph()
 
-        for key in self._adjacency_list.keys():
-            new_graph._adjacency_list[key] = OrderedSet()
+        for node in self._adjacency_list:
+            new_graph._adjacency_list[node] = OrderedSet()
 
         for node, children in self._adjacency_list.items():
             for child in children:
@@ -276,7 +276,7 @@ class DirectedGraph(Generic[Node]):
         indexer: dict[Node, int] = {}
         lowlinks: dict[Node, int] = {}
 
-        for node in self._adjacency_list.keys():
+        for node in self._adjacency_list:
             if node not in indexer:
                 yield from rec_scc(node)
 

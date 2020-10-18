@@ -93,7 +93,7 @@ class WeightedGraph(Generic[Node]):
 
     def find_minimum_edge(self) -> Edge:
         try:
-            edges = self._weight_table.keys()
+            edges = self._weight_table
             return min(edges, key=lambda edge: self._weight_table[edge])
 
         except ValueError:
@@ -116,7 +116,7 @@ class WeightedGraph(Generic[Node]):
         _graph = self.copy()
         seen: OrderedSet[Node] = OrderedSet()
 
-        seen.add(first(_graph._adjacency_list.keys()))
+        seen.add(first(_graph._adjacency_list))
 
         while len(seen) < _graph.num_nodes:
             candidate_edges = []
