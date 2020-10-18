@@ -69,6 +69,23 @@ class DirectedGraph(Generic[Node]):
         entry = first(self._adjacency_list.keys())
         return ilen(self.bfs(entry)) == len(self._adjacency_list)
 
+    def find_sources(self) -> OrderedSet[Node]:
+        sources: OrderedSet[Node] = OrderedSet(self._adjacency_list.keys())
+
+        for children in self._adjacency_list.values():
+            sources -= children
+
+        return sources
+
+    def find_sinks(self: DirectedGraph[Node]) -> OrderedSet[Node]:
+        sinks: OrderedSet[Node] = OrderedSet()
+
+        for node, children in self._adjacency_list.items():
+            if not children:
+                sinks.add(node)
+
+        return sinks
+
     def bfs(self, source: Node) -> Iterator[Node]:
         """
         Depending on the connectivity of the graph, it may not traverse all the nodes.
@@ -182,37 +199,8 @@ class DirectedGraph(Generic[Node]):
         This method traverses all the nodes regardless of the connectivity of the graph.
         """
 
-        def find_sources(graph: DirectedGraph[Node]) -> OrderedSet[Node]:
-            sources: OrderedSet[Node] = OrderedSet(graph._adjacency_list.keys())
-
-            for children in graph._adjacency_list.values():
-                sources -= children
-
-            if not sources and graph._adjacency_list:
-                raise CircularDependencyError(
-                    "Circular dependency detected! "
-                    + "Try to run the method detect_back_edge() to find back edges."
-                )
-
-            return sources
-
-        def find_sinks(graph: DirectedGraph[Node]) -> OrderedSet[Node]:
-            sinks: OrderedSet[Node] = OrderedSet()
-
-            for node, children in graph._adjacency_list.items():
-                if not children:
-                    sinks.add(node)
-
-            if not sinks and graph._adjacency_list:
-                raise CircularDependencyError(
-                    "Circular dependency detected! "
-                    + "Try to run the method detect_back_edge() to find back edges."
-                )
-
-            return sinks
-
         def remove_sources(graph: DirectedGraph[Node]) -> OrderedSet[Node]:
-            srcs = find_sources(graph)
+            srcs = graph.find_sources()
 
             for src in srcs:
                 del graph._adjacency_list[src]
@@ -223,7 +211,7 @@ class DirectedGraph(Generic[Node]):
             return srcs
 
         def remove_sinks(graph: DirectedGraph[Node]) -> OrderedSet[Node]:
-            sinks = find_sinks(graph)
+            sinks = graph.find_sinks()
 
             for sink in sinks:
                 del graph._adjacency_list[sink]
@@ -245,6 +233,12 @@ class DirectedGraph(Generic[Node]):
         else:
             while sinks := remove_sinks(_graph):
                 yield from same_rank_sorter(list(sinks))
+
+        if self._adjacency_list:
+            raise CircularDependencyError(
+                "Circular dependency detected! "
+                + "Try to run the method detect_back_edge() to find back edges."
+            )
 
     def strongly_connected_components(self) -> Iterator[SCC]:
         """
