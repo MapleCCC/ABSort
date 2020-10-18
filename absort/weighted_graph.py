@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import copy
 from collections import defaultdict
 from collections.abc import Iterator
 from typing import Generic, TypeVar
@@ -85,8 +84,12 @@ class WeightedGraph(Generic[Node]):
         """
 
         new: WeightedGraph[Node] = WeightedGraph()
-        new._adjacency_list = copy.deepcopy(self._adjacency_list)
+
+        for node, neighbors in self._adjacency_list.items():
+            new._adjacency_list[node] = neighbors.copy()
+
         new._weight_table = self._weight_table.copy()
+
         return new
 
     def find_minimum_edge(self) -> Edge:

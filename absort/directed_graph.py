@@ -3,7 +3,6 @@
 
 from __future__ import annotations
 
-import copy
 from collections import defaultdict, deque
 from collections.abc import Callable, Iterator, Sequence
 from typing import Generic, Optional, TypeVar
@@ -181,7 +180,10 @@ class DirectedGraph(Generic[Node]):
         """
 
         new_graph: DirectedGraph[Node] = DirectedGraph()
-        new_graph._adjacency_list = copy.deepcopy(self._adjacency_list)
+
+        for node, children in self._adjacency_list.items():
+            new_graph._adjacency_list[node] = children.copy()
+
         return new_graph
 
     def topological_sort(
