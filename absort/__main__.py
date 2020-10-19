@@ -64,6 +64,7 @@ __all__ = [
     "FileAction",
     "SortOrder",
     "NameRedefinition",
+    "MutuallyExclusiveOptions",
 ]
 
 
@@ -143,6 +144,10 @@ class NameRedefinition(Exception):
 
 class ABSortFail(Exception):
     """ An exception to signal that sorting fails """
+
+
+class MutuallyExclusiveOptions(Exception):
+    """ An exception to signal that two or more mutually exclusive CLI options are set """
 
 
 #
@@ -450,19 +455,23 @@ def validate_args(options: SimpleNamespace) -> None:
     # FIXME use click library's builtin mechanism to specify mutually exclusive options
 
     if sum([options.check, options.display_diff, options.in_place]) > 1:
-        raise ValueError(
+        raise MutuallyExclusiveOptions(
             "Only one of the `--check`, `--diff` and `--in-place` options can be specified at the same time"
         )
 
     if options.quiet and options.verbose:
-        raise ValueError("Can't specify both `--quiet` and `--verbose` options")
+        raise MutuallyExclusiveOptions(
+            "Can't specify both `--quiet` and `--verbose` options"
+        )
 
     if options.dfs and options.bfs:
-        raise ValueError("Can't specify both `--dfs` and `--bfs` options")
+        raise MutuallyExclusiveOptions("Can't specify both `--dfs` and `--bfs` options")
 
     if options.in_place and options.quiet:
         # Because in-place updating files requires user confirmation through command line prompts.
-        raise ValueError("Can't specify both `--in-place` and `--quiet` options")
+        raise MutuallyExclusiveOptions(
+            "Can't specify both `--in-place` and `--quiet` options"
+        )
 
 
 @run_in_event_loop

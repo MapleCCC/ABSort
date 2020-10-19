@@ -4,6 +4,7 @@ from .__main__ import (
     FormatOption,
     SortOrder,
     NameRedefinition,
+    MutuallyExclusiveOptions,
     absort_file,
     absort_files,
     absort_str,
@@ -20,5 +21,6 @@ __all__ = [
     "FileAction",
     "SortOrder",
     "NameRedefinition",
+    "MutuallyExclusiveOptions",
     "__version__",
 ]
