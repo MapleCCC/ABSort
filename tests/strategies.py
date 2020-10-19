@@ -1,3 +1,7 @@
+"""
+This module contains a series of hypothesis strategies for convenient use.
+"""
+
 from collections.abc import Hashable
 from itertools import combinations, permutations
 from typing import Union

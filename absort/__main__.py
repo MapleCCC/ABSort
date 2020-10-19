@@ -106,7 +106,7 @@ class CommentStrategy(Enum):
 
 
 class SortOrder(Enum):
-    """"""
+    """ An enumeration to specify different kinds of sort order strategies """
 
     TOPOLOGICAL = 0
     DEPTH_FIRST = 1
@@ -119,7 +119,7 @@ class SortOrder(Enum):
 
 # Specify the location of the cache directory
 CACHE_DIR = Path.sync_home() / ".absort_cache"
-# Specify the maximum size threshold fot the cache directory (in bytes)
+# Specify the maximum size threshold for the cache directory (in bytes)
 CACHE_MAX_SIZE = 400000  # unit is byte
 
 #
@@ -448,22 +448,20 @@ def validate_args(options: SimpleNamespace) -> None:
 
     # FIXME use click library's builtin mechanism to specify mutually exclusive options
 
-    def mutually_exclusive(*args: str) -> None:
-        if sum(bool(getattr(options, arg)) for arg in args) > 1:
-            if len(args) == 2:
-                raise ValueError(
-                    f"Can't specify both `{args[0]}` and `{args[1]}` options"
-                )
-            else:
-                fargs = [f"`{arg}`" for arg in args]
-                opts = ", ".join(fargs[:-1]) + " and " + fargs[-1]
-                raise ValueError(
-                    f"Only one of the {opts} options can be specified at the same time"
-                )
+    if sum([options.check, options.display_diff, options.in_place]) > 1:
+        raise ValueError(
+            "Only one of the `--check`, `--diff` and `--in-place` options can be specified at the same time"
+        )
 
-    mutually_exclusive("check", "display_diff", "in_place")
-    mutually_exclusive("quiet", "verbose")
-    mutually_exclusive("dfs", "bfs")
+    if options.quiet and options.verbose:
+        raise ValueError("Can't specify both `--quiet` and `--verbose` options")
+
+    if options.dfs and options.bfs:
+        raise ValueError("Can't specify both `--dfs` and `--bfs` options")
+
+    if options.in_place and options.quiet:
+        # Because in-place updating files requires user confirmation through command line prompts.
+        raise ValueError("Can't specify both `--in-place` and `--quiet` options")
 
 
 @run_in_event_loop
@@ -583,7 +581,7 @@ async def absort_file(
 
         if not bypass_prompt:
             ans = click.confirm(
-                f"Are you sure you want to in-place update the file {file}?", err=True
+                f"Are you sure you want to in-place update the file {file}?"
             )
             if not ans:
                 digest.unmodified += 1
@@ -736,7 +734,10 @@ def absort_decls(
     def same_abstract_level_sorter(names: Iterable[str]) -> Iterable[str]:
         """ Specify how to sort declarations within the same abstract level """
 
-        # Currently sort by retaining their original relative order, to reduce diff size.
+        # If the `--no-aggressive` option is set, sort by retaining their original relative
+        # order, to reduce diff size.
+        #
+        # Otherwise, sort by code similarity.
         #
         # Possible alternatives: sort by lexicographical order of the names, sort by body
         # size, sort by name length, etc.

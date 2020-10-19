@@ -10,13 +10,14 @@ from collections import OrderedDict, defaultdict
 from collections.abc import Callable, Hashable, Iterable, Iterator, Sequence
 from decimal import Decimal
 from functools import cache, partial
-from itertools import chain, combinations, zip_longest
+from itertools import chain, combinations, permutations, zip_longest
 from numbers import Complex, Number
 from types import SimpleNamespace
 from typing import IO, Any, Optional, TypeVar, Union, overload
 
 import attr
 from colorama import Fore, Style
+from more_itertools import all_equal
 
 from .exceptions import Unreachable
 from .lfu import LFU
@@ -363,7 +364,6 @@ def duplicated(sequence: Sequence) -> bool:
         return False
 
 
-
 @overload
 def hamming_distance(
     iterable1: Iterable[T],
@@ -428,17 +428,22 @@ def identityfunc(input: T) -> T:
 
 
 def iequal(
-    iterable1: Iterable,
-    iterable2: Iterable,
+    *iterables: Iterable,
     equal: Callable[[Any, Any], bool] = operator.eq,
     strict: bool = False,
 ) -> bool:
     if not strict:
-        return all(map(equal, iterable1, iterable2))
+        for elements in zip(*iterables):
+            for e1, e2 in permutations(elements, 2):
+                if not equal(e1, e2):
+                    return False
+        return True
+
     else:
-        list1 = list(iterable1)
-        list2 = list(iterable2)
-        return len(list1) == len(list2) and all(map(equal, list1, list2))
+        lists = [[*iterable] for iterable in iterables]
+        if not all_equal(map(len, lists)):
+            return False
+        return iequal(*lists, equal=equal, strict=False)
 
 
 class on_except_return:

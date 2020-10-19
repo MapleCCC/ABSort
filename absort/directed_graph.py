@@ -244,7 +244,7 @@ class DirectedGraph(Generic[Node]):
         """
         Find all strongly connected components.
 
-        The implementation is Tarjan's algorithm.
+        The implementation is Tarjan's algorithm, with linear time complexity O(|V|+|E|).
 
         It fallbacks to topological sort for a DAG.
 
