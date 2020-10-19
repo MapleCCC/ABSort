@@ -334,8 +334,9 @@ class PyVersionParamType(click.ParamType):
     "-y",
     "--yes",
     "bypass_prompt",
-    is_flag=True,
-    help="Bypass all confirmation prompts. Dangerous option. Not recommended.",
+    count=True,
+    help="Bypass confirmation prompts. Use multiple times to bypass increasingly more confirmation prompts. "
+    "Dangerous option. Not recommended.",
 )
 @click.option("--dfs", is_flag=True, help="Sort in depth-first order.")
 @click.option("--bfs", is_flag=True, help="Sort in breadth-first order.")
@@ -364,7 +365,7 @@ def main(
     quiet: bool,
     verbose: bool,
     color_off: bool,
-    bypass_prompt: bool,
+    bypass_prompt: int,
     dfs: bool,
     bfs: bool,
     separate_class_and_function: bool,
@@ -375,22 +376,22 @@ def main(
     validate_args(options)
 
     # First confirmation prompt
-    if bypass_prompt:
+    if 0 < bypass_prompt < 3:
         ans = click.confirm(
             "Are you sure you want to bypass all confirmation prompts? "
             "(Dangerous, not recommended)"
         )
         if not ans:
-            bypass_prompt = False
+            bypass_prompt = 0
 
     # Second confirmation prompt
-    if bypass_prompt:
+    if 0 < bypass_prompt < 2:
         ans = click.confirm(
             "Are you REALLY REALLY REALLY sure you want to bypass all confirmation prompts? "
             "(Dangerous, not recommended)"
         )
         if not ans:
-            bypass_prompt = False
+            bypass_prompt = 0
 
     files = list(collect_python_files(map(Path, filepaths)))
     if not files:
@@ -491,7 +492,7 @@ async def collect_python_files(filepaths: Iterable[Path]) -> AsyncIterator[Path]
 def absort_files(
     files: list[Path],
     encoding: str = "utf-8",
-    bypass_prompt: bool = False,
+    bypass_prompt: int = 0,
     verbose: bool = False,
     file_action: FileAction = FileAction.PRINT,
     py_version: PyVersion = (3, 9),
@@ -528,7 +529,7 @@ def absort_files(
 async def absort_file(
     file: Path,
     encoding: str = "utf-8",
-    bypass_prompt: bool = False,
+    bypass_prompt: int = 0,
     verbose: bool = False,
     file_action: FileAction = FileAction.PRINT,
     py_version: PyVersion = (3, 9),
@@ -579,7 +580,7 @@ async def absort_file(
     async def write_source(file: Path, new_source: str) -> None:
         """ Write the new source to the file, prompt for confirmation and make backup """
 
-        if not bypass_prompt:
+        if bypass_prompt < 1:
             ans = click.confirm(
                 f"Are you sure you want to in-place update the file {file}?"
             )
