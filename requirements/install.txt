@@ -1,6 +1,6 @@
 click==7.1.2
-colorama==0.4.3
+colorama==0.4.4
 attrs==20.2.0
 cchardet==2.1.6
 aiofiles==0.5.0
-more_itertools==8.5.0
+more-itertools==8.5.0
