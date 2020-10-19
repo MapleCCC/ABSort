@@ -976,6 +976,14 @@ async def backup_to_cache(file: Path) -> None:
     backup_file = CACHE_DIR / (file.name + "." + timestamp + ".backup")
 
     await CACHE_DIR.mkdir(parents=True, exist_ok=True)
+    readme = CACHE_DIR / "README"
+    if not readme.exists():
+        readme.write_text(
+            "This directory is a cache folder of the absort utility (https://github.com/MapleCCC/ABSort). "
+            "It's used for precautious recovery purpose. It can be removed safely.",
+            encoding="utf-8",
+        )
+
     await file.copy2(backup_file)
 
     if await CACHE_DIR.dirsize() > CACHE_MAX_SIZE:
