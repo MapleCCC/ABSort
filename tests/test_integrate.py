@@ -1,3 +1,4 @@
+import ast
 import random
 import sys
 from itertools import product
@@ -8,6 +9,8 @@ from click.testing import CliRunner
 from more_itertools import collapse
 
 from absort.__main__ import MutuallyExclusiveOptions, main as absort_entry
+from absort.ast_utils import ast_deep_equal
+from absort.utils import contains
 
 
 STDLIB_DIR = Path(sys.executable).with_name("Lib")
@@ -46,18 +49,26 @@ def test_integrate() -> None:
 
     runner = CliRunner()
     with runner.isolated_filesystem():
-        for test_file in TEST_FILES:
-            filename = test_file.name
-            copy2(test_file, Path.cwd() / filename)
+        for source_test_file in TEST_FILES:
+            test_file = Path.cwd() / source_test_file.name
+            copy2(source_test_file, test_file)
+
+            old_content = test_file.read_text(encoding="utf-8")
 
             option = random.choice(option_combinations)
-            result = runner.invoke(
-                absort_entry,
-                [str(filename), *option],
-            )
+            result = runner.invoke(absort_entry, [str(test_file), *option])
 
             if isinstance(result.exception, MutuallyExclusiveOptions):
                 continue
+
             assert result.exit_code == 0
+
+            if "--in-place" in option:
+                old_tree = ast.parse(old_content)
+                new_content = test_file.read_text(encoding="utf-8")
+                new_tree = ast.parse(new_content)
+                assert len(new_tree.body) == len(old_tree.body)
+                for stmt in new_tree.body:
+                    assert contains(old_tree.body, stmt, equal=ast_deep_equal)
 
             # TODO add more asserts
