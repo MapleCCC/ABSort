@@ -116,12 +116,15 @@ class AsyncPath:
         await run_async(shutil.copy, self._path, dst, follow_symlinks=follow_symlinks)
 
     async def copy2(self, dst: Union[str, AsyncPath], *, follow_symlinks=True) -> None:
+        if isinstance(dst, AsyncPath):
+            dst = str(dst)
+
         await run_async(shutil.copy2, self._path, dst, follow_symlinks=follow_symlinks)
 
     async def dirsize(self) -> int:
         """ Return the total size of a directory, in bytes """
 
-        if await self.is_dir():
+        if not await self.is_dir():
             raise NotADirectoryError(f"{self} is not a directory")
 
         size = 0
