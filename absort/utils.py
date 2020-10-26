@@ -166,18 +166,26 @@ def colored_unified_diff(
 
 
 @contextlib.contextmanager
-def silent_context() -> Iterator[None]:
+def silent_context(include_err: bool=False) -> Iterator[None]:
     """
     Return a context manager. Within the context, writting to `stdout` is discarded.
     """
 
+    null_device_fd = open(os.devnull, "a", encoding="utf-8")
+
     original_stdout = sys.stdout
-    sys.stdout = open(os.devnull, "a", encoding="utf-8")
-    # sys.stderr = open(os.devnull, "a")
+    original_stderr = sys.stderr
+
+    sys.stdout = null_device_fd
+    if include_err:
+        sys.stderr = null_device_fd
+
     try:
         yield
+
     finally:
         sys.stdout = original_stdout
+        sys.stderr = original_stderr
 
 
 # TODO Add more cache replacement policy implementation
