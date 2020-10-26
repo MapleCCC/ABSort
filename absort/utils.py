@@ -172,7 +172,7 @@ def silent_context() -> Iterator[None]:
     """
 
     original_stdout = sys.stdout
-    sys.stdout = open(os.devnull, "a")
+    sys.stdout = open(os.devnull, "a", encoding="utf-8")
     # sys.stderr = open(os.devnull, "a")
     try:
         yield
