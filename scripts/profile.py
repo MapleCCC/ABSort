@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import ast
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -87,6 +88,9 @@ def main() -> None:
 
         entry_script = tempdir / ENTRY_SCRIPT_NAME
 
+        env = dict(os.environ)
+        env["PYTHONIOENCODING"] = "utf-8"
+
         completed_proc = subprocess.run(
             [
                 "time",
@@ -101,6 +105,7 @@ def main() -> None:
             encoding="utf-8",
             # WARNING: don't specify capture_output if stderr or stdout is specified
             capture_output=True,
+            env=env,
         )
         stdout = completed_proc.stdout
         stderr = completed_proc.stderr
