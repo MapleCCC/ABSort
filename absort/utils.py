@@ -17,7 +17,7 @@ from typing import IO, Any, Optional, TypeVar, Union, overload
 
 import attr
 from colorama import Fore, Style
-from more_itertools import all_equal
+from more_itertools import zip_equal, UnequalIterablesError
 
 from .exceptions import Unreachable
 from .lfu import LFU
@@ -440,18 +440,17 @@ def iequal(
     equal: Callable[[Any, Any], bool] = operator.eq,
     strict: bool = False,
 ) -> bool:
-    if not strict:
-        for elements in zip(*iterables):
+
+    zip_func = zip_equal if strict else zip
+
+    try:
+        for elements in zip_func(*iterables):
             for e1, e2 in permutations(elements, 2):
                 if not equal(e1, e2):
                     return False
         return True
-
-    else:
-        lists = [[*iterable] for iterable in iterables]
-        if not all_equal(map(len, lists)):
-            return False
-        return iequal(*lists, equal=equal, strict=False)
+    except UnequalIterablesError:
+        return False
 
 
 class on_except_return:
