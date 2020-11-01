@@ -6,6 +6,7 @@ from shutil import copy2
 
 from click.testing import CliRunner
 from hypothesis import given, settings
+from hypothesis.strategies import sampled_from
 from more_itertools import collapse
 
 from absort.__main__ import MutuallyExclusiveOptions, main as absort_entry
@@ -16,7 +17,7 @@ from .strategies import products
 
 
 STDLIB_DIR = Path(sys.executable).with_name("Lib")
-TEST_FILES = STDLIB_DIR.rglob("*.py")
+TEST_FILES = list(STDLIB_DIR.rglob("*.py"))
 
 
 file_action_options = [[], "--check", "--diff", ["--in-place", "-yyy"]]
@@ -50,30 +51,29 @@ cli_options = constantfunc(
 )
 
 
-@given(cli_options())
+@given(cli_options(), sampled_from(TEST_FILES))
 @settings(deadline=None)
-def test_integrate(option: tuple[str, ...]) -> None:
+def test_integrate(option: tuple[str, ...], source_test_file: Path) -> None:
     runner = CliRunner()
     with runner.isolated_filesystem():
-        for source_test_file in TEST_FILES:
-            test_file = Path.cwd() / source_test_file.name
-            copy2(source_test_file, test_file)
+        test_file = Path.cwd() / source_test_file.name
+        copy2(source_test_file, test_file)
 
-            old_content = test_file.read_text(encoding="utf-8")
+        old_content = test_file.read_text(encoding="utf-8")
 
-            result = runner.invoke(absort_entry, [str(test_file), *option])
+        result = runner.invoke(absort_entry, [str(test_file), *option])
 
-            if isinstance(result.exception, MutuallyExclusiveOptions):
-                continue
+        if isinstance(result.exception, MutuallyExclusiveOptions):
+            return
 
-            assert result.exit_code == 0
+        assert result.exit_code == 0
 
-            if "--in-place" in option:
-                old_tree = ast.parse(old_content)
-                new_content = test_file.read_text(encoding="utf-8")
-                new_tree = ast.parse(new_content)
-                assert len(new_tree.body) == len(old_tree.body)
-                for stmt in new_tree.body:
-                    assert contains(old_tree.body, stmt, equal=ast_deep_equal)
+        if "--in-place" in option:
+            old_tree = ast.parse(old_content)
+            new_content = test_file.read_text(encoding="utf-8")
+            new_tree = ast.parse(new_content)
+            assert len(new_tree.body) == len(old_tree.body)
+            for stmt in new_tree.body:
+                assert contains(old_tree.body, stmt, equal=ast_deep_equal)
 
-            # TODO add more asserts
+        # TODO add more asserts
