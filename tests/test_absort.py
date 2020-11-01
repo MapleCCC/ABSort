@@ -7,7 +7,7 @@ from pathlib import Path
 
 import attr
 from hypothesis import given, settings
-from hypothesis.strategies import SearchStrategy, sampled_from
+from hypothesis.strategies import sampled_from
 
 from absort.__main__ import (
     CommentStrategy,
@@ -17,7 +17,7 @@ from absort.__main__ import (
     absort_str,
 )
 from absort.ast_utils import ast_deep_equal
-from absort.utils import contains
+from absort.utils import constantfunc, contains
 
 from .strategies import products
 
@@ -44,7 +44,12 @@ if os.getenv("CI") and os.getenv("TRAVIS"):
 TEST_FILES = list(STDLIB_DIR.rglob("*.py"))
 
 
-Option = tuple[CommentStrategy, FormatOption, SortOrder]
+@attr.s(auto_attribs=True)
+class Option:
+    comment_strategy: CommentStrategy
+    format_option: FormatOption
+    sort_order: SortOrder
+
 
 all_comment_strategies = list(CommentStrategy)
 all_format_options = [
@@ -53,9 +58,9 @@ all_format_options = [
 ]
 all_sort_orders = list(SortOrder)
 
-
-def arg_options() -> SearchStrategy[Option]:
-    return products(all_comment_strategies, all_format_options, all_sort_orders)  # type: ignore
+arg_options = constantfunc(
+    products(all_comment_strategies, all_format_options, all_sort_orders).map(Option)
+)
 
 
 @given(sampled_from(TEST_FILES), arg_options())
@@ -63,20 +68,9 @@ def arg_options() -> SearchStrategy[Option]:
 def test_absort_str(test_sample: Path, option: Option) -> None:
     try:
         source = test_sample.read_text(encoding="utf-8")
-        comment_strategy, format_option, sort_order = option
-        new_source = absort_str(
-            source,
-            comment_strategy=comment_strategy,
-            format_option=format_option,
-            sort_order=sort_order,
-        )
+        new_source = absort_str(source, **attr.asdict(option))
 
-        second_run_new_source = absort_str(
-            source,
-            comment_strategy=comment_strategy,
-            format_option=format_option,
-            sort_order=sort_order,
-        )
+        second_run_new_source = absort_str(source, **attr.asdict(option))
         # Check that absort is deterministic and stable
         assert new_source == second_run_new_source
 
