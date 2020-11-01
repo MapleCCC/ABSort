@@ -478,6 +478,9 @@ def ast_tree_edit_distance(
 
     Reference: https://epubs.siam.org/doi/abs/10.1137/0218082
 
+    Optionally, specify the algorithm argument as "PQGram" to switch to PQGram tree edit
+    distance algorithm, which is far more efficient for large trees.
+
     Note that the rename_cost function **should** return 0 for identical nodes.
     """
 

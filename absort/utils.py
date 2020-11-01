@@ -157,7 +157,7 @@ def colored_unified_diff(
 
 
 @contextlib.contextmanager
-def silent_context(include_err: bool=False) -> Iterator[None]:
+def silent_context(include_err: bool = False) -> Iterator[None]:
     """
     Return a context manager. Within the context, writting to `stdout` is discarded.
     """

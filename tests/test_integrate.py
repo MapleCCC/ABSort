@@ -66,9 +66,9 @@ cli_options = constantfunc(
 )
 
 
-@given(cli_options(), sampled_from(TEST_FILES))
+@given(sampled_from(TEST_FILES), cli_options())
 @settings(deadline=None)
-def test_integrate(option: tuple[str, ...], source_test_file: Path) -> None:
+def test_integrate(source_test_file: Path, option: tuple[str, ...]) -> None:
     runner = CliRunner()
     with runner.isolated_filesystem():
         test_file = Path.cwd() / source_test_file.name
@@ -87,6 +87,7 @@ def test_integrate(option: tuple[str, ...], source_test_file: Path) -> None:
             old_tree = ast.parse(old_content)
             new_content = test_file.read_text(encoding="utf-8")
             new_tree = ast.parse(new_content)
+
             assert len(new_tree.body) == len(old_tree.body)
             for stmt in new_tree.body:
                 assert contains(old_tree.body, stmt, equal=ast_deep_equal)

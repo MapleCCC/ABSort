@@ -1,5 +1,5 @@
 """
-This module contains a series of hypothesis strategies for convenient use.
+This module contains a collection of hypothesis strategies for convenient use.
 """
 
 from collections.abc import Hashable, Sequence
@@ -71,6 +71,7 @@ def graphs(
 ) -> Graph:
     if directed:
         if connected:
+            # TODO
             raise NotImplementedError
 
         node_pools = draw(lists(nodes(), unique=True))
@@ -99,9 +100,11 @@ def graphs(
 
     else:
         if acyclic:
+            # TODO
             raise NotImplementedError
 
         if not connected:
+            # TODO
             raise NotImplementedError
 
         node_pools = draw(lists(nodes(), unique=True))

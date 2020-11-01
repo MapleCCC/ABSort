@@ -52,7 +52,7 @@
 
 The default sorting algorithm is a topological sort on the directed acyclic graph formed by strongly connected components of the dependency graph, with function definitions and class definitions as graph nodes, their dependency relations as graph edges.
 
-Another method to realize abstraction level sort is to sort by DFS/BFS order of the dependency graph. This behavior can be opted in with the `--dfs` and `--bfs` CLI options.
+Another method to realize abstraction level sort is to sort by DFS/BFS order of the dependency graph. This behavior can be opted in via the `--dfs` and `--bfs` CLI options.
 
 For graph nodes within the same abstract level, they are in turn sorted in two options:
 
@@ -185,14 +185,15 @@ print(add_three(1))
 After ABSorting:
 
 ```python
+class Adder:
+    method = increment
+
 def add_three(x):
     return add_two(increment(x))
 
 def add_two(x):
     return increment(increment(x))
 
-class Adder:
-    method = increment
 
 def increment(x):
     return x + 1

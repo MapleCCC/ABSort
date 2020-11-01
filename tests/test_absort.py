@@ -88,8 +88,10 @@ def test_absort_str(test_sample: Path, option: Option) -> None:
         assert len(old_ast.body) == len(new_ast.body)
         for stmt in old_ast.body:
             assert contains(new_ast.body, stmt, equal=ast_deep_equal)
+
     except (SyntaxError, NameRedefinition, UnicodeDecodeError):
         pass
+
     except Exception as exc:
         exc_cls_name = getattr(exc.__class__, "__name__", "some exception")
         print(f"Encountered {exc_cls_name} when sorting {test_sample}")
