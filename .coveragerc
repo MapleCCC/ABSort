@@ -1,6 +1,8 @@
 [run]
 command_line = -m pytest tests
 source = absort
+omit =
+    */archive.py
 
 [report]
 exclude_lines =
