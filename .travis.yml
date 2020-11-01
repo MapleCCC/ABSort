@@ -1,8 +1,6 @@
 language: python
 python:
-  # TODO Wait for 3.9 image to be available in Travis CI.
-  # Follow the issue https://travis-ci.community/t/python-3-9-0-build/10091/4
-  - "3.9-dev"
+  - "3.9"
 install:
   - pip install -r requirements/install.txt
   - pip install -r requirements/test.txt
