@@ -118,6 +118,32 @@ def zhangshasha(
     return result
 
 
+try:
+    import zss
+
+    def _zhangshasha(
+        tree1: Tree,
+        tree2: Tree,
+        children: Callable[[Tree], Iterable[Tree]],
+        insert_cost: Callable[[Tree], float] = constantfunc(1),
+        delete_cost: Callable[[Tree], float] = constantfunc(1),
+        rename_cost: Callable[[Tree, Tree], float] = lambda x, y: int(x != y),
+    ) -> float:
+        return zss.distance(
+            tree1,
+            tree2,
+            get_children=lambda x: [*children(x)],
+            insert_cost=insert_cost,
+            remove_cost=delete_cost,
+            update_cost=rename_cost,
+        )  # type: ignore
+
+    zhangshasha = _zhangshasha  # type: ignore
+
+except ImportError:
+    pass
+
+
 Label = TypeVar("Label")
 LabelTuple = tuple[Label, ...]
 Register = deque[Label]
