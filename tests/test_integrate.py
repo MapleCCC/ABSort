@@ -76,7 +76,7 @@ def test_integrate(option: tuple[str, ...], source_test_file: Path) -> None:
 
         old_content = test_file.read_text(encoding="utf-8")
 
-        result = runner.invoke(absort_entry, [str(test_file), *option])
+        result = runner.invoke(absort_entry, [*option, "--", str(test_file)])
 
         if isinstance(result.exception, MutuallyExclusiveOptions):
             return
