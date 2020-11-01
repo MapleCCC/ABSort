@@ -191,7 +191,7 @@ Fields = tuple[tuple[str, str], ...]
 
 def retrieve_ast_node_class_fields(
     ast_node_class: type[ast.AST],
-) -> Fields:
+) -> Fields:  # pragma: no cover
     if ast_node_class is ast.AST:
         raise ValueError("Abstract node class has no fields")
 
@@ -229,7 +229,7 @@ def retrieve_ast_node_class_fields(
     return tuple((*attribute.split(),) for attribute in attributes.split(","))  # type: ignore
 
 
-def all_ast_node_classes() -> Iterator[tuple[str, type[ast.AST]]]:
+def all_ast_node_classes() -> Iterator[tuple[str, type[ast.AST]]]:  # pragma: no cover
     for name in dir(ast):
         attr = getattr(ast, name)
         try:
@@ -241,7 +241,7 @@ def all_ast_node_classes() -> Iterator[tuple[str, type[ast.AST]]]:
             pass
 
 
-def build_ast_node_class_fields_table() -> dict[str, tuple[tuple[str, str], ...]]:
+def build_ast_node_class_fields_table() -> dict[str, tuple[tuple[str, str], ...]]:  # pragma: no cover
     table: dict[str, Fields] = {}
     for name, cls in all_ast_node_classes():
         try:
