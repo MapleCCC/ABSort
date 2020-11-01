@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import ast
 import os
 import re
@@ -50,6 +52,10 @@ class Option:
     format_option: FormatOption
     sort_order: SortOrder
 
+    @classmethod
+    def from_tuple(cls: type, tup: tuple) -> Option:
+        return cls(*tup)
+
 
 all_comment_strategies = list(CommentStrategy)
 all_format_options = [
@@ -59,7 +65,9 @@ all_format_options = [
 all_sort_orders = list(SortOrder)
 
 arg_options = constantfunc(
-    products(all_comment_strategies, all_format_options, all_sort_orders).map(Option)
+    products(all_comment_strategies, all_format_options, all_sort_orders).map(
+        Option.from_tuple
+    )
 )
 
 
