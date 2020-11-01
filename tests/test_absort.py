@@ -1,12 +1,12 @@
 import ast
 import asyncio
 import os
-import random
 import re
 import sys
-from itertools import combinations_with_replacement, product
+from itertools import product
 
 import attr
+from more_itertools import random_product
 
 from absort.__main__ import (
     CommentStrategy,
@@ -42,23 +42,23 @@ if os.getenv("CI") and os.getenv("TRAVIS"):
 TEST_FILES = STDLIB_DIR.rglob("*.py")
 
 
-def test_absort_str() -> None:
-    all_comment_strategies = iter(CommentStrategy)
-    format_option_init_arg_options = combinations_with_replacement(
-        (True, False), len(attr.fields(FormatOption))
-    )
-    all_format_options = (
-        FormatOption(*c) for c in format_option_init_arg_options  # type: ignore
-    )
-    all_sort_orders = iter(SortOrder)
-    all_arg_options = list(
-        product(all_comment_strategies, all_format_options, all_sort_orders)
-    )
+all_comment_strategies = list(CommentStrategy)
+all_format_options = [
+    FormatOption(*p)  # type: ignore
+    for p in product(*([(True, False)] * len(attr.fields(FormatOption))))
+]
+all_sort_orders = list(SortOrder)
 
+
+def random_arg_option() -> tuple[CommentStrategy, FormatOption, SortOrder]:
+    return random_product(all_comment_strategies, all_format_options, all_sort_orders)  # type: ignore
+
+
+def test_absort_str() -> None:
     async def entry() -> None:
         tasks = []
         async for test_sample in TEST_FILES:
-            arg_option = random.choice(all_arg_options)
+            arg_option = random_arg_option()
             task = helper(test_sample, arg_option)
             tasks.append(task)
         await asyncio.gather(*tasks)
