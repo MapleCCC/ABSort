@@ -10,7 +10,7 @@ from collections import OrderedDict, defaultdict
 from collections.abc import Callable, Hashable, Iterable, Iterator, Sequence
 from decimal import Decimal
 from functools import cache, partial
-from itertools import chain, combinations, permutations, zip_longest
+from itertools import chain, combinations, zip_longest
 from numbers import Complex, Number
 from types import SimpleNamespace
 from typing import IO, Any, Optional, TypeVar, Union, overload
@@ -445,7 +445,7 @@ def iequal(
 
     try:
         for elements in zip_func(*iterables):
-            for e1, e2 in permutations(elements, 2):
+            for e1, e2 in combinations(elements, 2):
                 if not equal(e1, e2):
                     return False
         return True
