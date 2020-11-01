@@ -4,9 +4,10 @@ source = absort
 
 [report]
 exclude_lines =
+    pragma: no cover
     def __str__
     def __repr__
     except
     raise
     if __name__ == .__main__.:
-    \.\.\.
+    return NotImplemented
