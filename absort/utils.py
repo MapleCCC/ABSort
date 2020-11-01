@@ -10,7 +10,7 @@ from collections import OrderedDict, defaultdict
 from collections.abc import Callable, Hashable, Iterable, Iterator, Sequence
 from decimal import Decimal
 from functools import cache
-from itertools import chain, combinations, zip_longest
+from itertools import combinations, zip_longest
 from numbers import Complex, Number
 from typing import IO, Any, TypeVar
 
@@ -361,9 +361,6 @@ def larger_recursion_limit() -> Iterator:
         sys.setrecursionlimit(orig_rec_limit)
 
 
-_sentinel = object()
-
-
 def memoization(
     key: Callable[..., Hashable] = None,
 ) -> Callable[[Callable[..., T]], Callable[..., T]]:
@@ -373,36 +370,14 @@ def memoization(
     A drop-in replacement of the builtin functools.cache, with the additional feature that the key caculation is customizable.
     """
 
+    if key is None:
+        return cache
+
     @attr.s(auto_attribs=True)
     class CacheInfo:
         hit: int = 0
         miss: int = 0
         currsize: int = 0
-
-    class wrapper_tuple:
-        def __init__(self, tup: tuple) -> None:
-            self._tup = tup
-            self._hash = hash(tup)
-
-        def __hash__(self) -> int:
-            return self._hash
-
-    def default_key(*args, **kwargs) -> Hashable:
-        # Duplicate the behavior of the builtin functools.cache
-
-        args_key = (*args, _sentinel, *chain.from_iterable(kwargs))
-
-        if len(args_key) == 1 and isinstance(args_key[0], (int, str)):
-            return args_key[0]
-
-        try:
-            return wrapper_tuple(args_key)
-        except TypeError:
-            str_kwargs = [f"{key}={value}" for key, value in kwargs.items()]
-            raise TypeError(f"{(*args, *str_kwargs)} is unhashable")
-
-    if key is None:
-        key = default_key
 
     class decorator:
         def __init__(self, func: Callable[..., T]) -> None:
