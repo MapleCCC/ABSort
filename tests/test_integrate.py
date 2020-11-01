@@ -1,12 +1,11 @@
 import ast
-import random
 import sys
 from itertools import product
 from pathlib import Path
 from shutil import copy2
 
 from click.testing import CliRunner
-from more_itertools import collapse
+from more_itertools import collapse, random_product
 
 from absort.__main__ import MutuallyExclusiveOptions, main as absort_entry
 from absort.ast_utils import ast_deep_equal
@@ -25,7 +24,7 @@ def test_integrate() -> None:
         "--no-aggressive",
         "--separate-class-and-function",
     ]
-    format_options = product(*([[], flag] for flag in format_flags))
+    format_options = list(product(*([[], flag] for flag in format_flags)))
     sort_order_options = [[], "--dfs", "--bfs"]
     verboseness_options = [[], "--quiet", "--verbose"]
     miscellaneous_options = [[], "--color-off"]
@@ -35,17 +34,18 @@ def test_integrate() -> None:
         ["--comment-strategy", "push-top"],
         ["--comment-strategy", "ignore"],
     ]
-    option_combinations = [
-        list(collapse(p))
-        for p in product(
-            file_action_options,
-            format_options,
-            sort_order_options,
-            verboseness_options,
-            miscellaneous_options,
-            comment_strategy_options,
+    random_option_combination = lambda: list(
+        collapse(
+            random_product(
+                file_action_options,
+                format_options,
+                sort_order_options,
+                verboseness_options,
+                miscellaneous_options,
+                comment_strategy_options,
+            )
         )
-    ]
+    )
 
     runner = CliRunner()
     with runner.isolated_filesystem():
@@ -55,7 +55,7 @@ def test_integrate() -> None:
 
             old_content = test_file.read_text(encoding="utf-8")
 
-            option = random.choice(option_combinations)
+            option = random_option_combination()
             result = runner.invoke(absort_entry, [str(test_file), *option])
 
             if isinstance(result.exception, MutuallyExclusiveOptions):
