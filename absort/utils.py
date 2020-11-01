@@ -13,7 +13,7 @@ from functools import cache, partial
 from itertools import chain, combinations, zip_longest
 from numbers import Complex, Number
 from types import SimpleNamespace
-from typing import IO, Any, Optional, TypeVar, Union, overload
+from typing import IO, Any, Optional, TypeVar, Union
 
 import attr
 from colorama import Fore, Style
@@ -66,12 +66,7 @@ T = TypeVar("T")
 S = TypeVar("S")
 
 
-@overload
 def ireverse(iterable: Iterable[T]) -> Iterator[T]:
-    ...
-
-
-def ireverse(iterable: Iterable) -> Iterator:
     """
     Similar to the builtin function reversed(), except accept iterable objects as input
     """
@@ -80,12 +75,7 @@ def ireverse(iterable: Iterable) -> Iterator:
         yield l[~i]
 
 
-@overload
 def xreverse(iterable: Iterable[T]) -> list[T]:
-    ...
-
-
-def xreverse(iterable: Iterable) -> list:
     """
     Similar to the builtin function reversed(), except accept iterable objects as input,
     and return non-lazy result
@@ -278,12 +268,7 @@ class Logger:
         self._count += 1
 
 
-@overload
 def concat(lists: Iterable[list[T]]) -> list[T]:
-    ...
-
-
-def concat(lists: Iterable[list]) -> list:
     """ Concatenate multiple lists into one list """
     return list(chain(*lists))
 
@@ -373,19 +358,10 @@ def duplicated(sequence: Sequence) -> bool:
         return False
 
 
-@overload
 def hamming_distance(
     iterable1: Iterable[T],
     iterable2: Iterable[S],
     equal: Callable[[T, S], bool] = operator.eq,
-) -> int:
-    ...
-
-
-def hamming_distance(
-    iterable1: Iterable,
-    iterable2: Iterable,
-    equal: Callable[[Any, Any], bool] = operator.eq,
 ) -> int:
     """ Don't apply on infinite iterables """
 
