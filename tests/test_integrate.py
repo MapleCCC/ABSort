@@ -5,48 +5,54 @@ from pathlib import Path
 from shutil import copy2
 
 from click.testing import CliRunner
-from more_itertools import collapse, random_product
+from hypothesis import given, settings
+from more_itertools import collapse
 
 from absort.__main__ import MutuallyExclusiveOptions, main as absort_entry
 from absort.ast_utils import ast_deep_equal
-from absort.utils import contains
+from absort.utils import constantfunc, contains
+
+from .strategies import products
 
 
 STDLIB_DIR = Path(sys.executable).with_name("Lib")
 TEST_FILES = STDLIB_DIR.rglob("*.py")
 
 
-def test_integrate() -> None:
-    file_action_options = [[], "--check", "--diff", ["--in-place", "-yyy"]]
-    format_flags = [
-        "--no-fix-main-to-bottom",
-        "--reverse",
-        "--no-aggressive",
-        "--separate-class-and-function",
-    ]
-    format_options = list(product(*([[], flag] for flag in format_flags)))
-    sort_order_options = [[], "--dfs", "--bfs"]
-    verboseness_options = [[], "--quiet", "--verbose"]
-    miscellaneous_options = [[], "--color-off"]
-    comment_strategy_options = [
-        [],
-        ["--comment-strategy", "attr-follow-decl"],
-        ["--comment-strategy", "push-top"],
-        ["--comment-strategy", "ignore"],
-    ]
-    random_option_combination = lambda: list(
-        collapse(
-            random_product(
-                file_action_options,
-                format_options,
-                sort_order_options,
-                verboseness_options,
-                miscellaneous_options,
-                comment_strategy_options,
-            )
-        )
+file_action_options = [[], "--check", "--diff", ["--in-place", "-yyy"]]
+format_flags = [
+    "--no-fix-main-to-bottom",
+    "--reverse",
+    "--no-aggressive",
+    "--separate-class-and-function",
+]
+format_options = list(product(*([[], flag] for flag in format_flags)))
+sort_order_options = [[], "--dfs", "--bfs"]
+verboseness_options = [[], "--quiet", "--verbose"]
+miscellaneous_options = [[], "--color-off"]
+comment_strategy_options = [
+    [],
+    ["--comment-strategy", "attr-follow-decl"],
+    ["--comment-strategy", "push-top"],
+    ["--comment-strategy", "ignore"],
+]
+cli_options = constantfunc(
+    products(
+        file_action_options,
+        format_options,
+        sort_order_options,
+        verboseness_options,
+        miscellaneous_options,
+        comment_strategy_options,
     )
+    .map(collapse)
+    .map(tuple)
+)
 
+
+@given(cli_options())
+@settings(deadline=None)
+def test_integrate(option: tuple[str, ...]) -> None:
     runner = CliRunner()
     with runner.isolated_filesystem():
         for source_test_file in TEST_FILES:
@@ -55,7 +61,6 @@ def test_integrate() -> None:
 
             old_content = test_file.read_text(encoding="utf-8")
 
-            option = random_option_combination()
             result = runner.invoke(absort_entry, [str(test_file), *option])
 
             if isinstance(result.exception, MutuallyExclusiveOptions):

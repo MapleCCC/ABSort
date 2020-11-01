@@ -2,9 +2,9 @@
 This module contains a series of hypothesis strategies for convenient use.
 """
 
-from collections.abc import Hashable
+from collections.abc import Hashable, Sequence
 from itertools import combinations, permutations
-from typing import Union
+from typing import TypeVar, Union
 
 from hypothesis.strategies import (
     SearchStrategy,
@@ -24,6 +24,9 @@ from absort.weighted_graph import WeightedGraph
 
 
 __all__ = ["anys", "hashables", "graphs"]
+
+
+T = TypeVar("T")
 
 
 anys = constantfunc(from_type(type))
@@ -134,3 +137,8 @@ def graphs(
             graph.add_edge(*edge, weight)
 
         return graph
+
+
+@composite
+def products(draw, *sequences: Sequence[T]) -> tuple[T, ...]:
+    return tuple(draw(sampled_from(seq)) for seq in sequences)
