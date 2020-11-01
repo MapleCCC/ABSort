@@ -1,12 +1,13 @@
 import ast
-import asyncio
 import os
 import re
 import sys
 from itertools import product
+from pathlib import Path
 
 import attr
-from more_itertools import random_product
+from hypothesis import given, settings
+from hypothesis.strategies import SearchStrategy, sampled_from
 
 from absort.__main__ import (
     CommentStrategy,
@@ -15,9 +16,10 @@ from absort.__main__ import (
     SortOrder,
     absort_str,
 )
-from absort.aiopathlib import AsyncPath as Path
 from absort.ast_utils import ast_deep_equal
 from absort.utils import contains
+
+from .strategies import products
 
 
 # Use third-party library hypothesmith to generate random valid Python source code, to
@@ -39,8 +41,10 @@ if os.getenv("CI") and os.getenv("TRAVIS"):
     STDLIB_DIR = Path(f"/opt/python/{py_version}/lib/python{py_version_num}/")
 
 
-TEST_FILES = STDLIB_DIR.rglob("*.py")
+TEST_FILES = list(STDLIB_DIR.rglob("*.py"))
 
+
+Option = tuple[CommentStrategy, FormatOption, SortOrder]
 
 all_comment_strategies = list(CommentStrategy)
 all_format_options = [
@@ -50,28 +54,16 @@ all_format_options = [
 all_sort_orders = list(SortOrder)
 
 
-def random_arg_option() -> tuple[CommentStrategy, FormatOption, SortOrder]:
-    return random_product(all_comment_strategies, all_format_options, all_sort_orders)  # type: ignore
+def arg_options() -> SearchStrategy[Option]:
+    return products(all_comment_strategies, all_format_options, all_sort_orders)  # type: ignore
 
 
-def test_absort_str() -> None:
-    async def entry() -> None:
-        tasks = []
-        async for test_sample in TEST_FILES:
-            arg_option = random_arg_option()
-            task = helper(test_sample, arg_option)
-            tasks.append(task)
-        await asyncio.gather(*tasks)
-
-    asyncio.run(entry())
-
-
-async def helper(
-    test_sample: Path, arg_option: tuple[CommentStrategy, FormatOption, SortOrder]
-) -> None:
+@given(sampled_from(TEST_FILES), arg_options())
+@settings(deadline=None)
+def test_absort_str(test_sample: Path, option: Option) -> None:
     try:
-        source = await test_sample.read_text(encoding="utf-8")
-        comment_strategy, format_option, sort_order = arg_option
+        source = test_sample.read_text(encoding="utf-8")
+        comment_strategy, format_option, sort_order = option
         new_source = absort_str(
             source,
             comment_strategy=comment_strategy,
