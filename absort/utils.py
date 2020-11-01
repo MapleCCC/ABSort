@@ -58,6 +58,7 @@ __all__ = [
     "chenyu",
     "no_color_context",
     "is_nan",
+    "is_dtype",
 ]
 
 
@@ -672,4 +673,15 @@ def is_nan(x: Any) -> bool:
     elif isinstance(x, Number):
         return math.isnan(x)  # type: ignore
     else:
+        return False
+
+
+def is_dtype(x: Any) -> bool:
+    """ Determine if x is of type `numpy.dtype` """
+
+    try:
+        import numpy as np
+
+        return isinstance(x, np.dtype)
+    except ImportError:
         return False
