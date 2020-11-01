@@ -1,4 +1,6 @@
 import ast
+import os
+import re
 import sys
 from itertools import product
 from pathlib import Path
@@ -17,6 +19,19 @@ from .strategies import products
 
 
 STDLIB_DIR = Path(sys.executable).with_name("Lib")
+
+# Reference: https://docs.travis-ci.com/user/environment-variables/#default-environment-variables
+if os.getenv("CI") and os.getenv("TRAVIS"):
+    py_version = os.getenv("TRAVIS_PYTHON_VERSION")
+    assert py_version
+
+    # Reference: https://docs.travis-ci.com/user/languages/python/#python-versions
+    # Reference: https://docs.travis-ci.com/user/languages/python/#development-releases-support
+    py_version_num = re.fullmatch(r"(?P<num>[0-9.]+)(?:-dev)?", py_version).group("num")
+
+    STDLIB_DIR = Path(f"/opt/python/{py_version}/lib/python{py_version_num}/")
+
+
 TEST_FILES = list(STDLIB_DIR.rglob("*.py"))
 
 
