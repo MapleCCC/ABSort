@@ -76,9 +76,9 @@ arg_options = constantfunc(
 def test_absort_str(test_sample: Path, option: Option) -> None:
     try:
         source = test_sample.read_text(encoding="utf-8")
-        new_source = absort_str(source, **attr.asdict(option))
+        new_source = absort_str(source, **attr.asdict(option, recurse=False))
 
-        second_run_new_source = absort_str(source, **attr.asdict(option))
+        second_run_new_source = absort_str(source, **attr.asdict(option, recurse=False))
         # Check that absort is deterministic and stable
         assert new_source == second_run_new_source
 
