@@ -198,42 +198,36 @@ class DirectedGraph(Generic[Node]):
         This method traverses all the nodes regardless of the connectivity of the graph.
         """
 
-        def remove_sources(graph: DirectedGraph[Node]) -> OrderedSet[Node]:
-            srcs = graph.find_sources()
-
-            for src in srcs:
-                del graph._adjacency_list[src]
-
-            for node in graph._adjacency_list:
-                graph._adjacency_list[node] -= srcs
-
-            return srcs
-
-        def remove_sinks(graph: DirectedGraph[Node]) -> OrderedSet[Node]:
-            sinks = graph.find_sinks()
-
-            for sink in sinks:
-                del graph._adjacency_list[sink]
-
-            for node in graph._adjacency_list:
-                graph._adjacency_list[node] -= sinks
-
-            return sinks
-
         if same_rank_sorter is None:
             same_rank_sorter = identityfunc
 
-        _graph = self.copy()
+        if reverse:
+            yield from self.get_transpose_graph().topological_sort()
+            return
 
-        if not reverse:
-            while srcs := remove_sources(_graph):
-                yield from same_rank_sorter(list(srcs))
+        indegree_table = defaultdict(int)
+        for children in self._adjacency_list.values():
+            for child in children:
+                indegree_table[child] += 1
 
-        else:
-            while sinks := remove_sinks(_graph):
-                yield from same_rank_sorter(list(sinks))
+        cnt = 0
+        sources = [node for node in self._adjacency_list if indegree_table[node] == 0]
 
-        if _graph._adjacency_list:
+        while sources:
+            cnt += len(sources)
+            yield from same_rank_sorter(sources)
+
+            new_sources = []  # type: list[Node]
+            for node in sources:
+                for child in self._adjacency_list[node]:
+                    indegree_table[child] -= 1
+
+                    if indegree_table[child] == 0:
+                        new_sources.append(child)
+
+            sources = new_sources
+
+        if cnt < len(self._adjacency_list):
             raise CircularDependencyError(
                 "Circular dependency detected! "
                 + "Try to run the method detect_back_edge() to find back edges."
