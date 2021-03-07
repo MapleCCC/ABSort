@@ -27,11 +27,11 @@ __all__ = ["CircularDependencyError", "SelfLoopError", "DirectedGraph"]
 
 
 class CircularDependencyError(Exception):
-    pass
+    """ An exception to signal that circular dependency is detected """
 
 
 class SelfLoopError(Exception):
-    pass
+    """ An exception to signal that self loop is detected """
 
 
 # Graph is represented internally as data structure adjacency list
@@ -93,8 +93,8 @@ class DirectedGraph(Generic[Node]):
 
         assert source in self._adjacency_list
 
-        queue: deque[Node] = deque([source])
-        traversed: set[Node] = set()
+        queue = deque([source])  # type: deque[Node]
+        traversed = set()  # type: set[Node]
 
         while queue:
             node = queue.popleft()
@@ -133,7 +133,7 @@ class DirectedGraph(Generic[Node]):
 
         Note that depending on the connectivity of the graph, this method may not traverse
         all the nodes. So this method reporting no back edge found doesn't necessarily
-        imply that there is not cycle in the graph.
+        imply that there is no cycle in the graph.
         """
 
         assert source in self._adjacency_list
@@ -161,6 +161,7 @@ class DirectedGraph(Generic[Node]):
         new_graph: DirectedGraph[Node] = DirectedGraph()
 
         for node in self._adjacency_list:
+            # This line is necessary, such that nodes with in-degree are also included in the new graph.
             new_graph._adjacency_list[node] = OrderedSet()
 
         for node, children in self._adjacency_list.items():

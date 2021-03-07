@@ -2,7 +2,7 @@ from collections import Counter, deque
 from collections.abc import Callable, Iterable
 from functools import cache
 from itertools import repeat
-from typing import TypeVar, Union
+from typing import TypeVar, Union, cast
 
 from .utils import (
     constantfunc,
@@ -45,10 +45,10 @@ def zhangshasha(
     def tree_size(tree: Tree) -> int:
         return 1 + sum(map(tree_size, children(tree)))
 
-    def forest_size(forest: Forest) -> int:
+    def forest_size(forest: Forest[Tree]) -> int:
         return sum(map(tree_size, forest))
 
-    def remove_rightmost_root(forest: Forest) -> Forest:
+    def remove_rightmost_root(forest: Forest[Tree]) -> Forest[Tree]:
         rightmost_tree = forest[-1]
         rightmost_tree_children = list(children(rightmost_tree))
         return forest[:-1] + rightmost_tree_children
@@ -57,7 +57,7 @@ def zhangshasha(
 
     @memoization(key=calculate_cache_key)
     @on_except_return(RecursionError, returns=0)
-    def forest_distance(forest1: Forest, forest2: Forest) -> float:
+    def forest_distance(forest1: Forest[Tree], forest2: Forest[Tree]) -> float:
 
         # Uncomment the following lines to activate debug mode
         #
@@ -83,7 +83,7 @@ def zhangshasha(
         elif contains_one_tree(forest1) and contains_one_tree(forest2):
             new_forest1 = remove_rightmost_root(forest1)
             new_forest2 = remove_rightmost_root(forest2)
-            candidates: list[float] = [None] * 3  # type: ignore
+            candidates = cast(list[float], [None] * 3)
 
             candidates[0] = forest_distance(new_forest1, forest2) + delete_cost(
                 forest1[-1]
@@ -99,7 +99,7 @@ def zhangshasha(
         else:
             new_forest1 = remove_rightmost_root(forest1)
             new_forest2 = remove_rightmost_root(forest2)
-            candidates: list[float] = [None] * 3  # type: ignore
+            candidates = cast(list[float], [None] * 3)
 
             candidates[0] = forest_distance(new_forest1, forest2) + delete_cost(
                 forest1[-1]
@@ -147,7 +147,7 @@ except ImportError:
 Label = TypeVar("Label")
 LabelTuple = tuple[Label, ...]
 Register = deque[Label]
-Index = Counter[Union[int, LabelTuple]]
+Index = Counter[Union[int, LabelTuple[Label]]]
 
 DUMMY_LABEL = object()
 
@@ -188,22 +188,22 @@ def pqgram_index(
     q: int = 3,
     label: Callable[[Tree], Label] = identityfunc,
     compact: bool = False,
-) -> Index:
+) -> Index[Label]:
     """
     Setting the compact argument to True yields less space cost, with the tradeoff of precision lost due to possible hash collisions.
     """
 
-    def construct_index_entry(stem: Register, base: Register) -> Union[int, LabelTuple]:
+    def construct_index_entry(stem: Register[Label], base: Register[Label]) -> Union[int, LabelTuple[Label]]:
         label_tuple = (*stem, *base)
 
         if compact:
-            # TODO possible micro-optimization: calculate tuple hash without actually constructing the tuple.
+            # TODO Possible micro-optimization: calculate tuple hash without actually constructing the tuple.
             return hash(label_tuple)
         else:
             return label_tuple
 
     def rec_pqgram_index(tree: Tree) -> None:
-        base: Register = deque(repeat(DUMMY_LABEL, q), maxlen=q)
+        base = cast(Register[Label], deque(repeat(DUMMY_LABEL, q), maxlen=q))
         stem.append(label(tree))
 
         children_count = 0
@@ -216,14 +216,14 @@ def pqgram_index(
 
         if children_count:
             for _ in range(q - 1):
-                base.append(DUMMY_LABEL)
+                base.append(cast(Label, DUMMY_LABEL))
                 entry = construct_index_entry(stem, base)
                 index[entry] += 1
         else:
             entry = construct_index_entry(stem, base)
             index[entry] += 1
 
-    index: Index = Counter()
-    stem: Register = deque(repeat(DUMMY_LABEL, p), maxlen=p)
+    index = Counter()  # type: Index[Label]
+    stem = cast(Register[Label], deque(repeat(DUMMY_LABEL, p), maxlen=p))
     rec_pqgram_index(tree)
     return index
