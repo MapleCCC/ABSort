@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from collections.abc import Iterator
+from collections.abc import Hashable, Iterator
 from typing import Generic, TypeVar
 
 from more_itertools import first
@@ -16,9 +16,8 @@ __all__ = ["WeightedGraph"]
 # Thin semantic type annotation
 #
 
-# TODO: specify that Node type has to be hashable (constrained by current implementation,
-# though we may consider to rewrite the implementation to waive the constraint in the future)
-Node = TypeVar("Node")
+# Specify that Node type has to be hashable (constrained by current implementation, though we may consider to rewrite the implementation to waive the constraint in the future)
+Node = TypeVar("Node", bound=Hashable)
 Edge = frozenset[Node]
 Weight = float
 AdjacencyList = defaultdict[Node, OrderedSet[Node]]

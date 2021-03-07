@@ -4,7 +4,7 @@
 from __future__ import annotations
 
 from collections import defaultdict, deque
-from collections.abc import Callable, Iterator, Sequence
+from collections.abc import Callable, Hashable, Iterator, Sequence
 from typing import Generic, Optional, TypeVar
 
 from more_itertools import first, ilen
@@ -16,9 +16,8 @@ from .utils import identityfunc
 # Thin semantic type abstraction
 #
 
-# TODO: specify that Node type has to be hashable (constrained by current implementation,
-# though we may consider to rewrite the implementation to waive the constraint in the future)
-Node = TypeVar("Node")
+# Specify that Node type has to be hashable (constrained by current implementation, though we may consider to rewrite the implementation to waive the constraint in the future)
+Node = TypeVar("Node", bound=Hashable)
 Edge = tuple[Node, Node]
 AdjacencyList = defaultdict[Node, OrderedSet[Node]]
 SCC = Sequence[Node]  # strongly connected components
