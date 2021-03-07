@@ -706,30 +706,25 @@ def find_continguous_decls(
 
     # WARNING: lineno and end_lineno are 1-indexed
 
-    head_sentinel = ast.stmt()
-    head_sentinel.lineno = head_sentinel.end_lineno = 0
-    stmts.insert(0, head_sentinel)
+    n = len(stmts)
+    index = 0
+    while index < n:
+        while index < n and not isinstance(stmts[index], Declaration):
+            index += 1
 
-    tail_sentinel = ast.stmt()
-    tail_sentinel.lineno = tail_sentinel.end_lineno = stmts[-1].end_lineno + 1
-    stmts.append(tail_sentinel)
+        if index == n - 1:
+            return
 
-    buffer = []  # type: list[DeclarationType]
-    last_nondecl_stmt = head_sentinel
-    lineno = 0
-    end_lineno = 0
+        start = index
+        while index < n and isinstance(stmts[index], Declaration):
+            index += 1
+        end = index
 
-    for stmt in islice(stmts, 1, None):
-        if isinstance(stmt, Declaration):
-            lineno = last_nondecl_stmt.end_lineno + 1
-            assert stmt.end_lineno is not None
-            end_lineno = stmt.end_lineno
-            buffer.append(stmt)
-        else:
-            if buffer:
-                yield lineno, end_lineno, buffer
-                buffer.clear()
-            last_nondecl_stmt = stmt
+        lineno = stmts[start - 1].end_lineno + 1
+        end_lineno = stmts[end - 1].end_lineno
+        assert end_lineno is not None
+
+        yield lineno, end_lineno, stmts[start:end]  # type: ignore
 
 
 @profile  # type: ignore
