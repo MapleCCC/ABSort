@@ -6,7 +6,7 @@ from typing import Generic, TypeVar
 
 from more_itertools import first
 
-from .collections_extra import OrderedSet
+from .collections_extra import OrderedSet, UnionFind
 
 
 __all__ = ["WeightedGraph"]
@@ -110,33 +110,25 @@ class WeightedGraph(Generic[Node]):
         Every connected graph has a minimum spanning tree. (may not be unique)
         """
 
-        if self.num_nodes == 0:
-            return
+        edges = sorted(self._weight_table, key=self._weight_table.get)
 
-        _graph = self.copy()
-        seen: OrderedSet[Node] = OrderedSet()
+        res = OrderedSet()
+        uf = UnionFind(self._adjacency_list)
+        cnt = 0
+        for edge in edges:
+            u, v = edge
+            if uf.find(u) == uf.find(v):
+                continue
+            uf.union(u, v)
+            res.update(edge)
+            cnt += 1
+            if cnt == len(self._adjacency_list) - 1:
+                break
 
-        seen.add(first(_graph._adjacency_list))
+        if cnt < len(self._adjacency_list) - 1:
+            raise ValueError("Unconnected graph has no minimum spanning tree")
 
-        while len(seen) < _graph.num_nodes:
-            candidate_edges = []
-
-            for node in seen:
-                for neighbor in _graph._adjacency_list[node]:
-                    if neighbor not in seen:
-                        edge = frozenset({node, neighbor})
-                        candidate_edges.append(edge)
-
-            target_edge = min(
-                candidate_edges, key=lambda edge: _graph._weight_table[edge]
-            )
-            seen.update(target_edge)
-            _graph.remove_edge(*target_edge)
-
-        if len(seen) < len(self._adjacency_list):
-            raise ValueError("Disconnected graph doesn't have minimum spanning tree")
-
-        yield from seen
+        yield from res
 
 
 if __name__ == "__main__":

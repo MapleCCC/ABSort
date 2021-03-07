@@ -2,10 +2,15 @@ from __future__ import annotations
 
 from collections.abc import Iterable, Iterator, MutableSet
 from itertools import repeat
-from typing import TypeVar
+from operator import attrgetter
+from typing import Generic, TypeVar
+
+import attr
+
+from .utils import maxmin
 
 
-__all__ = ["OrderedSet"]
+__all__ = ["OrderedSet", "UnionFind"]
 
 
 T = TypeVar("T")
@@ -61,3 +66,54 @@ try:
     from orderedset import OrderedSet  # type: ignore
 except ImportError:
     pass
+
+
+@attr.s(auto_attribs=True, slots=True)
+class UnionFindNode(Generic[T]):
+    item: T
+    parent: UnionFindNode[T]
+    rank: int = 0
+
+
+class UnionFind(Generic[T]):
+    def __init__(self, elements: Iterable[T]) -> None:
+        self._table = {}
+
+        for elem in elements:
+            node = UnionFindNode(elem, parent=None)  # type: ignore
+            node.parent = node
+            self._table[elem] = node
+
+    __slots__ = "_table"
+
+    def find(self, element: T) -> T:
+        if element not in self._table:
+            raise ValueError(f"Can't find {element}")
+
+        return self._find(self._table[element]).item
+
+    def _find(self, node: UnionFindNode[T]) -> UnionFindNode[T]:
+        if node.parent == node:
+            return node
+        else:
+            root = self._find(node.parent)
+            node.parent = root
+            return root
+
+    def union(self, x: T, y: T) -> None:
+        if x not in self._table:
+            raise ValueError(f"Can't find {x}")
+        if y not in self._table:
+            raise ValueError(f"Can't find {y}")
+
+        node1, node2 = self._table[x], self._table[y]
+        root1, root2 = self._find(node1), self._find(node2)
+
+        if root1 == root2:
+            return
+        elif root1.rank != root2.rank:
+            root1, root2 = maxmin(root1, root2, key=attrgetter("rank"))
+            root2.parent = root1
+        else:
+            root2.parent = root1
+            root1.rank += 1

@@ -46,6 +46,7 @@ __all__ = [
     "no_color_context",
     "is_nan",
     "is_dtype",
+    "maxmin",
 ]
 
 
@@ -475,3 +476,16 @@ def is_dtype(x: Any) -> bool:
         return isinstance(x, np.dtype)
     except ImportError:
         return False
+
+
+def maxmin(*args, key=identityfunc, default=None):
+    """ Mimic the builtin divmod() function """
+
+    if len(args) <= 1:
+        max_item = max(*args, key=key, default=default)
+        min_item = min(*args, key=key, default=default)
+    else:
+        max_item = max(*args, key=key)
+        min_item = min(*args, key=key)
+
+    return max_item, min_item
