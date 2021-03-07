@@ -12,7 +12,7 @@ from collections.abc import AsyncIterator, Iterable, Iterator, Sequence
 from datetime import datetime
 from enum import Enum
 from functools import partial
-from itertools import chain, combinations
+from itertools import chain, combinations, islice
 from operator import itemgetter
 from types import SimpleNamespace
 from typing import Any
@@ -714,12 +714,12 @@ def find_continguous_decls(
     tail_sentinel.lineno = tail_sentinel.end_lineno = stmts[-1].end_lineno + 1
     stmts.append(tail_sentinel)
 
-    buffer: list[DeclarationType] = []
+    buffer = []  # type: list[DeclarationType]
     last_nondecl_stmt = head_sentinel
-    lineno: int = 0
-    end_lineno: int = 0
+    lineno = 0
+    end_lineno = 0
 
-    for stmt in stmts[1:]:
+    for stmt in islice(stmts, 1, None):
         if isinstance(stmt, Declaration):
             lineno = last_nondecl_stmt.end_lineno + 1
             assert stmt.end_lineno is not None

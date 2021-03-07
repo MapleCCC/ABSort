@@ -7,16 +7,16 @@ import os
 import random
 import sys
 from collections import OrderedDict, defaultdict
-from collections.abc import Callable, Hashable, Iterable, Iterator, Sequence
+from collections.abc import Callable, Collection, Hashable, Iterable, Iterator, Sequence
 from decimal import Decimal
 from functools import cache
 from itertools import combinations, zip_longest
 from numbers import Complex, Number
-from typing import IO, Any, TypeVar
+from typing import IO, Any, Generic, Type, TypeVar
 
 import attr
 from colorama import Fore, Style
-from more_itertools import zip_equal, UnequalIterablesError
+from more_itertools import UnequalIterablesError, zip_equal
 
 from .exceptions import Unreachable
 from .weighted_graph import WeightedGraph
@@ -39,7 +39,7 @@ __all__ = [
     "hamming_distance",
     "strict_splitlines",
     "constantfunc",
-    "identifyfunc",
+    "identityfunc",
     "iequal",
     "on_except_return",
     "contains",
@@ -205,7 +205,7 @@ class dispatch:
     """
 
     def __init__(self, base_func: Callable) -> None:
-        self._regsitry: OrderedDict[Predicate, Callable]
+        self._registry: OrderedDict[Predicate, Callable]
         self._registry = OrderedDict()
 
         self._base_func = base_func
@@ -247,7 +247,9 @@ def duplicated(sequence: Sequence) -> bool:
 
     try:
         return len(set(sequence)) < len(sequence)
+
     except TypeError:
+        # If elements are unhashable
         seen = []
         for elem in sequence:
             if elem in seen:
@@ -287,7 +289,7 @@ def strict_splitlines(s: str) -> list[str]:
     res = s.split("\n")
 
     if res[-1] == "":
-        res = res[:-1]
+        res.pop()
 
     return res
 
@@ -320,18 +322,19 @@ def iequal(
                 if not equal(e1, e2):
                     return False
         return True
+
     except UnequalIterablesError:
         return False
 
 
 class on_except_return:
-    def __init__(self, exception: type[Exception], returns: Any = None) -> None:
+    def __init__(self, exception: Type[Exception], returns: Any = None) -> None:
         self._exception = exception
         self._return = returns
 
     def __call__(self, func: Callable) -> Callable:
         @functools.wraps(func)
-        def wrapper(*args, **kwargs) -> T:
+        def wrapper(*args, **kwargs):
             try:
                 return func(*args, **kwargs)
             except self._exception:
@@ -341,7 +344,7 @@ class on_except_return:
 
 
 def contains(
-    container: Any, elem: Any, equal: Callable[[Any, Any], bool] = operator.eq
+    container: Collection, elem: Any, equal: Callable[[Any, Any], bool] = operator.eq
 ) -> bool:
     return any(equal(elem, value) for value in container)
 
@@ -379,7 +382,7 @@ def memoization(
         miss: int = 0
         currsize: int = 0
 
-    class decorator:
+    class decorator(Generic[T]):
         def __init__(self, func: Callable[..., T]) -> None:
             self._func = func
             self._cache: dict[Any, T] = {}
@@ -412,9 +415,9 @@ def memoization(
             self._cache.clear()
 
         def cache_info(self) -> CacheInfo:
-            return CacheInfo(self._hit, self._miss, len(self._cache))  # type: ignore
+            return CacheInfo(self._hit, self._miss, len(self._cache))  # type: ignore # Pyright doesn't yet support attrs
 
-    return decorator
+    return decorator  # type: ignore
 
 
 Point = TypeVar("Point")

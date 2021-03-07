@@ -38,7 +38,7 @@ class SelfLoopError(Exception):
 # Graph is represented internally as data structure adjacency list
 class DirectedGraph(Generic[Node]):
     def __init__(self) -> None:
-        self._adjacency_list: AdjacencyList = defaultdict(OrderedSet)
+        self._adjacency_list = defaultdict(OrderedSet)  # type: AdjacencyList[Node]
 
     __slots__ = "_adjacency_list"
 
@@ -128,7 +128,7 @@ class DirectedGraph(Generic[Node]):
             traversed.add(node)
             stack.extend(self._adjacency_list[node])
 
-    def detect_back_edge(self, source: Node) -> Optional[Edge]:
+    def detect_back_edge(self, source: Node) -> Optional[Edge[Node]]:
         """
         Return one back edge, or None if no back edge is found.
 
@@ -240,7 +240,7 @@ class DirectedGraph(Generic[Node]):
                 + "Try to run the method detect_back_edge() to find back edges."
             )
 
-    def strongly_connected_components(self) -> Iterator[SCC]:
+    def strongly_connected_components(self) -> Iterator[SCC[Node]]:
         """
         Find all strongly connected components.
 
@@ -255,7 +255,7 @@ class DirectedGraph(Generic[Node]):
         This method traverses all the nodes regardless of the connectivity of the graph.
         """
 
-        def rec_scc(node: Node) -> Iterator[SCC]:
+        def rec_scc(node: Node) -> Iterator[SCC[Node]]:
             nonlocal count, stack
 
             indexer[node] = count

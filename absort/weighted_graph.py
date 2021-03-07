@@ -26,8 +26,8 @@ AdjacencyList = defaultdict[Node, OrderedSet[Node]]
 
 class WeightedGraph(Generic[Node]):
     def __init__(self) -> None:
-        self._adjacency_list: AdjacencyList = defaultdict(OrderedSet)
-        self._weight_table: dict[Edge, Weight] = {}
+        self._adjacency_list = defaultdict(OrderedSet)  # type: AdjacencyList[Node]
+        self._weight_table = {}  # type: dict[Edge[Node], Weight]
 
     __slots__ = ["_adjacency_list", "_weight_table"]
 
@@ -92,7 +92,7 @@ class WeightedGraph(Generic[Node]):
 
         return new
 
-    def find_minimum_edge(self) -> Edge:
+    def find_minimum_edge(self) -> Edge[Node]:
         try:
             edges = self._weight_table
             return min(edges, key=lambda edge: self._weight_table[edge])
