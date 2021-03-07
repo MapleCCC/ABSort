@@ -20,7 +20,7 @@ class OrderedSet(MutableSet[T]):
     def __init__(self, iterable: Iterable[T] = tuple()) -> None:
         self._data: dict[T, None] = dict.fromkeys(iterable)
 
-    __slots__ = ["_data"]
+    __slots__ = "_data"
 
     def __contains__(self, elem: T) -> bool:
         return elem in self._data

@@ -81,12 +81,11 @@ def ast_strip_location_info(node: ast.AST, in_place: bool = True) -> Optional[as
         ast_strip_location_info(new_node, in_place=True)
         return new_node
 
-    nodes = ast_ordered_walk(node)
     location_info_attrs = ("lineno", "col_offset", "end_lineno", "end_col_offset")
-    for node in nodes:
+    for desc in ast_ordered_walk(node):
         for attr in location_info_attrs:
-            if hasattr(node, attr):
-                delattr(node, attr)
+            if hasattr(desc, attr):
+                delattr(desc, attr)
 
 
 def ast_get_leading_comment_and_decorator_list_source_lines(

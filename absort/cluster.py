@@ -5,7 +5,7 @@ This module contains implementaion of some clustering algorithms.
 
 import random
 from collections import defaultdict
-from collections.abc import Callable, Iterator
+from collections.abc import Callable, Hashable, Iterator
 from itertools import combinations
 from typing import TypeVar
 
@@ -15,13 +15,13 @@ from .weighted_graph import WeightedGraph
 __all__ = ["chenyu"]
 
 
-Point = TypeVar("Point")
+Point = TypeVar("Point", bound=Hashable)
 Cluster = list[Point]
 
 
 def chenyu(
-    points: Cluster, distance: Callable[[Point, Point], float], k: int
-) -> Iterator[Cluster]:
+    points: Cluster[Point], distance: Callable[[Point, Point], float], k: int
+) -> Iterator[Cluster[Point]]:
     """
     A derterministic divisive hierarchical clustering algorithm proposed by Chen Yu (https://github.com/vincentcheny)
 
@@ -38,14 +38,14 @@ def chenyu(
     then the time complexity is k*n*(ln(n)/ln(k)-1) = O(n*ln(n)).
     """
 
-    def rec_chenyu(points: Cluster) -> Iterator[Cluster]:
+    def rec_chenyu(points: Cluster[Point]) -> Iterator[Cluster[Point]]:
         if len(points) < k:
             yield points
             return
 
         centroids = r.sample(points, k)
 
-        clusters: defaultdict[Point, Cluster] = defaultdict(list)
+        clusters: defaultdict[Point, Cluster[Point]] = defaultdict(list)
         for p in points:
             nearest_centroid = min(centroids, key=lambda x: distance(x, p))
             clusters[nearest_centroid].append(p)

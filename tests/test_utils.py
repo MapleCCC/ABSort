@@ -17,5 +17,5 @@ def test_iequal_equal(iterable: Iterable[int], length: int) -> None:
 def test_iequal_unequal(iterables: list[Iterable[int]]) -> None:
     ls = set((*iterable,) for iterable in iterables)
     assume(len(ls) > 1)
-    iterables = map(iter, ls)
-    assert not iequal(*iterables, strict=True)
+    new_iterables = map(iter, ls)
+    assert not iequal(*new_iterables, strict=True)

@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-from collections import defaultdict
+from collections import defaultdict, deque
 from collections.abc import Hashable, Iterator
 from typing import Generic, TypeVar
 
-from more_itertools import first
+from more_itertools import first, ilen
 
 from .collections_extra import OrderedSet, UnionFind
 
@@ -73,6 +73,53 @@ class WeightedGraph(Generic[Node]):
         self._adjacency_list.clear()
         self._weight_table.clear()
 
+    def bfs(self, source: Node) -> Iterator[Node]:
+        """
+        Depending on the connectivity of the graph, it may not traverse all the nodes.
+        """
+
+        assert source in self._adjacency_list
+
+        queue = deque([source])
+        traversed = set()
+
+        while queue:
+            node = queue.popleft()
+
+            if node in traversed:
+                continue
+
+            yield node
+            traversed.add(node)
+            queue.extend(self._adjacency_list[node])
+
+    def dfs(self, source: Node) -> Iterator[Node]:
+        """
+        Depending on the connectivity of the graph, it may not traverse all the nodes.
+        """
+
+        assert source in self._adjacency_list
+
+        stack = [source]
+        traversed = set()
+
+        while stack:
+            node = stack.pop()
+
+            if node in traversed:
+                continue
+
+            yield node
+            traversed.add(node)
+            stack.extend(self._adjacency_list[node])
+
+    def connected(self) -> bool:
+        if not self._adjacency_list:
+            return True
+
+        source = first(self._adjacency_list)
+        return ilen(self.dfs(source)) == len(self._adjacency_list)
+
     def copy(self) -> WeightedGraph[Node]:
         """
         Note that this is shallow copy, NOT deep copy.
@@ -110,7 +157,8 @@ class WeightedGraph(Generic[Node]):
         Every connected graph has a minimum spanning tree. (may not be unique)
         """
 
-        edges = sorted(self._weight_table, key=self._weight_table.get)
+        edges = sorted(self._weight_table, key=self._weight_table.get)  # type: ignore
+        edges: list[Edge[Node]]
 
         res = OrderedSet()
         uf = UnionFind(self._adjacency_list)
@@ -126,7 +174,7 @@ class WeightedGraph(Generic[Node]):
                 break
 
         if cnt < len(self._adjacency_list) - 1:
-            raise ValueError("Unconnected graph has no minimum spanning tree")
+            raise ValueError("Disconnected graph has no minimum spanning tree")
 
         yield from res
 

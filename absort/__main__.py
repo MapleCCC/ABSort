@@ -34,6 +34,7 @@ from .ast_utils import (
     ast_tree_size,
 )
 from .async_utils import run_in_event_loop
+from .cluster import chenyu
 from .collections_extra import OrderedSet
 from .directed_graph import DirectedGraph
 from .exceptions import Unreachable
@@ -41,7 +42,6 @@ from .typing_extra import Declaration, DeclarationType
 from .utils import (
     bright_green,
     bright_yellow,
-    chenyu,
     colored_unified_diff,
     duplicated,
     identityfunc,
