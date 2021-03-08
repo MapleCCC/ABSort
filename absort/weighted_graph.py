@@ -157,6 +157,10 @@ class WeightedGraph(Generic[Node]):
         Every connected graph has a minimum spanning tree. (may not be unique)
         """
 
+        if len(self._adjacency_list) == 1:
+            yield first(self._adjacency_list)
+            return
+
         edges = sorted(self._weight_table, key=self._weight_table.get)  # type: ignore
         edges: list[Edge[Node]]
 
