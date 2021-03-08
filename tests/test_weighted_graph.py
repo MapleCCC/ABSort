@@ -22,7 +22,7 @@ def test_minimum_spanning_tree() -> None:
     g.add_edge("C", "F", 2)
     g.add_edge("E", "F", 4)
     g.add_edge("E", "C", 5)
-    assert list(g.minimum_spanning_tree()) == ["B", "A", "D", "E", "F", "C"]
+    assert list(g.minimum_spanning_tree()) == ["A", "B", "E", "D", "C", "F"]
 
     g.clear()
     g.add_node("A")

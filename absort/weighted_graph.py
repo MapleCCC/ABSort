@@ -6,7 +6,7 @@ from typing import Generic, TypeVar
 
 from more_itertools import first, ilen
 
-from .collections_extra import OrderedSet, UnionFind
+from .collections_extra import OrderedFrozenSet, OrderedSet, UnionFind
 
 
 __all__ = ["WeightedGraph"]
@@ -18,7 +18,7 @@ __all__ = ["WeightedGraph"]
 
 # Specify that Node type has to be hashable (constrained by current implementation, though we may consider to rewrite the implementation to waive the constraint in the future)
 Node = TypeVar("Node", bound=Hashable)
-Edge = frozenset[Node]
+Edge = OrderedFrozenSet[Node]
 Weight = float
 AdjacencyList = defaultdict[Node, OrderedSet[Node]]
 
@@ -40,14 +40,14 @@ class WeightedGraph(Generic[Node]):
         self._adjacency_list[v].add(w)
         self._adjacency_list[w].add(v)
 
-        edge = frozenset({v, w})
+        edge = OrderedFrozenSet([v, w])
         self._weight_table[edge] = weight
 
     def remove_edge(self, v: Node, w: Node) -> None:
         self._adjacency_list[v].discard(w)
         self._adjacency_list[w].discard(v)
 
-        edge = frozenset({v, w})
+        edge = OrderedFrozenSet({v, w})
         self._weight_table.pop(edge, None)
 
     @property
@@ -63,7 +63,7 @@ class WeightedGraph(Generic[Node]):
 
     def weight(self, v: Node, w: Node) -> Weight:
         try:
-            edge = frozenset({v, w})
+            edge = OrderedFrozenSet({v, w})
             return self._weight_table[edge]
 
         except KeyError:

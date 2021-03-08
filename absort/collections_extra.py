@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import Iterable, Iterator, MutableSet
+from collections.abc import Iterable, Iterator, Set, MutableSet
 from itertools import repeat
 from operator import attrgetter
 from typing import Generic, TypeVar
@@ -10,7 +10,7 @@ import attr
 from .utils import maxmin
 
 
-__all__ = ["OrderedSet", "UnionFind"]
+__all__ = ["OrderedSet", "OrderedFrozenSet", "UnionFind"]
 
 
 T = TypeVar("T")
@@ -18,7 +18,7 @@ T = TypeVar("T")
 
 class OrderedSet(MutableSet[T]):
     def __init__(self, iterable: Iterable[T] = tuple()) -> None:
-        self._data: dict[T, None] = dict.fromkeys(iterable)
+        self._data = dict.fromkeys(iterable)  # type: dict[T, None]
 
     __slots__ = "_data"
 
@@ -66,6 +66,25 @@ try:
     from orderedset import OrderedSet  # type: ignore
 except ImportError:
     pass
+
+
+class OrderedFrozenSet(Set[T]):
+    def __init__(self, iterable: Iterable[T]) -> None:
+        self._data = dict.fromkeys(iterable)  # type: dict[T, None]
+
+    __slots__ = "_data"
+
+    def __contains__(self, item: T) -> bool:
+        return item in self._data
+
+    def __iter__(self) -> Iterator[T]:
+        yield from self._data
+
+    def __len__(self) -> int:
+        return len(self._data)
+
+    def __hash__(self) -> int:
+        return hash(tuple(self._data))
 
 
 @attr.s(auto_attribs=True, slots=True)
