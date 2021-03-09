@@ -140,20 +140,23 @@ class DirectedGraph(Generic[Node]):
 
         stack: list[Node] = [source]
         current_path: list[Optional[Node]] = [None]
+        current_path_nodes = set()
 
         while stack:
             node = stack[-1]
 
             if node != current_path[-1]:
                 current_path.append(node)
+                current_path_nodes.add(node)
+
                 for child in self._adjacency_list[node]:
-                    if child in current_path:
+                    if child in current_path_nodes:
                         return (node, child)
                     stack.append(child)
 
             else:
                 stack.pop()
-                current_path.pop()
+                current_path_nodes.remove(current_path.pop())
 
         return None
 
