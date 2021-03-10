@@ -138,25 +138,33 @@ class DirectedGraph(Generic[Node]):
 
         assert source in self._adjacency_list
 
-        stack: list[Node] = [source]
-        current_path: list[Optional[Node]] = [None]
-        current_path_nodes = set()
+        stack = [source]  # type: list[Node]
+        current_path = [None]  # type: list[Optional[Node]]
+        current_path_nodes = set()  # type: set[Node]
+        traversed = set()  # type: set[Node]
 
         while stack:
             node = stack[-1]
 
-            if node != current_path[-1]:
+            if node in traversed:
+                stack.pop()
+
+            elif node != current_path[-1]:
                 current_path.append(node)
                 current_path_nodes.add(node)
 
                 for child in self._adjacency_list[node]:
                     if child in current_path_nodes:
+                        # Found a back edge
                         return (node, child)
+
                     stack.append(child)
 
             else:
                 stack.pop()
-                current_path_nodes.remove(current_path.pop())
+                current_path.pop()
+                current_path_nodes.remove(node)
+                traversed.add(node)
 
         return None
 
