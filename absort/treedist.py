@@ -113,9 +113,7 @@ def zhangshasha(
             return min(candidates)
 
     with larger_recursion_limit():
-        result = forest_distance([tree1], [tree2])
-
-    return result
+        return forest_distance([tree1], [tree2])
 
 
 try:
