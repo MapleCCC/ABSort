@@ -11,7 +11,7 @@ from decimal import Decimal
 from functools import cache
 from itertools import combinations, zip_longest
 from numbers import Complex, Number
-from typing import IO, Any, Generic, Type, TypeVar
+from typing import IO, Any, Generic, TypeVar
 
 import attr
 from colorama import Fore, Style
@@ -326,7 +326,7 @@ def iequal(
 
 
 class on_except_return:
-    def __init__(self, exception: Type[Exception], returns: Any = None) -> None:
+    def __init__(self, exception: type[Exception], returns: Any = None) -> None:
         self._exception = exception
         self._return = returns
 

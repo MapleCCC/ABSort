@@ -12,7 +12,7 @@ from collections.abc import AsyncIterator, Iterable, Iterator, Sequence
 from datetime import datetime
 from enum import Enum
 from functools import partial
-from itertools import chain, combinations, islice
+from itertools import chain, combinations
 from operator import itemgetter
 from types import SimpleNamespace
 from typing import Any
@@ -124,7 +124,7 @@ CACHE_DIR = Path.sync_home() / ".absort_cache"
 CACHE_MAX_SIZE = 400000  # unit is byte
 
 #
-# Types
+# Type Annotations
 #
 
 PyVersion = tuple[int, int]
@@ -1053,4 +1053,4 @@ def display_summary(digest: Digest) -> None:
 
 
 if __name__ == "__main__":
-    main()
+    main()  # pylint: disable=no-value-for-parameter

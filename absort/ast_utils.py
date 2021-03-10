@@ -57,7 +57,7 @@ def ast_pretty_dump(
     except ImportError:
         raise RuntimeError(
             "Black is required to use ast_pretty_dump(). "
-            "Try `python pip install -U black` to install."
+            "Try `python -m pip install -U black` to install."
         )
     except AttributeError:
         # FIXME remove version incompatible check after black publishes the first
@@ -181,11 +181,11 @@ def cached_ast_iter_child_nodes(node: ast.AST) -> list[ast.AST]:
 
 
 class DeprecatedASTNodeError(Exception):
-    pass
+    """ An exception to signal that some AST node is deprecated """
 
 
 Field = tuple[str, str]
-Fields = tuple[tuple[str, str], ...]
+Fields = tuple[Field, ...]
 
 
 def retrieve_ast_node_class_fields(
@@ -225,7 +225,7 @@ def retrieve_ast_node_class_fields(
         # Example: ast.Load, ast.Store, ast.Del, etc.
         return ()
 
-    return tuple((*attribute.split(),) for attribute in attributes.split(","))  # type: ignore
+    return tuple(tuple(attr.split()) for attr in attributes.split(","))
 
 
 def all_ast_node_classes() -> Iterator[tuple[str, type[ast.AST]]]:  # pragma: no cover
@@ -240,8 +240,8 @@ def all_ast_node_classes() -> Iterator[tuple[str, type[ast.AST]]]:  # pragma: no
             pass
 
 
-def build_ast_node_class_fields_table() -> dict[str, tuple[tuple[str, str], ...]]:  # pragma: no cover
-    table: dict[str, Fields] = {}
+def build_ast_node_class_fields_table() -> dict[str, Fields]:  # pragma: no cover
+    table = {}  # type: dict[str, Fields]
     for name, cls in all_ast_node_classes():
         try:
             fields = retrieve_ast_node_class_fields(cls)
@@ -483,7 +483,7 @@ def ast_tree_edit_distance(
     Note that the rename_cost function **should** return 0 for identical nodes.
     """
 
-    # Note: one important thing to note here is that, ast.AST() != ast.AST().
+    # Note: one important thing to note here is that, `ast.AST() != ast.AST()`.
 
     if algorithm == "ZhangShasha":
         # hopefully a sane default

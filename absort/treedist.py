@@ -35,7 +35,7 @@ def zhangshasha(
     rename_cost: Callable[[Tree, Tree], float] = lambda x, y: int(x != y),
 ) -> float:
     """
-    Implementation is Zhang-Shasha's tree edit distance algorithm.
+    Implementation of Zhang-Shasha's tree edit distance algorithm.
 
     Reference: https://epubs.siam.org/doi/abs/10.1137/0218082
 
@@ -172,11 +172,12 @@ def pqgram(
     index1 = pqgram_index(tree1, children, p, q, label, compact=True)
     index2 = pqgram_index(tree2, children, p, q, label, compact=True)
 
-    symmetric_diff = sum(((index1 - index2) + (index2 - index1)).values())
     total = sum((index1 | index2).values())
-
     if not total:
         return 0
+
+    symmetric_diff = sum(((index1 - index2) + (index2 - index1)).values())
+
     return symmetric_diff / total
 
 
