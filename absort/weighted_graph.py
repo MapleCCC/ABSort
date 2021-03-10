@@ -161,8 +161,7 @@ class WeightedGraph(Generic[Node]):
             yield first(self._adjacency_list)
             return
 
-        edges = sorted(self._weight_table, key=self._weight_table.get)  # type: ignore
-        edges: list[Edge[Node]]
+        edges = sorted(self._weight_table, key=self._weight_table.__getitem__)
 
         res = OrderedSet()
         uf = UnionFind(self._adjacency_list)
