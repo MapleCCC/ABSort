@@ -56,6 +56,8 @@ def zhangshasha(
     calculate_cache_key = lambda forest1, forest2: (*forest1, *forest2)
 
     @memoization(key=calculate_cache_key)
+    # Zhang-Shasha algorithm's time complexity is too high that it becomes infeasible for large trees.
+    # A heuristic strategy is used: when the recursion limit is hit, prune the tree.
     @on_except_return(RecursionError, returns=0)
     def forest_distance(forest1: Forest[Tree], forest2: Forest[Tree]) -> float:
 
