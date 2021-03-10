@@ -127,6 +127,52 @@ class DirectedGraph(Generic[Node]):
             traversed.add(node)
             stack.extend(self._adjacency_list[node])
 
+    def detect_cycle(self) -> list[Node]:
+        """
+        Return a list of nodes which constitutes a cycle in the graph,
+        or None if no cycle is found.
+
+        Note that detect_cycle() is not intended to find all cycles in the graph.
+        """
+
+        nodes = set(self._adjacency_list)
+        if not nodes:
+            return []
+
+        while nodes:
+            path = []
+            indexer = {}
+            src = first(nodes)
+            stack = [src]
+            traversed = set()
+
+            while stack:
+                node = stack[-1]
+
+                if node in traversed:
+                    stack.pop()
+
+                elif node != path[-1]:
+                    path.append(node)
+                    indexer[node] = len(path) - 1
+
+                    for child in self._adjacency_list[node]:
+                        if child in indexer:
+                            # Found a cycle
+                            return path[indexer[child] :] + [child]
+
+                        stack.append(child)
+
+                else:
+                    path.pop()
+                    del indexer[node]
+                    stack.pop()
+                    traversed.add(node)
+
+            nodes -= traversed
+
+        return []
+
     def detect_back_edge(self, source: Node) -> Optional[Edge[Node]]:
         """
         Return one back edge, or None if no back edge is found.
@@ -242,7 +288,8 @@ class DirectedGraph(Generic[Node]):
         if cnt < len(self._adjacency_list):
             raise CircularDependencyError(
                 "Circular dependency detected! "
-                + "Try to run the method detect_back_edge() to find back edges."
+                + "Try to run the method detect_cycle() to find cycle, "
+                + "or detect_back_edge() to find back edges."
             )
 
     def strongly_connected_components(self) -> Iterator[SCC[Node]]:
