@@ -207,15 +207,15 @@ def pqgram_index(
         base = cast(Register[Label], deque(repeat(DUMMY_LABEL, q), maxlen=q))
         stem.append(label(tree))
 
-        children_count = 0
+        has_children = False
         for child in children(tree):
             base.append(label(child))
             entry = construct_index_entry(stem, base)
             index[entry] += 1
             rec_pqgram_index(child)
-            children_count += 1
+            has_children = True
 
-        if children_count:
+        if has_children:
             for _ in range(q - 1):
                 base.append(cast(Label, DUMMY_LABEL))
                 entry = construct_index_entry(stem, base)
