@@ -9,7 +9,7 @@ import sys
 from collections import Counter
 from collections.abc import AsyncIterator, Iterable
 from datetime import datetime
-from enum import Enum, auto
+from enum import Enum, IntEnum, auto
 from operator import itemgetter
 from types import SimpleNamespace
 from typing import Any
@@ -48,6 +48,7 @@ __all__ = [
     "FileAction",
     "SortOrder",
     "NameRedefinition",
+    "BypassPromptLevel",
 ]
 
 
@@ -78,6 +79,20 @@ class FileResult(Enum):
     UNMODIFIED = "unmodified"
     MODIFIED = "modified"
     FAILED = "failed"
+
+
+class BypassPromptLevel(IntEnum):
+    """ An enumeration to specify different bypass-prompt levels """
+
+    NO = 0
+    LOW = 1
+    MEDIUM = 2
+    HIGH = 3
+
+    @classmethod
+    @property
+    def MAX_LEVEL(cls: type[BypassPromptLevel])->int:
+        return 3
 
 
 #
@@ -163,6 +178,19 @@ class PyVersionParamType(click.ParamType):
                 param,
                 ctx,
             )
+
+class BypassPromptParamType(click.ParamType):
+    """ A parameter type for the --yes CLI option """
+
+    name = "bypass_prompt"
+
+    def convert(self, value: int, param: Any, ctx: Any) -> BypassPromptLevel:
+        try:
+            value = min(value, BypassPromptLevel.MAX_LEVEL)
+            return BypassPromptLevel(value)
+
+        except ValueError:
+            self.fail("--yes flag has invalid count.", param, ctx)
 
 
 # TODO provide a programmatical interface. Check if click library provides such a functionality, to turn a CLI interface to programmatical interface.
@@ -273,6 +301,7 @@ class PyVersionParamType(click.ParamType):
     "--yes",
     "bypass_prompt",
     count=True,
+    type=BypassPromptParamType(),
     help="Bypass confirmation prompts. Use multiple times to bypass increasingly more confirmation prompts. "
     "Dangerous option. Not recommended.",
 )
@@ -303,7 +332,7 @@ def main(
     quiet: bool,
     verbose: bool,
     color_off: bool,
-    bypass_prompt: int,
+    bypass_prompt: BypassPromptLevel,
     dfs: bool,
     bfs: bool,
     separate_class_and_function: bool,
@@ -322,22 +351,22 @@ def main(
             pass
 
     # First confirmation prompt
-    if 0 < bypass_prompt < 3:
+    if BypassPromptLevel.NO < bypass_prompt < BypassPromptLevel.HIGH:
         ans = click.confirm(
             "Are you sure you want to bypass all confirmation prompts? "
             "(Dangerous, not recommended)"
         )
         if not ans:
-            bypass_prompt = 0
+            bypass_prompt = BypassPromptLevel.NO
 
     # Second confirmation prompt
-    if 0 < bypass_prompt < 2:
+    if BypassPromptLevel.NO < bypass_prompt < BypassPromptLevel.MEDIUM:
         ans = click.confirm(
             "Are you REALLY REALLY REALLY sure you want to bypass all confirmation prompts? "
             "(Dangerous, not recommended)"
         )
         if not ans:
-            bypass_prompt = 0
+            bypass_prompt = BypassPromptLevel.NO
 
     files = list(collect_python_files(map(Path, filepaths)))
     if not files:
@@ -442,7 +471,7 @@ async def collect_python_files(filepaths: Iterable[Path]) -> AsyncIterator[Path]
 def absort_files(
     files: list[Path],
     encoding: str = "utf-8",
-    bypass_prompt: int = 0,
+    bypass_prompt: BypassPromptLevel = BypassPromptLevel.NO,
     verbose: bool = False,
     file_action: FileAction = FileAction.PRINT,
     py_version: PyVersion = (3, 9),
@@ -479,7 +508,7 @@ def absort_files(
 async def absort_file(
     file: Path,
     encoding: str = "utf-8",
-    bypass_prompt: int = 0,
+    bypass_prompt: BypassPromptLevel = BypassPromptLevel.NO,
     verbose: bool = False,
     file_action: FileAction = FileAction.PRINT,
     py_version: PyVersion = (3, 9),
@@ -530,7 +559,7 @@ async def absort_file(
     async def write_source(file: Path, new_source: str) -> FileResult:
         """ Write the new source to the file, prompt for confirmation and make backup """
 
-        if bypass_prompt < 1:
+        if bypass_prompt < BypassPromptLevel.LOW:
             ans = click.confirm(
                 f"Are you sure you want to in-place update the file {file}?"
             )
