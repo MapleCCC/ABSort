@@ -9,7 +9,7 @@ import sys
 from collections import Counter
 from collections.abc import AsyncIterator, Iterable
 from datetime import datetime
-from enum import Enum
+from enum import Enum, auto
 from operator import itemgetter
 from types import SimpleNamespace
 from typing import Any
@@ -66,10 +66,10 @@ except NameError:
 class FileAction(Enum):
     """ An enumeration to specify different kinds of file actions """
 
-    CHECK = 1
-    DIFF = 2
-    PRINT = 3
-    WRITE = 4
+    CHECK = auto()
+    DIFF = auto()
+    PRINT = auto()
+    WRITE = auto()
 
 
 class FileResult(Enum):

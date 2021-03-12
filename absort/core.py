@@ -1,6 +1,6 @@
 import ast
 from collections.abc import Iterable, Iterator, Sequence
-from enum import Enum
+from enum import Enum, auto
 from functools import partial
 from itertools import chain, combinations
 
@@ -64,9 +64,9 @@ class CommentStrategy(Enum):
 class SortOrder(Enum):
     """ An enumeration to specify different kinds of sort order strategies """
 
-    TOPOLOGICAL = 1
-    DEPTH_FIRST = 2
-    BREADTH_FIRST = 3
+    TOPOLOGICAL = auto()
+    DEPTH_FIRST = auto()
+    BREADTH_FIRST = auto()
 
 
 #
