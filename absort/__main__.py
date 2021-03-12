@@ -58,15 +58,6 @@ except NameError:
     profile = identityfunc
 
 
-# Optionally use uvloop to boost speed
-try:
-    import uvloop  # type: ignore
-
-    uvloop.install()
-except ImportError:
-    pass
-
-
 #
 # Enumerations
 #
@@ -321,6 +312,14 @@ def main(
 
     options = SimpleNamespace(**ctx.params)
     validate_args(options)
+
+    if not no_aggressive:
+        # Optionally use uvloop to boost speed
+        try:
+            import uvloop  # type: ignore
+            uvloop.install()
+        except ImportError:
+            pass
 
     # First confirmation prompt
     if 0 < bypass_prompt < 3:
