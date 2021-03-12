@@ -14,7 +14,6 @@ from operator import itemgetter
 from types import SimpleNamespace
 from typing import Any
 
-import attr
 import cchardet
 import click
 from colorama import colorama_text
@@ -83,6 +82,14 @@ class FileAction(Enum):
     WRITE = 3
 
 
+class FileResult(Enum):
+    """ An enumeration to specify different kinds of file results """
+
+    UNMODIFIED = "unmodified"
+    MODIFIED = "modified"
+    FAILED = "failed"
+
+
 #
 # Constants
 #
@@ -116,25 +123,6 @@ class MutuallyExclusiveOptions(Exception):
 #
 # Utility Classes
 #
-
-
-@attr.s(auto_attribs=True, slots=True)
-class Digest:
-    """ A semantic data class to represent digest data """
-
-    unmodified: int = 0
-    modified: int = 0
-    failed: int = 0
-
-    def __getitem__(self, key: str) -> int:
-        return attr.asdict(self)[key]
-
-    def __add__(self, other: Any) -> Digest:
-        if not isinstance(other, Digest):
-            return NotImplemented
-        c1 = Counter(attr.asdict(self))
-        c2 = Counter(attr.asdict(other))
-        return Digest(**(c1 + c2))  # type: ignore
 
 
 class CommentStrategyParamType(click.ParamType):
@@ -463,12 +451,12 @@ def absort_files(
     comment_strategy: CommentStrategy = CommentStrategy.ATTR_FOLLOW_DECL,
     format_option: FormatOption = FormatOption(),
     sort_order: SortOrder = SortOrder.TOPOLOGICAL,
-) -> Digest:
+) -> Counter[FileResult]:
     """ Sort a list of files """
 
     # TODO use multi-processing to boost speed of handling a bunch of files (CPU-bound parts)
 
-    async def entry() -> Digest:
+    async def entry() -> Counter[FileResult]:
         tasks = (
             absort_file(
                 file,
@@ -483,8 +471,8 @@ def absort_files(
             )
             for file in files
         )
-        digests = await asyncio.gather(*tasks)
-        return sum(digests, Digest())
+        results = await asyncio.gather(*tasks)
+        return Counter(results)
 
     return asyncio.run(entry())
 
@@ -500,7 +488,7 @@ async def absort_file(
     comment_strategy: CommentStrategy = CommentStrategy.ATTR_FOLLOW_DECL,
     format_option: FormatOption = FormatOption(),
     sort_order: SortOrder = SortOrder.TOPOLOGICAL,
-) -> Digest:
+) -> FileResult:
     """ Sort the source in the given file """
 
     async def read_source(file: Path) -> str:
@@ -541,7 +529,7 @@ async def absort_file(
             )
             raise ABSortFail
 
-    async def write_source(file: Path, new_source: str) -> None:
+    async def write_source(file: Path, new_source: str) -> FileResult:
         """ Write the new source to the file, prompt for confirmation and make backup """
 
         if bypass_prompt < 1:
@@ -549,41 +537,38 @@ async def absort_file(
                 f"Are you sure you want to in-place update the file {file}?"
             )
             if not ans:
-                digest.unmodified += 1
-                return
+                return FileResult.UNMODIFIED
 
         await backup_to_cache(file)
 
         await file.write_text(new_source, encoding)
-        digest.modified += 1
         if verbose:
             print(bright_green(f"Processed {file}"))
+        return FileResult.MODIFIED
 
-    async def process_new_source(new_source: str) -> None:
+    async def process_new_source(new_source: str) -> FileResult:
         """ Process the new source as specified by the CLI arguments """
 
         # TODO add more styled output (e.g. colorized)
 
         if file_action is FileAction.DIFF:
 
-            digest.unmodified += 1
             display_diff_with_filename(old_source, new_source, str(file))
+            return FileResult.UNMODIFIED
 
         elif file_action is FileAction.WRITE:
 
             if old_source == new_source:
-                digest.unmodified += 1
-                return
-            await write_source(file, new_source)
+                return FileResult.UNMODIFIED
+            return await write_source(file, new_source)
 
         elif file_action is FileAction.CHECK:
 
-            digest.unmodified += 1
             if old_source != new_source:
                 print(f"{file} needs reformat")
+            return FileResult.UNMODIFIED
 
         elif file_action is FileAction.PRINT:
-            digest.unmodified += 1
             divider = bright_yellow("-" * 79)
             print(divider)
             print(file)
@@ -592,17 +577,19 @@ async def absort_file(
             print(divider)
             print("\n", end="")
 
+            return FileResult.UNMODIFIED
+
         else:
             raise ValueError("the file_action argument receives invalid value")
 
     try:
-        digest = Digest()
+
         old_source = await read_source(file)
         new_source = absort_source(old_source)
-        await process_new_source(new_source)
-        return digest
+        return await process_new_source(new_source)
+
     except ABSortFail:
-        return Digest(failed=1)  # type: ignore
+        return FileResult.FAILED
 
 
 async def backup_to_cache(file: Path) -> None:
@@ -677,17 +664,15 @@ def display_diff_with_filename(
     print("\n", end="")
 
 
-def display_summary(digest: Digest) -> None:
+def display_summary(digest: Counter[FileResult]) -> None:
     """ Display the succint summary of the sorting process """
 
     summary = []
-    for field in attr.fields(Digest):
-        description = field.name
-        file_num = digest[description]
-        if not file_num:
+    for file_result, count in digest.items():
+        if not count:
             continue
-        plurality_suffix = "s" if file_num > 1 else ""
-        summary.append(f"{file_num} file{plurality_suffix} {description}")
+        plurality_suffix = "s" if count > 1 else ""
+        summary.append(f"{count} file{plurality_suffix} {file_result.value}")
     print(", ".join(summary) + ".")
 
 
