@@ -1,5 +1,5 @@
 from collections import Counter, deque
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Hashable, Iterable
 from functools import cache
 from itertools import repeat
 from typing import TypeVar, Union, cast
@@ -20,7 +20,7 @@ __all__ = ["zhangshasha", "pqgram"]
 
 # TODO use more advanced algorithms to replace the classic Zhang-Shasha algorithm. E.g. RTED, PQ-Gram, AP-TED+, etc.
 
-Tree = TypeVar("Tree")
+Tree = TypeVar("Tree", bound=Hashable)
 Forest = list[Tree]
 EmptyForest: Forest = []
 contains_one_tree: Callable[[Forest], bool] = lambda forest: len(forest) == 1
@@ -144,7 +144,7 @@ except ImportError:
     pass
 
 
-Label = TypeVar("Label")
+Label = TypeVar("Label", bound=Hashable)
 LabelTuple = tuple[Label, ...]
 Register = deque[Label]
 Index = Counter[Union[int, LabelTuple[Label]]]
