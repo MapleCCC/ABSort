@@ -12,6 +12,11 @@ from more_itertools import first, ilen
 from .collections_extra import OrderedSet
 from .utils import identityfunc
 
+try:
+    profile  # type: ignore
+except NameError:
+    profile = identityfunc
+
 #
 # Thin semantic type abstraction
 #
@@ -292,6 +297,7 @@ class DirectedGraph(Generic[Node]):
                 + "or detect_back_edge() to find back edges."
             )
 
+    @profile  # type: ignore
     def strongly_connected_components(self) -> Iterator[SCC[Node]]:
         """
         Find all strongly connected components.
@@ -307,6 +313,7 @@ class DirectedGraph(Generic[Node]):
         This method traverses all the nodes regardless of the connectivity of the graph.
         """
 
+        @profile
         def rec_scc(node: Node) -> Iterator[SCC[Node]]:
             nonlocal count, stack
 

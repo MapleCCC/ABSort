@@ -10,13 +10,14 @@ from collections import Counter
 from collections.abc import AsyncIterator, Iterable
 from datetime import datetime
 from enum import Enum, IntEnum, auto
-from operator import itemgetter
+from operator import itemgetter, methodcaller
 from types import SimpleNamespace
 from typing import Any
 
 import cchardet
 import click
 from colorama import colorama_text
+from more_itertools import take
 
 from .__version__ import __version__
 from .aiopathlib import AsyncPath as Path
@@ -624,11 +625,7 @@ async def backup_to_cache(file: Path) -> None:
 
     def generate_timestamp() -> str:
         now = str(datetime.now())
-        timestamp = ""
-        for char in now:
-            if char.isdigit():
-                timestamp += char
-        return timestamp[:14]
+        return "".join(take(14, filter(methodcaller("isdigit"), now)))
 
     timestamp = generate_timestamp()
     backup_file = CACHE_DIR / (file.name + "." + timestamp + ".backup")
@@ -655,19 +652,19 @@ async def shrink_cache() -> None:
 
     backup_filename_pattern = r".*\.(?P<timestamp>\d{14})\.backup"
 
-    files: list[tuple[str, Path]] = []
+    files = []  # type: list[tuple[str, Path]]
     async for f in CACHE_DIR.iterdir():
         if m := re.fullmatch(backup_filename_pattern, f.name):
             timestamp = m.group("timestamp")
             files.append((timestamp, f))
 
-    sorted_files = sorted(files, key=itemgetter(0))
+    files.sort(key=itemgetter(0))
 
     shrinked_size = 0
-    for _, f in sorted_files:
+    for _, f in files:
         stat = await f.stat()
-        shrinked_size += stat.st_size
         await f.unlink()
+        shrinked_size += stat.st_size
         if shrinked_size >= shrink_target_size:
             break
 
