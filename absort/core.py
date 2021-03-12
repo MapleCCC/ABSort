@@ -64,9 +64,9 @@ class CommentStrategy(Enum):
 class SortOrder(Enum):
     """ An enumeration to specify different kinds of sort order strategies """
 
-    TOPOLOGICAL = 0
-    DEPTH_FIRST = 1
-    BREADTH_FIRST = 2
+    TOPOLOGICAL = 1
+    DEPTH_FIRST = 2
+    BREADTH_FIRST = 3
 
 
 #

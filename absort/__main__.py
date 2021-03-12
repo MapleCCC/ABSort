@@ -66,10 +66,10 @@ except NameError:
 class FileAction(Enum):
     """ An enumeration to specify different kinds of file actions """
 
-    CHECK = 0
-    DIFF = 1
-    PRINT = 2
-    WRITE = 3
+    CHECK = 1
+    DIFF = 2
+    PRINT = 3
+    WRITE = 4
 
 
 class FileResult(Enum):
