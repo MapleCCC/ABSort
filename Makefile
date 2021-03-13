@@ -43,10 +43,13 @@ lint:
 unused-imports:
 	find . -type f -name "*.py" | xargs pylint --disable=all --enable=W0611
 
+count-loc:
+	tokei .
+
 todo:
 	rg "# TODO|# FIXME" --glob !Makefile
 
 clean:
 	rm -rf __pycache__/
 
-.PHONY: all pypy test test-cov stress-test format prof type-check lint unused-imports todo clean
+.PHONY: all pypy test test-cov stress-test format prof type-check lint unused-imports count-loc todo clean

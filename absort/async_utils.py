@@ -55,7 +55,7 @@ def _(
 @asyncify.register(inspect.isfunction)
 def _(func: Callable[..., T]) -> Callable[..., Coroutine[Any, Any, T]]:
     @functools.wraps(func)
-    async def wrapper(*args, **kwargs) -> Coroutine[Any, Any, T]:
+    async def wrapper(*args, **kwargs) -> T:
 
         pfunc = partial(func, *args, **kwargs)
         loop = asyncio.get_running_loop()
@@ -79,7 +79,7 @@ def _(
 ) -> Callable[..., Generator[T, Any, Any]]:
     @functools.wraps(func)
     def wrapper(*args, **kwargs) -> Generator[T, Any, Any]:
-        async def entry():
+        async def entry() -> list[T]:
 
             result = []
             async for value in func(*args, **kwargs):

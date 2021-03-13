@@ -133,8 +133,7 @@ class AsyncPath:
         size = 0
         async for f in self.rglob("*"):
             if await f.is_file():
-                stat = await f.stat()
-                size += stat.st_size
+                size += await f.size()
         return size
 
     async def removedirs(self) -> None:

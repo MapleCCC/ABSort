@@ -93,7 +93,7 @@ class BypassPromptLevel(IntEnum):
 
     @classmethod
     @property
-    def MAX_LEVEL(cls: type[BypassPromptLevel])->int:
+    def MAX_LEVEL(cls: type[BypassPromptLevel]) -> int:
         return 3
 
 
@@ -180,6 +180,7 @@ class PyVersionParamType(click.ParamType):
                 param,
                 ctx,
             )
+
 
 class BypassPromptParamType(click.ParamType):
     """ A parameter type for the --yes CLI option """
@@ -348,6 +349,7 @@ def main(
         # Optionally use uvloop to boost speed
         try:
             import uvloop  # type: ignore
+
             uvloop.install()
         except ImportError:
             pass
