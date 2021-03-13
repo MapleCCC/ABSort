@@ -37,6 +37,9 @@ class AsyncPath:
     async def stat(self) -> stat_result:
         return await run_async(self._path.stat)
 
+    async def size(self) -> int:
+        return (await run_async(self._path.stat)).st_size
+
     async def unlink(self, missing_ok=False) -> None:
         await run_async(self._path.unlink, missing_ok)
 

@@ -10,7 +10,7 @@ from collections import Counter
 from collections.abc import AsyncIterator, Iterable
 from datetime import datetime
 from enum import Enum, IntEnum, auto
-from operator import itemgetter, methodcaller
+from operator import methodcaller
 from types import SimpleNamespace
 from typing import Any
 
@@ -22,6 +22,7 @@ from more_itertools import take
 from .__version__ import __version__
 from .aiopathlib import AsyncPath as Path
 from .async_utils import run_in_event_loop
+from .collections_extra import PriorityQueue
 from .core import (
     CommentStrategy,
     FormatOption,
@@ -652,21 +653,24 @@ async def shrink_cache() -> None:
 
     backup_filename_pattern = r".*\.(?P<timestamp>\d{14})\.backup"
 
-    files = []  # type: list[tuple[str, Path]]
-    async for f in CACHE_DIR.iterdir():
-        if m := re.fullmatch(backup_filename_pattern, f.name):
-            timestamp = m.group("timestamp")
-            files.append((timestamp, f))
+    total_size = 0
+    pq = PriorityQueue(reverse=True)  # type: PriorityQueue[Path]
 
-    files.sort(key=itemgetter(0))
+    async for file in CACHE_DIR.iterdir():
+        m = re.fullmatch(backup_filename_pattern, file.name)
+        if not m:
+            continue
 
-    shrinked_size = 0
-    for _, f in files:
-        stat = await f.stat()
-        await f.unlink()
-        shrinked_size += stat.st_size
-        if shrinked_size >= shrink_target_size:
-            break
+        timestamp = m.group("timestamp")
+        pq.push(file, priority=timestamp)
+
+        total_size += await file.size()
+
+        while pq and total_size - await pq.top().size() >= shrink_target_size:
+            pq.pop()
+
+    for file in pq.to_iterator():
+        await file.unlink()
 
 
 def display_diff_with_filename(

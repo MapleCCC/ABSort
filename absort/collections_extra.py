@@ -1,16 +1,20 @@
 from __future__ import annotations
 
 from collections.abc import Iterable, Iterator, Set, MutableSet
+from dataclasses import dataclass, field
+from functools import total_ordering
+from heapq import heappop, heappush
 from itertools import repeat
 from operator import attrgetter
 from typing import Generic, TypeVar
 
 import attr
 
+from .typing_extra import Comparable
 from .utils import maxmin
 
 
-__all__ = ["OrderedSet", "OrderedFrozenSet", "UnionFind"]
+__all__ = ["OrderedSet", "OrderedFrozenSet", "UnionFind", "PriorityQueue"]
 
 
 T = TypeVar("T")
@@ -136,3 +140,70 @@ class UnionFind(Generic[T]):
         else:
             root2.parent = root1
             root1.rank += 1
+
+
+@total_ordering
+class OrderedBox(Generic[T]):
+    def __init__(self, item: T, reverse: bool = False) -> None:
+        self._item = item
+        self._reverse = reverse
+
+    __slots__ = ("_item", "_reverse")
+
+    def unbox(self) -> T:
+        return self._item
+
+    def __eq__(self, other) -> bool:
+        if not isinstance(other, OrderedBox):
+            return NotImplemented
+
+        return self._item == other._item
+
+    def __lt__(self, other) -> bool:
+        if not isinstance(other, OrderedBox):
+            return NotImplemented
+
+        if not self._reverse:
+            return self._item < other._item
+        else:
+            return self._item > other._item
+
+
+@dataclass(order=True)
+class PrioritizedItem(Generic[T]):
+    priority: Comparable
+    item: T = field(compare=False)
+
+
+class PriorityQueue(Generic[T]):
+    def __init__(self, reverse: bool = False) -> None:
+        self._reverse = reverse
+        self._data = []  # type: list[PrioritizedItem[T]]
+
+    __slots__ = ("_reverse", "_data")
+
+    def __bool__(self) -> bool:
+        return bool(self._data)
+
+    def top(self) -> T:
+        if not self._data:
+            raise IndexError("Empty priority queue has no top")
+
+        return self._data[0].item
+
+    def push(self, elem: T, priority: Comparable) -> None:
+        boxed_priority = OrderedBox(priority, reverse=self._reverse)
+        pitem = PrioritizedItem(priority=boxed_priority, item=elem)
+        heappush(self._data, pitem)
+
+    def pop(self) -> T:
+        if not self._data:
+            raise IndexError("Pop from empty priority queue")
+
+        return heappop(self._data).item
+
+    def to_iterator(self) -> Iterator[T]:
+        """ Destructive """
+
+        while self._data:
+            yield heappop(self._data).item
