@@ -473,7 +473,7 @@ async def collect_python_files(filepaths: Iterable[Path]) -> AsyncIterator[Path]
 
 
 def absort_files(
-    files: list[Path],
+    files: list[str],
     encoding: str = "utf-8",
     bypass_prompt: BypassPromptLevel = BypassPromptLevel.NO,
     verbose: bool = False,
@@ -510,7 +510,7 @@ def absort_files(
 
 @profile  # type: ignore
 async def absort_file(
-    file: Path,
+    file: str,
     encoding: str = "utf-8",
     bypass_prompt: BypassPromptLevel = BypassPromptLevel.NO,
     verbose: bool = False,
@@ -522,22 +522,22 @@ async def absort_file(
 ) -> FileResult:
     """ Sort the source in the given file """
 
-    async def read_source(file: Path) -> str:
+    async def read_source(filepath: Path) -> str:
         """ Read source from the file, including exception handling """
 
         try:
-            return await file.read_text(encoding)
+            return await filepath.read_text(encoding)
         except UnicodeDecodeError:
-            print(f"{file} is not decodable by {encoding}", file=sys.stderr)
+            print(f"{filepath} is not decodable by {encoding}", file=sys.stderr)
             print(f"Try to automatically detect file encoding......", file=sys.stderr)
-            binary = await file.read_bytes()
+            binary = await filepath.read_bytes()
             detected_encoding = cchardet.detect(binary)["encoding"]
 
             try:
-                return await file.read_text(detected_encoding)
+                return await filepath.read_text(detected_encoding)
             except UnicodeDecodeError:
 
-                print(f"{file} has unknown encoding.", file=sys.stderr)
+                print(f"{filepath} has unknown encoding.", file=sys.stderr)
                 raise ABSortFail
 
     def absort_source(old_source: str) -> str:
@@ -550,59 +550,59 @@ async def absort_file(
         except SyntaxError as exc:
             # if re.fullmatch(r"Missing parentheses in call to 'print'. Did you mean print(.*)\?", exc.msg):
             #     pass
-            print(f"{file} has erroneous syntax: {exc.msg}", file=sys.stderr)
+            print(f"{filepath} has erroneous syntax: {exc.msg}", file=sys.stderr)
             raise ABSortFail
 
         except NameRedefinition:
             print(
-                f"{file} contains duplicate name redefinitions. Not supported yet.",
+                f"{filepath} contains duplicate name redefinitions. Not supported yet.",
                 file=sys.stderr,
             )
             raise ABSortFail
 
-    async def write_source(file: Path, new_source: str) -> FileResult:
+    async def write_source(filepath: Path, new_source: str) -> FileResult:
         """ Write the new source to the file, prompt for confirmation and make backup """
 
         if bypass_prompt < BypassPromptLevel.LOW:
             ans = click.confirm(
-                f"Are you sure you want to in-place update the file {file}?"
+                f"Are you sure you want to in-place update the file {filepath}?"
             )
             if not ans:
                 return FileResult.UNMODIFIED
 
-        await backup_to_cache(file)
+        await backup_to_cache(filepath)
 
-        await file.write_text(new_source, encoding)
+        await filepath.write_text(new_source, encoding)
         if verbose:
-            print(bright_green(f"Processed {file}"))
+            print(bright_green(f"Processed {filepath}"))
         return FileResult.MODIFIED
 
-    async def process_new_source(new_source: str) -> FileResult:
+    async def process_new_source(new_source: str, filepath: Path) -> FileResult:
         """ Process the new source as specified by the CLI arguments """
 
         # TODO add more styled output (e.g. colorized)
 
         if file_action is FileAction.DIFF:
 
-            display_diff_with_filename(old_source, new_source, str(file))
+            display_diff_with_filename(old_source, new_source, str(filepath))
             return FileResult.UNMODIFIED
 
         elif file_action is FileAction.WRITE:
 
             if old_source == new_source:
                 return FileResult.UNMODIFIED
-            return await write_source(file, new_source)
+            return await write_source(filepath, new_source)
 
         elif file_action is FileAction.CHECK:
 
             if old_source != new_source:
-                print(f"{file} needs reformat")
+                print(f"{filepath} needs reformat")
             return FileResult.UNMODIFIED
 
         elif file_action is FileAction.PRINT:
             divider = bright_yellow("-" * 79)
             print(divider)
-            print(file)
+            print(filepath)
             print(divider)
             print(new_source)
             print(divider)
@@ -615,9 +615,10 @@ async def absort_file(
 
     try:
 
-        old_source = await read_source(file)
+        filepath = Path(file)
+        old_source = await read_source(filepath)
         new_source = absort_source(old_source)
-        return await process_new_source(new_source)
+        return await process_new_source(new_source, filepath)
 
     except ABSortFail:
         return FileResult.FAILED
