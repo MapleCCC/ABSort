@@ -103,16 +103,16 @@ class AsyncPath:
         async with self.open(mode="r", encoding=encoding, errors=errors) as fp:
             return await fp.read()
 
-    async def read_bytes(self, encoding=None, errors=None) -> str:
-        async with self.open(mode="rb", encoding=encoding, errors=errors) as fp:
+    async def read_bytes(self, errors=None) -> str:
+        async with self.open(mode="rb", errors=errors) as fp:
             return await fp.read()
 
     async def write_text(self, data: str, encoding=None, errors=None) -> None:
         async with self.open(mode="w", encoding=encoding, errors=errors) as fp:
             await fp.write(data)
 
-    async def write_bytes(self, data: bytes, encoding=None, errors=None) -> None:
-        async with self.open(mode="wb", encoding=encoding, errors=errors) as fp:
+    async def write_bytes(self, data: bytes, errors=None) -> None:
+        async with self.open(mode="wb", errors=errors) as fp:
             await fp.write(data)
 
     async def copy(self, dst: Union[str, AsyncPath], *, follow_symlinks=True) -> None:
