@@ -11,11 +11,8 @@ from decimal import Decimal
 from functools import cache
 from itertools import combinations, zip_longest
 from numbers import Complex, Number
-from pathlib import Path
 from typing import IO, Any, Generic, TypeVar
 
-import aiofiles
-import aiofiles.os
 import attr
 from colorama import Fore, Style
 from more_itertools import UnequalIterablesError, zip_equal
@@ -50,11 +47,6 @@ __all__ = [
     "is_nan",
     "is_dtype",
     "maxmin",
-    "afilesize",
-    "adirsize",
-    "aread_text",
-    "aread_bytes",
-    "awrite_text",
 ]
 
 
@@ -497,35 +489,3 @@ def maxmin(*args, key=identityfunc, default=None):
         min_item = min(*args, key=key)
 
     return max_item, min_item
-
-
-async def afilesize(file: Path) -> int:
-    """ Return the size of a file, in bytes """
-
-    stat = await aiofiles.os.stat(file)
-    return stat.st_size
-
-
-async def adirsize(directory: Path) -> int:
-    """ Return the total size of a directory, in bytes """
-
-    if not directory.is_dir():
-        raise NotADirectoryError(f"{directory} is not a directory")
-
-    # TODO asynchronously gather filesizes, instead of sequentially waiting.
-    return sum(await afilesize(f) for f in directory.rglob("*"))
-
-
-async def aread_text(file: Path, encoding: str = "utf-8") -> str:
-    async with aiofiles.open(file, mode="r", encoding=encoding) as f:
-        return await f.read()
-
-
-async def aread_bytes(file: Path) -> bytes:
-    async with aiofiles.open(file, mode="rb") as f:
-        return await f.read()
-
-
-async def awrite_text(file: Path, text: str, encoding: str = "utf-8") -> None:
-    async with aiofiles.open(file, mode="w", encoding=encoding) as f:
-        await f.write(text)

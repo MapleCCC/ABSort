@@ -32,11 +32,6 @@ from .core import (
     absort_str,
 )
 from .utils import (
-    adirsize,
-    afilesize,
-    aread_bytes,
-    aread_text,
-    awrite_text,
     bright_green,
     bright_yellow,
     colorized_unified_diff,
@@ -533,15 +528,15 @@ async def absort_file(
         """Read source from the file, including exception handling"""
 
         try:
-            return await aread_text(filepath, encoding)
+            return await asyncio.to_thread(filepath.read_text, encoding)
         except UnicodeDecodeError:
             print(f"{filepath} is not decodable by {encoding}", file=sys.stderr)
             print(f"Try to automatically detect file encoding......", file=sys.stderr)
-            binary = await aread_bytes(filepath)
+            binary = await asyncio.to_thread(filepath.read_bytes)
             detected_encoding = cchardet.detect(binary)["encoding"]
 
             try:
-                return await aread_text(filepath, detected_encoding)
+                return await asyncio.to_thread(filepath.read_text, detected_encoding)
             except UnicodeDecodeError:
 
                 print(f"{filepath} has unknown encoding.", file=sys.stderr)
@@ -579,7 +574,7 @@ async def absort_file(
 
         await backup_to_cache(filepath)
 
-        await awrite_text(filepath, new_source, encoding)
+        await asyncio.to_thread(filepath.write_text, new_source, encoding)
         if verbose:
             print(bright_green(f"Processed {filepath}"))
         return FileResult.MODIFIED
@@ -645,8 +640,8 @@ async def backup_to_cache(file: Path) -> None:
     CACHE_DIR.mkdir(parents=True, exist_ok=True)
     readme = CACHE_DIR / "README"
     if not readme.exists():
-        await awrite_text(
-            readme,
+        await asyncio.to_thread(
+            readme.write_text,
             "This directory is a cache folder of the absort utility (https://github.com/MapleCCC/ABSort). "
             "It's used for precautious recovery purpose. It can be removed safely.",
             encoding="utf-8",
@@ -654,14 +649,14 @@ async def backup_to_cache(file: Path) -> None:
 
     shutil.copy2(file, backup_file)
 
-    if await adirsize(CACHE_DIR) > CACHE_MAX_SIZE:
+    if CACHE_DIR.stat().st_size > CACHE_MAX_SIZE:
         await shrink_cache()
 
 
 async def shrink_cache() -> None:
     """Shrink the size of cache to under threshold"""
 
-    shrink_target_size = CACHE_MAX_SIZE - await adirsize(CACHE_DIR)
+    shrink_target_size = CACHE_MAX_SIZE - CACHE_DIR.stat().st_size
 
     backup_filename_pattern = r".*\.(?P<timestamp>\d{14})\.backup"
 
@@ -676,10 +671,10 @@ async def shrink_cache() -> None:
         timestamp = m.group("timestamp")
         pq.push(file, priority=timestamp)
 
-        total_size += await afilesize(file)
+        total_size += file.stat().st_size
 
-        while pq and total_size - await afilesize(pq.top()) >= shrink_target_size:
-            total_size -= await afilesize(pq.pop())
+        while pq and total_size - pq.top().stat().st_size >= shrink_target_size:
+            total_size -= pq.top().stat().st_size
 
     for file in pq.to_iterator():
         await aiofiles.os.remove(file)
