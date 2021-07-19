@@ -677,7 +677,7 @@ async def shrink_cache() -> None:
             total_size -= pq.top().stat().st_size
 
     for file in pq.to_iterator():
-        await aiofiles.os.remove(file)
+        file.unlink()
 
 
 def display_diff_with_filename(
