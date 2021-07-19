@@ -5,22 +5,23 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import re
+import shutil
 import sys
 from collections import Counter
-from collections.abc import AsyncIterator, Iterable
+from collections.abc import Iterable, Iterator
 from datetime import datetime
 from enum import Enum, IntEnum, auto
+from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
 
+import aiofiles.os
 import cchardet
 import click
 from colorama import colorama_text
 from more_itertools import take
 
 from .__version__ import __version__
-from .aiopathlib import AsyncPath as Path
-from .async_utils import run_in_event_loop
 from .collections_extra import PriorityQueue
 from .core import (
     CommentStrategy,
@@ -31,6 +32,11 @@ from .core import (
     absort_str,
 )
 from .utils import (
+    adirsize,
+    afilesize,
+    aread_bytes,
+    aread_text,
+    awrite_text,
     bright_green,
     bright_yellow,
     colorized_unified_diff,
@@ -101,7 +107,7 @@ class BypassPromptLevel(IntEnum):
 #
 
 # Specify the location of the cache directory
-CACHE_DIR = Path.sync_home() / ".absort_cache"
+CACHE_DIR = Path.home() / ".absort_cache"
 # Specify the maximum size threshold for the cache directory (in bytes)
 CACHE_MAX_SIZE = 400000  # unit is byte
 
@@ -371,7 +377,7 @@ def main(
         if not ans:
             bypass_prompt = BypassPromptLevel.NO
 
-    files = list(collect_python_files(map(Path, filepaths)))
+    files = list(collect_python_files(filepaths))
     if not files:
         print("No file is found")
         return
@@ -447,25 +453,27 @@ def validate_args(options: SimpleNamespace) -> None:
         )
 
 
-@run_in_event_loop
-async def collect_python_files(filepaths: Iterable[Path]) -> AsyncIterator[Path]:
+# TODO use multi-thread to accelerate
+def collect_python_files(filepaths: Iterable[str]) -> Iterator[str]:
     """ Yield python files searched from the given paths """
 
     for filepath in filepaths:
-        if not await filepath.exists():
+        filepath = Path(filepath)
+
+        if not filepath.exists():
             print(f'File "{filepath}" doesn\'t exist. Skipped.', file=sys.stderr)
-        elif await filepath.is_file():
+
+        elif filepath.is_file():
 
             # We don't test file suffix, because it's possible user explicitly enters an
             # input file that contains Python code but doesn't have `.py` extension.
             # If it doesn't contain Python code, a SyntaxError will be raised from other
             # part of the code and handled by exception handling routines anyway.
-            yield filepath
+            yield str(filepath)
 
-        elif await filepath.is_dir():
-
-            async for p in filepath.rglob("*.py"):
-                yield p
+        elif filepath.is_dir():
+            for fp in filepath.rglob("*.py"):
+                yield str(fp)
 
         else:
             raise NotImplementedError
@@ -525,15 +533,15 @@ async def absort_file(
         """ Read source from the file, including exception handling """
 
         try:
-            return await filepath.read_text(encoding)
+            return await aread_text(filepath, encoding)
         except UnicodeDecodeError:
             print(f"{filepath} is not decodable by {encoding}", file=sys.stderr)
             print(f"Try to automatically detect file encoding......", file=sys.stderr)
-            binary = await filepath.read_bytes()
+            binary = await aread_bytes(filepath)
             detected_encoding = cchardet.detect(binary)["encoding"]
 
             try:
-                return await filepath.read_text(detected_encoding)
+                return await aread_text(filepath, detected_encoding)
             except UnicodeDecodeError:
 
                 print(f"{filepath} has unknown encoding.", file=sys.stderr)
@@ -571,7 +579,7 @@ async def absort_file(
 
         await backup_to_cache(filepath)
 
-        await filepath.write_text(new_source, encoding)
+        await awrite_text(filepath, new_source, encoding)
         if verbose:
             print(bright_green(f"Processed {filepath}"))
         return FileResult.MODIFIED
@@ -634,32 +642,33 @@ async def backup_to_cache(file: Path) -> None:
     timestamp = generate_timestamp()
     backup_file = CACHE_DIR / (file.name + "." + timestamp + ".backup")
 
-    await CACHE_DIR.mkdir(parents=True, exist_ok=True)
+    CACHE_DIR.mkdir(parents=True, exist_ok=True)
     readme = CACHE_DIR / "README"
-    if not await readme.exists():
-        await readme.write_text(
+    if not readme.exists():
+        await awrite_text(
+            readme,
             "This directory is a cache folder of the absort utility (https://github.com/MapleCCC/ABSort). "
             "It's used for precautious recovery purpose. It can be removed safely.",
             encoding="utf-8",
         )
 
-    await file.copy2(backup_file)
+    shutil.copy2(file, backup_file)
 
-    if await CACHE_DIR.dirsize() > CACHE_MAX_SIZE:
+    if await adirsize(CACHE_DIR) > CACHE_MAX_SIZE:
         await shrink_cache()
 
 
 async def shrink_cache() -> None:
     """ Shrink the size of cache to under threshold """
 
-    shrink_target_size = CACHE_MAX_SIZE - await CACHE_DIR.dirsize()
+    shrink_target_size = CACHE_MAX_SIZE - await adirsize(CACHE_DIR)
 
     backup_filename_pattern = r".*\.(?P<timestamp>\d{14})\.backup"
 
     total_size = 0
     pq = PriorityQueue(reverse=True)  # type: PriorityQueue[Path]
 
-    async for file in CACHE_DIR.iterdir():
+    for file in CACHE_DIR.iterdir():
         m = re.fullmatch(backup_filename_pattern, file.name)
         if not m:
             continue
@@ -667,13 +676,13 @@ async def shrink_cache() -> None:
         timestamp = m.group("timestamp")
         pq.push(file, priority=timestamp)
 
-        total_size += await file.size()
+        total_size += await afilesize(file)
 
-        while pq and total_size - await pq.top().size() >= shrink_target_size:
+        while pq and total_size - await afilesize(pq.top()) >= shrink_target_size:
             pq.pop()
 
     for file in pq.to_iterator():
-        await file.unlink()
+        await aiofiles.os.remove(file)
 
 
 def display_diff_with_filename(
