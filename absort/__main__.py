@@ -679,7 +679,7 @@ async def shrink_cache() -> None:
         total_size += await afilesize(file)
 
         while pq and total_size - await afilesize(pq.top()) >= shrink_target_size:
-            pq.pop()
+            total_size -= await afilesize(pq.pop())
 
     for file in pq.to_iterator():
         await aiofiles.os.remove(file)
