@@ -481,7 +481,10 @@ def is_dtype(x: Any) -> bool:
 def maxmin(*args, key=identityfunc, default=None):
     """ Mimic the builtin divmod() function """
 
-    if len(args) <= 1:
+    if not args:
+        raise TypeError("maxmin expected at least 1 argument, got 0")
+    elif len(args) == 1:
+        # args[0] should be an iterable
         max_item = max(*args, key=key, default=default)
         min_item = min(*args, key=key, default=default)
     else:
