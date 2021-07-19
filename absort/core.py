@@ -5,7 +5,7 @@ from functools import partial
 from itertools import chain, combinations
 
 import attr
-from more_itertools import first_true
+from more_itertools import first_true, flatten
 
 from .__version__ import __version__
 from .ast_utils import (
@@ -239,7 +239,7 @@ def absort_decls(
 
     if sort_order is SortOrder.TOPOLOGICAL:
         sccs = ireverse(graph.strongly_connected_components())
-        sorted_names = list(chain(*(same_abstract_level_sorter(scc) for scc in sccs)))
+        sorted_names = list(flatten(same_abstract_level_sorter(scc) for scc in sccs))
 
     elif sort_order in (SortOrder.DEPTH_FIRST, SortOrder.BREADTH_FIRST):
         if sort_order is SortOrder.DEPTH_FIRST:

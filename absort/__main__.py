@@ -10,7 +10,6 @@ from collections import Counter
 from collections.abc import AsyncIterator, Iterable
 from datetime import datetime
 from enum import Enum, IntEnum, auto
-from operator import methodcaller
 from types import SimpleNamespace
 from typing import Any
 
@@ -34,7 +33,7 @@ from .core import (
 from .utils import (
     bright_green,
     bright_yellow,
-    colored_unified_diff,
+    colorized_unified_diff,
     identityfunc,
     no_color_context,
     silent_context,
@@ -629,7 +628,8 @@ async def backup_to_cache(file: Path) -> None:
 
     def generate_timestamp() -> str:
         now = str(datetime.now())
-        return "".join(take(14, filter(methodcaller("isdigit"), now)))
+        digits = (char for char in now if char.isdigit())
+        return "".join(take(14, digits))
 
     timestamp = generate_timestamp()
     backup_file = CACHE_DIR / (file.name + "." + timestamp + ".backup")
@@ -687,11 +687,11 @@ def display_diff_with_filename(
     fromfile = "old/" + filename if filename else ""
     tofile = "new/" + filename if filename else ""
 
-    diff_view_lines = colored_unified_diff(
+    diff_view_lines = colorized_unified_diff(
         old_src_lines, new_src_lines, fromfile, tofile
     )
 
-    print("".join(diff_view_lines), end="")
+    print(*diff_view_lines, sep="", end="")
     print("\n", end="")
 
 

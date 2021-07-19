@@ -365,3 +365,4 @@ if __name__ == "__main__":
     print(list(g.bfs("0")))
     print(list(g.dfs("0")))
     print(list(g.topological_sort()))
+    print(list(g.strongly_connected_components()))

@@ -27,7 +27,7 @@ __all__ = [
     "bright_green",
     "bright_blue",
     "bright_yellow",
-    "colored_unified_diff",
+    "colorized_unified_diff",
     "cached_splitlines",
     "silent_context",
     "Logger",
@@ -124,7 +124,7 @@ def bright_yellow(s: str) -> str:
     return Style.BRIGHT + Fore.YELLOW + s + Style.RESET_ALL  # type: ignore
 
 
-def colored_unified_diff(
+def colorized_unified_diff(
     a: list[str], b: list[str], *args: Any, **kwargs: Any
 ) -> Iterator[str]:
     """ Return unified diff view between a and b, with color """
@@ -440,7 +440,7 @@ def no_color_context() -> Iterator[None]:
     Utilities supporting the NO_COLOR movement (https://no-color.org/) should automatically adjust their color output behavior.
     """
 
-    orig_value = os.environ.get("NO_COLOR", None)
+    orig_value = os.environ.get("NO_COLOR")
     os.environ["NO_COLOR"] = "true"
 
     try:

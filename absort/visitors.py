@@ -131,17 +131,11 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
 
     def visit_Import(self, node: ast.Import) -> None:
         for name in node.names:
-            if name.asname:
-                self._namespaces[-1][name.asname] = BogusNode()
-            else:
-                self._namespaces[-1][name.name] = BogusNode()
+            self._namespaces[-1][name.asname or name.name] = BogusNode()
 
     def visit_ImportFrom(self, node: ast.ImportFrom) -> None:
         for name in node.names:
-            if name.asname:
-                self._namespaces[-1][name.asname] = BogusNode()
-            else:
-                self._namespaces[-1][name.name] = BogusNode()
+            self._namespaces[-1][name.asname or name.name] = BogusNode()
 
     def visit_Global(self, node: ast.Global) -> None:
         for name in node.names:
@@ -193,14 +187,17 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
         if isinstance(node.ctx, ast.Load):
             if not self._symbol_lookup(node.id):
                 self._undefined_vars.add(node.id)
+
         elif isinstance(node.ctx, ast.Store):
             # TODO if we found the symbol, should we update it in the namespace?
             if not self._symbol_lookup(node.id):
                 self._namespaces[-1][node.id] = node
+
         elif isinstance(node.ctx, ast.Del):
             for namespace in reversed(self._namespaces):
                 if node.id in namespace:
                     del namespace[node.id]
                     break
+
         else:
             raise Unreachable
