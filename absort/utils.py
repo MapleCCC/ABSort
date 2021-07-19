@@ -483,12 +483,17 @@ def maxmin(*args, key=identityfunc, default=None):
 
     if not args:
         raise TypeError("maxmin expected at least 1 argument, got 0")
-    elif len(args) == 1:
-        # args[0] should be an iterable
-        max_item = max(*args, key=key, default=default)
-        min_item = min(*args, key=key, default=default)
-    else:
-        max_item = max(*args, key=key)
-        min_item = min(*args, key=key)
 
-    return max_item, min_item
+    seq = args[0] if len(args) == 1 else args
+
+    curr_max = default
+    curr_min = default
+
+    for elem in seq:
+        elem_key = key(elem)
+        if elem_key > key(curr_max):
+            curr_max = elem
+        elif elem_key < key(curr_min):
+            curr_min = elem
+
+    return curr_max, curr_min
