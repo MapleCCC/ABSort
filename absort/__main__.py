@@ -72,7 +72,7 @@ except NameError:
 
 
 class FileAction(Enum):
-    """ An enumeration to specify different kinds of file actions """
+    """An enumeration to specify different kinds of file actions"""
 
     CHECK = auto()
     DIFF = auto()
@@ -81,7 +81,7 @@ class FileAction(Enum):
 
 
 class FileResult(Enum):
-    """ An enumeration to specify different kinds of file results """
+    """An enumeration to specify different kinds of file results"""
 
     UNMODIFIED = "unmodified"
     MODIFIED = "modified"
@@ -89,7 +89,7 @@ class FileResult(Enum):
 
 
 class BypassPromptLevel(IntEnum):
-    """ An enumeration to specify different bypass-prompt levels """
+    """An enumeration to specify different bypass-prompt levels"""
 
     NO = 0
     LOW = 1
@@ -125,11 +125,11 @@ CACHE_MAX_SIZE = 400000  # unit is byte
 
 
 class ABSortFail(Exception):
-    """ An exception to signal that sorting fails """
+    """An exception to signal that sorting fails"""
 
 
 class MutuallyExclusiveOptions(Exception):
-    """ An exception to signal that two or more mutually exclusive CLI options are set """
+    """An exception to signal that two or more mutually exclusive CLI options are set"""
 
 
 #
@@ -138,7 +138,7 @@ class MutuallyExclusiveOptions(Exception):
 
 
 class CommentStrategyParamType(click.ParamType):
-    """ A parameter type for the --comment-strategy CLI option """
+    """A parameter type for the --comment-strategy CLI option"""
 
     name = "comment_strategy"
 
@@ -156,7 +156,7 @@ class CommentStrategyParamType(click.ParamType):
 
 
 class PyVersionParamType(click.ParamType):
-    """ A parameter type for the --py-version CLI option """
+    """A parameter type for the --py-version CLI option"""
 
     name = "py_version"
 
@@ -188,7 +188,7 @@ class PyVersionParamType(click.ParamType):
 
 
 class BypassPromptParamType(click.ParamType):
-    """ A parameter type for the --yes CLI option """
+    """A parameter type for the --yes CLI option"""
 
     name = "bypass_prompt"
 
@@ -345,7 +345,7 @@ def main(
     bfs: bool,
     separate_class_and_function: bool,
 ) -> None:
-    """ the CLI entry """
+    """the CLI entry"""
 
     options = SimpleNamespace(**ctx.params)
     validate_args(options)
@@ -429,7 +429,7 @@ def main(
 
 
 def validate_args(options: SimpleNamespace) -> None:
-    """ Preliminary check of the validness of the CLI argument """
+    """Preliminary check of the validness of the CLI argument"""
 
     # FIXME use click library's builtin mechanism to specify mutually exclusive options
 
@@ -455,7 +455,7 @@ def validate_args(options: SimpleNamespace) -> None:
 
 # TODO use multi-thread to accelerate
 def collect_python_files(filepaths: Iterable[str]) -> Iterator[str]:
-    """ Yield python files searched from the given paths """
+    """Yield python files searched from the given paths"""
 
     for filepath in filepaths:
         filepath = Path(filepath)
@@ -490,7 +490,7 @@ def absort_files(
     format_option: FormatOption = FormatOption(),
     sort_order: SortOrder = SortOrder.TOPOLOGICAL,
 ) -> Counter[FileResult]:
-    """ Sort a list of files """
+    """Sort a list of files"""
 
     # TODO use multi-processing to boost speed of handling a bunch of files (CPU-bound parts)
 
@@ -527,10 +527,10 @@ async def absort_file(
     format_option: FormatOption = FormatOption(),
     sort_order: SortOrder = SortOrder.TOPOLOGICAL,
 ) -> FileResult:
-    """ Sort the source in the given file """
+    """Sort the source in the given file"""
 
     async def read_source(filepath: Path) -> str:
-        """ Read source from the file, including exception handling """
+        """Read source from the file, including exception handling"""
 
         try:
             return await aread_text(filepath, encoding)
@@ -548,7 +548,7 @@ async def absort_file(
                 raise ABSortFail
 
     def absort_source(old_source: str) -> str:
-        """ Sort the source in string, including exception handling """
+        """Sort the source in string, including exception handling"""
 
         try:
             return absort_str(
@@ -568,7 +568,7 @@ async def absort_file(
             raise ABSortFail
 
     async def write_source(filepath: Path, new_source: str) -> FileResult:
-        """ Write the new source to the file, prompt for confirmation and make backup """
+        """Write the new source to the file, prompt for confirmation and make backup"""
 
         if bypass_prompt < BypassPromptLevel.LOW:
             ans = click.confirm(
@@ -585,7 +585,7 @@ async def absort_file(
         return FileResult.MODIFIED
 
     async def process_new_source(new_source: str, filepath: Path) -> FileResult:
-        """ Process the new source as specified by the CLI arguments """
+        """Process the new source as specified by the CLI arguments"""
 
         # TODO add more styled output (e.g. colorized)
 
@@ -632,7 +632,7 @@ async def absort_file(
 
 
 async def backup_to_cache(file: Path) -> None:
-    """ Make a backup of the file, put in the cache """
+    """Make a backup of the file, put in the cache"""
 
     def generate_timestamp() -> str:
         now = str(datetime.now())
@@ -659,7 +659,7 @@ async def backup_to_cache(file: Path) -> None:
 
 
 async def shrink_cache() -> None:
-    """ Shrink the size of cache to under threshold """
+    """Shrink the size of cache to under threshold"""
 
     shrink_target_size = CACHE_MAX_SIZE - await adirsize(CACHE_DIR)
 
@@ -688,7 +688,7 @@ async def shrink_cache() -> None:
 def display_diff_with_filename(
     old_src: str, new_src: str, filename: str = None
 ) -> None:
-    """ Display diff view between old source and new source """
+    """Display diff view between old source and new source"""
 
     old_src_lines = old_src.splitlines(keepends=True)
     new_src_lines = new_src.splitlines(keepends=True)
@@ -705,7 +705,7 @@ def display_diff_with_filename(
 
 
 def display_summary(digest: Counter[FileResult]) -> None:
-    """ Display the succint summary of the sorting process """
+    """Display the succint summary of the sorting process"""
 
     summary = []
     for file_result, count in digest.items():
