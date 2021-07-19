@@ -105,6 +105,7 @@ class BypassPromptLevel(IntEnum):
 CACHE_DIR = Path.home() / ".absort_cache"
 # Specify the maximum size threshold for the cache directory (in bytes)
 CACHE_MAX_SIZE = 400000  # unit is byte
+CACHE_DIR_LOCK = asyncio.Lock()
 
 #
 # Type Annotations
@@ -572,7 +573,8 @@ async def absort_file(
             if not ans:
                 return FileResult.UNMODIFIED
 
-        await backup_to_cache(filepath)
+        async with CACHE_DIR_LOCK:
+            await backup_to_cache(filepath)
 
         await asyncio.to_thread(filepath.write_text, new_source, encoding)
         if verbose:
