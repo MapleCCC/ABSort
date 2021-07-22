@@ -15,7 +15,6 @@ from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
 
-import aiofiles.os
 import cchardet
 import click
 from colorama import colorama_text
@@ -166,12 +165,14 @@ class PyVersionParamType(click.ParamType):
 
         try:
             m = re.fullmatch(r"(?P<major>\d+)\.(?P<minor>\d+)", value)
+            if not m:
+                raise ValueError
             version = int(m.group("major")), int(m.group("minor"))
             if version not in valid_py_versions:
                 raise ValueError
             return version
 
-        except (AttributeError, ValueError):
+        except ValueError:
             stringfy_valid_py_versions = ", ".join(
                 f"{x}.{y}" for x, y in valid_py_versions
             )
@@ -203,9 +204,8 @@ class BypassPromptParamType(click.ParamType):
 # TODO add -V as short option of --version
 @click.command(
     name="absort",
-    help="A command line utility to sort Python source code by abstraction levels",
-    no_args_is_help=True,  # type: ignore
-    context_settings=dict(help_option_names=["-h", "--help", "/?"]),
+    no_args_is_help=True,
+    context_settings={"help_option_names":["-h", "--help", "/?"]},
     epilog="While the tool is in the experimental stage, all files are backuped to a local cache before processing. "
     "If something goes wrong or regret hits you, it's always possible to safely recover the original files. "
     'The location of the backup cache is "~/.absort_cache".',
@@ -341,7 +341,7 @@ def main(
     bfs: bool,
     separate_class_and_function: bool,
 ) -> None:
-    """the CLI entry"""
+    """A command line utility to sort Python source code by abstraction levels"""
 
     options = SimpleNamespace(**ctx.params)
     validate_args(options)
