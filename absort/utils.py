@@ -413,7 +413,7 @@ def memoization(
             self._cache.clear()
 
         def cache_info(self) -> CacheInfo:
-            return CacheInfo(self._hit, self._miss, len(self._cache))  # type: ignore # Pyright doesn't yet support attrs
+            return CacheInfo(self._hit, self._miss, len(self._cache))
 
     return decorator  # type: ignore
 

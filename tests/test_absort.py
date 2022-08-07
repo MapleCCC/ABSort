@@ -59,7 +59,7 @@ class Option:
 
 all_comment_strategies = list(CommentStrategy)
 all_format_options = [
-    FormatOption(*p)  # type: ignore
+    FormatOption(*p)
     for p in product(*([(True, False)] * len(attrs.fields(FormatOption))))
 ]
 all_sort_orders = list(SortOrder)

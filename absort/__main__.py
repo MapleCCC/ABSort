@@ -379,7 +379,7 @@ def main(
         return
     print(f"Found {len(files)} files")
 
-    format_option = FormatOption(  # type: ignore
+    format_option = FormatOption(
         no_aggressive=no_aggressive,
         reverse=reverse,
         no_fix_main_to_bottom=no_fix_main_to_bottom,

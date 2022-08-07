@@ -70,7 +70,7 @@ def cache_with_key(
             return self._cache
 
         def cache_info(self) -> CacheInfo:
-            return CacheInfo(self._hit, self._miss, maxsize, self._cache.size)  # type: ignore
+            return CacheInfo(self._hit, self._miss, maxsize, self._cache.size)
 
         def clear_cache(self) -> None:
             self._cache.clear()

@@ -103,7 +103,7 @@ class UnionFind(Generic[T]):
         self._table = {}
 
         for elem in elements:
-            node = UnionFindNode(elem, parent=None)  # type: ignore
+            node = UnionFindNode(elem, parent=None)
             node.parent = node
             self._table[elem] = node
 
