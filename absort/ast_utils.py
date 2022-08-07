@@ -5,7 +5,6 @@ from collections import deque
 from collections.abc import Iterator
 from functools import cache
 from numbers import Number
-from typing import Optional, Union
 
 from .treedist import pqgram, zhangshasha
 from .utils import (
@@ -73,7 +72,7 @@ def ast_ordered_walk(node: ast.AST) -> Iterator[ast.AST]:
         yield from ast_ordered_walk(child)
 
 
-def ast_strip_location_info(node: ast.AST, in_place: bool = True) -> Optional[ast.AST]:
+def ast_strip_location_info(node: ast.AST, in_place: bool = True) -> ast.AST | None:
     """ Strip location info from AST nodes, recursively """
 
     if not in_place:
@@ -423,12 +422,12 @@ ast_node_class_fields_table = {
 # Reference: https://docs.python.org/3/library/ast.html#abstract-grammar
 Terminals = ("identifier", "int", "string", "constant")
 # Reference: https://docs.python.org/3/library/ast.html#ast.Constant
-TerminalType = Union[str, Number, None, tuple, frozenset]
+TerminalType = str | Number | None | tuple | frozenset
 
 
 def ast_iter_non_node_fields(
     node: ast.AST,
-) -> Iterator[Union[TerminalType, list[TerminalType], None]]:
+) -> Iterator[TerminalType | list[TerminalType] | None]:
     """ Complement of the ast.iter_child_nodes function """
 
     class_name = node.__class__.__name__

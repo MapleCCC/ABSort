@@ -3,7 +3,7 @@ from collections.abc import Callable, Hashable, Iterable, Iterator
 from functools import partial
 from itertools import chain
 from types import SimpleNamespace
-from typing import Any, Optional, TypeVar, Union
+from typing import Any, TypeVar
 
 import attrs
 
@@ -25,7 +25,7 @@ S = TypeVar("S")
 
 # TODO Add more cache replacement policy implementation
 def cache_with_key(
-    key: Callable[..., Hashable], maxsize: Optional[int] = 128, policy: str = "LRU"
+    key: Callable[..., Hashable], maxsize: int | None = 128, policy: str = "LRU"
 ) -> Callable[[Callable[..., T]], Callable[..., T]]:
     """
     It's like the builtin `functools.lru_cache`, except that it provides customization
@@ -66,7 +66,7 @@ def cache_with_key(
                 return result
 
         @property
-        def __cache__(self) -> Union[LRU, LFU]:
+        def __cache__(self) -> LRU | LFU:
             return self._cache
 
         def cache_info(self) -> CacheInfo:

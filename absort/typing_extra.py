@@ -1,6 +1,6 @@
 import ast
 from abc import abstractmethod
-from typing import Any, Protocol, TypeVar, Union
+from typing import Any, Protocol, TypeVar
 
 
 __all__ = [
@@ -13,10 +13,10 @@ __all__ = [
 
 
 Declaration = (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)
-DeclarationType = Union[ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef]
+DeclarationType = ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef
 
 Decoratable = (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)
-DecoratableType = Union[ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef]
+DecoratableType = ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef
 
 
 CT = TypeVar("CT", bound="Comparable")

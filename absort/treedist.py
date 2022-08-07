@@ -2,7 +2,7 @@ from collections import Counter, deque
 from collections.abc import Callable, Hashable, Iterable
 from functools import cache
 from itertools import repeat
-from typing import TypeVar, Union, cast
+from typing import TypeVar, cast
 
 from .utils import (
     constantfunc,
@@ -147,7 +147,7 @@ except ImportError:
 Label = TypeVar("Label", bound=Hashable)
 LabelTuple = tuple[Label, ...]
 Register = deque[Label]
-Index = Counter[Union[int, LabelTuple[Label]]]
+Index = Counter[int | LabelTuple[Label]]
 
 DUMMY_LABEL = object()
 

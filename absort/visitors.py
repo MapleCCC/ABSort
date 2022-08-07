@@ -1,6 +1,5 @@
 import ast
 from collections.abc import Sequence
-from typing import Optional, Union
 
 from .exceptions import Unreachable
 from .utils import identityfunc
@@ -53,7 +52,7 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
 
     __slots__ = ("_undefined_vars", "_namespaces", "_py_version")
 
-    def _symbol_lookup(self, name: str) -> Optional[ast.AST]:
+    def _symbol_lookup(self, name: str) -> ast.AST | None:
         for namespace in reversed(self._namespaces):
             if name in namespace:
                 return namespace[name]
@@ -63,7 +62,7 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
         super().visit(node)
         return self._undefined_vars
 
-    def _visit(self, obj: Union[Sequence[ast.AST], Optional[ast.AST]]) -> None:
+    def _visit(self, obj: ast.AST | Sequence[ast.AST] | None) -> None:
         """
         A handy helper method that can accept either an ast node, or None, or a list of ast nodes.
         This method is aimed to simplify programming, relieving wordy code.
@@ -147,7 +146,7 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
 
     def _visit_comprehension(
         self,
-        node: Union[ast.ListComp, ast.SetComp, ast.DictComp, ast.GeneratorExp],
+        node: ast.ListComp | ast.SetComp | ast.DictComp | ast.GeneratorExp,
         elt: ast.expr,
     ) -> None:
         """

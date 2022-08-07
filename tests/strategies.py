@@ -4,7 +4,7 @@ This module contains a collection of hypothesis strategies for convenient use.
 
 from collections.abc import Hashable, Sequence
 from itertools import combinations, permutations
-from typing import TypeVar, Union
+from typing import TypeVar
 
 from hypothesis.strategies import (
     SearchStrategy,
@@ -62,7 +62,7 @@ def nodes() -> SearchStrategy:
     return hashables().filter(filter_func)
 
 
-Graph = Union[DirectedGraph, WeightedGraph]
+Graph = DirectedGraph | WeightedGraph
 
 
 @composite

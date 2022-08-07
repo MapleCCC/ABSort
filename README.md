@@ -131,7 +131,7 @@ Options:
 
   --py PY_VERSION                 Specify the version of Python abstract
                                   grammar being used in parsing input files.
-                                  [default: 3.9]
+                                  [default: 3.10]
 
   -q, --quiet                     Suppress all output except the error
                                   channel. To also suppress error channel
@@ -204,7 +204,7 @@ print(add_three(1))
 
 ## Installation
 
-Prerequisite: Python>=3.9
+Prerequisite: Python>=3.10
 
 You may consider optionally installing [uvloop](https://github.com/magicstack/uvloop) and [orderedsort](https://github.com/simonpercivall/orderedset) to boost speed.
 

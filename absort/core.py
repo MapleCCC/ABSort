@@ -106,7 +106,7 @@ class FormatOption:
 @profile  # type: ignore
 def absort_str(
     old_source: str,
-    py_version: PyVersion = (3, 9),
+    py_version: PyVersion = (3, 10),
     comment_strategy: CommentStrategy = CommentStrategy.ATTR_FOLLOW_DECL,
     format_option: FormatOption = FormatOption(),
     sort_order: SortOrder = SortOrder.TOPOLOGICAL,
