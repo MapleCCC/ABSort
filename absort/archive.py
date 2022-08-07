@@ -5,7 +5,7 @@ from itertools import chain
 from types import SimpleNamespace
 from typing import Any, Optional, TypeVar, Union
 
-import attr
+import attrs
 
 from .lfu import LFU
 from .lru import LRU
@@ -32,7 +32,7 @@ def cache_with_key(
     space for the key calculating method and the cache replacement policy.
     """
 
-    @attr.s(auto_attribs=True)
+    @attrs.define
     class CacheInfo:
         hit: int = 0
         miss: int = 0

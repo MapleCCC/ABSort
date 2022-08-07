@@ -7,7 +7,7 @@ import sys
 from itertools import product
 from pathlib import Path
 
-import attr
+import attrs
 from hypothesis import given, settings
 from hypothesis.strategies import sampled_from
 
@@ -46,7 +46,7 @@ if os.getenv("CI") and os.getenv("TRAVIS"):
 TEST_FILES = list(STDLIB_DIR.rglob("*.py"))
 
 
-@attr.s(auto_attribs=True)
+@attrs.define
 class Option:
     comment_strategy: CommentStrategy
     format_option: FormatOption
@@ -60,7 +60,7 @@ class Option:
 all_comment_strategies = list(CommentStrategy)
 all_format_options = [
     FormatOption(*p)  # type: ignore
-    for p in product(*([(True, False)] * len(attr.fields(FormatOption))))
+    for p in product(*([(True, False)] * len(attrs.fields(FormatOption))))
 ]
 all_sort_orders = list(SortOrder)
 
@@ -76,9 +76,9 @@ arg_options = constantfunc(
 def test_absort_str(test_sample: Path, option: Option) -> None:
     try:
         source = test_sample.read_text(encoding="utf-8")
-        new_source = absort_str(source, **attr.asdict(option, recurse=False))
+        new_source = absort_str(source, **attrs.asdict(option, recurse=False))
 
-        second_run_new_source = absort_str(source, **attr.asdict(option, recurse=False))
+        second_run_new_source = absort_str(source, **attrs.asdict(option, recurse=False))
         # Check that absort is deterministic and stable
         assert new_source == second_run_new_source
 

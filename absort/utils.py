@@ -13,7 +13,7 @@ from itertools import combinations, zip_longest
 from numbers import Complex, Number
 from typing import IO, Any, Generic, TypeVar
 
-import attr
+import attrs
 from colorama import Fore, Style
 from more_itertools import UnequalIterablesError, zip_equal
 
@@ -374,7 +374,7 @@ def memoization(
     if key is None:
         return cache
 
-    @attr.s(auto_attribs=True)
+    @attrs.define
     class CacheInfo:
         hit: int = 0
         miss: int = 0

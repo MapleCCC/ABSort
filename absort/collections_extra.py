@@ -8,7 +8,7 @@ from itertools import repeat
 from operator import attrgetter
 from typing import Generic, TypeVar
 
-import attr
+import attrs
 
 from .typing_extra import Comparable
 from .utils import maxmin
@@ -91,7 +91,7 @@ class OrderedFrozenSet(Set[T]):
         return hash(tuple(self._data))
 
 
-@attr.s(auto_attribs=True, slots=True)
+@attrs.define
 class UnionFindNode(Generic[T]):
     item: T
     parent: UnionFindNode[T]

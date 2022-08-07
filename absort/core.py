@@ -4,7 +4,7 @@ from enum import Enum, auto
 from functools import partial
 from itertools import chain, combinations
 
-import attr
+import attrs
 from more_itertools import first_true, flatten
 
 from .__version__ import __version__
@@ -90,7 +90,7 @@ class NameRedefinition(Exception):
 #
 
 
-@attr.s(auto_attribs=True, frozen=True)
+@attrs.frozen
 class FormatOption:
     no_aggressive: bool = False
     reverse: bool = False
