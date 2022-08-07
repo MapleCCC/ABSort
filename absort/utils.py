@@ -88,7 +88,7 @@ def bright_red(s: str) -> str:
     if "NO_COLOR" in os.environ:
         return s
 
-    return Style.BRIGHT + Fore.RED + s + Style.RESET_ALL  # type: ignore
+    return Style.BRIGHT + Fore.RED + s + Style.RESET_ALL
 
 
 def bright_green(s: str) -> str:
@@ -99,7 +99,7 @@ def bright_green(s: str) -> str:
     if "NO_COLOR" in os.environ:
         return s
 
-    return Style.BRIGHT + Fore.GREEN + s + Style.RESET_ALL  # type: ignore
+    return Style.BRIGHT + Fore.GREEN + s + Style.RESET_ALL
 
 
 def bright_blue(s: str) -> str:
@@ -110,7 +110,7 @@ def bright_blue(s: str) -> str:
     if "NO_COLOR" in os.environ:
         return s
 
-    return Style.BRIGHT + Fore.BLUE + s + Style.RESET_ALL  # type: ignore
+    return Style.BRIGHT + Fore.BLUE + s + Style.RESET_ALL
 
 
 def bright_yellow(s: str) -> str:
@@ -121,7 +121,7 @@ def bright_yellow(s: str) -> str:
     if "NO_COLOR" in os.environ:
         return s
 
-    return Style.BRIGHT + Fore.YELLOW + s + Style.RESET_ALL  # type: ignore
+    return Style.BRIGHT + Fore.YELLOW + s + Style.RESET_ALL
 
 
 def colorized_unified_diff(
