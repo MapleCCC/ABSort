@@ -8,7 +8,8 @@ from string import whitespace
 from typing import cast
 
 import attrs
-from more_itertools import first_true, flatten
+from more_itertools import flatten
+from recipes.operator import in_
 from typing_extensions import assert_never
 
 from .__version__ import __version__
@@ -209,7 +210,7 @@ def absort_decls(
 ) -> Iterator[DeclarationType]:
     """ Sort a continguous block of declarations """
 
-    def same_abstract_level_sorter(names: Iterable[str]) -> Iterable[str]:
+    def same_abstract_level_sorter(names: Iterable[str]) -> Iterator[str]:
         """ Specify how to sort declarations within the same abstract level """
 
         # If the `--no-aggressive` option is set, sort by retaining their original relative
@@ -228,14 +229,12 @@ def absort_decls(
         # 2. sophisticated way: syntax tree similarity. E.g., the classic Zhange-Shaha algorithm.
 
         if format_option.no_aggressive:
-            decl_name_inverse_index = {name: idx for idx, name in enumerate(decl_names)}
-            return sorted(names, key=lambda name: decl_name_inverse_index[name])
+            return filter(in_(set(names)), decl_names)
 
         else:
             # Sort by putting two visually similar definitions together
 
-            name_lookup_table = {decl.name: decl for decl in decls}
-            same_level_decls = [name_lookup_table[name] for name in names]
+            same_level_decls = [index[name] for name in names]
             sorted_decls = sort_decls_by_syntax_tree_similarity(same_level_decls)
             return (decl.name for decl in sorted_decls)
 
@@ -256,6 +255,8 @@ def absort_decls(
     decl_names = [decl.name for decl in decls]
     if duplicated(decl_names):
         raise NameRedefinition("Name redefinition exists. Not supported yet.")
+
+    index = {decl.name: decl for decl in decls}
 
     graph = generate_dependency_graph(decls, py_version)
 
@@ -308,11 +309,7 @@ def absort_decls(
     # Sanity check
     assert len(sorted_names) == len(decl_names) and set(sorted_names) == set(decl_names)
 
-    # There is always one, and only one, decl that matches the name, we use
-    # short-circuit to optimize.
-    for name in sorted_names:
-        name_matcher = lambda decl: decl.name == name
-        yield cast(DeclarationType, first_true(decls, pred=name_matcher))
+    return [index[name] for name in sorted_names]
 
 
 def sort_decls_by_syntax_tree_similarity(
