@@ -364,7 +364,9 @@ def get_related_source_lines_of_block(
 
     for decl in decls:
 
-        related_source_lines = get_related_source_lines_of_decl(source, decl)
+        related_source_lines = ast_get_leading_comment_and_decorator_list_source_lines(
+            source, decl
+        ) + ast_get_source_lines(source, decl)
 
         if not format_option.aggressive:
             source_lines += related_source_lines
@@ -392,16 +394,5 @@ def get_related_source_lines_of_block(
 
         else:
             source_lines += related_source_lines
-
-    return source_lines
-
-
-def get_related_source_lines_of_decl(source: str, node: ast.AST) -> list[str]:
-    """ Retrieve source lines corresponding to the AST node, from the source """
-
-    source_lines = []
-
-    source_lines += ast_get_leading_comment_and_decorator_list_source_lines(source, node)
-    source_lines += ast_get_source_lines(source, node)
 
     return source_lines
