@@ -19,6 +19,7 @@ import cchardet
 import click
 from colorama import colorama_text
 from more_itertools import take
+from recipes.misc import bright_green, bright_yellow
 
 from .__version__ import __version__
 from .collections_extra import PriorityQueue
@@ -31,8 +32,6 @@ from .core import (
     absort_str,
 )
 from .utils import (
-    bright_green,
-    bright_yellow,
     colorized_unified_diff,
     identityfunc,
     no_color_context,
