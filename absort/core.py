@@ -116,12 +116,10 @@ def absort_str(
         # Take inspiration from clojure's builtin functions naming
 
         # Sanity check: only whitespace changes
-        diff = Counter(new_source)
-        # Shouldn't use the `-` subtraction operator, because it automatically discards
-        # non-positive counts. This side effect is undesirable here.
-        diff.subtract(Counter(old_source))
-        diff_chars = set(diff)
-        assert diff_chars <= set(whitespace)
+        c1 = Counter(old_source)
+        c2 = Counter(new_source)
+        diff = set((c1 - c2) + (c2 - c1))
+        assert diff <= set(whitespace), f"{diff=}"
 
     module_tree = ast.parse(old_source, feature_version=py_version)
 
