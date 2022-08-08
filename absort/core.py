@@ -146,11 +146,14 @@ def absort_str(
         new_source_lines[lineno - 1 + offset : end_lineno + offset] = source_lines
         offset += len(source_lines) - (end_lineno - lineno + 1)
 
-    new_source = "\n".join(new_source_lines) + "\n"
+    new_source = "\n".join(new_source_lines)
 
     # This line is a heuristic. It's visually bad to have blank lines at the
-    # start of the document. So we explicitly remove them.
-    new_source = new_source.lstrip()
+    # start and end of the document. So we explicitly remove them.
+    new_source = new_source.strip()
+
+    # Insert a final newline for POSIX compliant style.
+    new_source = new_source + "\n"
 
     post_sanity_check(old_source, new_source)
 
