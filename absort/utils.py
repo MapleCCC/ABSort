@@ -26,7 +26,9 @@ __all__ = [
     "cached_splitlines",
     "silent_context",
     "Logger",
-    "whitespace_lines",
+    "is_blank_line",
+    "is_blank_lines",
+    "is_comment_line",
     "dispatch",
     "duplicated",
     "hamming_distance",
@@ -131,9 +133,17 @@ class Logger:
         self._count += 1
 
 
-def whitespace_lines(lines: list[str]) -> bool:
+def is_blank_line(line: str) -> bool:
+    return not line.strip()
+
+
+def is_blank_lines(lines: list[str]) -> bool:
     """ Return whether lines are all whitespaces """
-    return all(not line.strip() for line in lines)
+    return all(is_blank_line(line) for line in lines)
+
+
+def is_comment_line(line: str) -> bool:
+    return line.lstrip().startswith("#")
 
 
 Predicate = Callable[[Any], bool]

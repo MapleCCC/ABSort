@@ -31,7 +31,7 @@ from .utils import (
     duplicated,
     ireverse,
     strict_splitlines,
-    whitespace_lines,
+    is_blank_lines,
 )
 from .visitors import GetUndefinedVariableVisitor
 from .weighted_graph import WeightedGraph
@@ -373,7 +373,7 @@ def get_related_source_lines_of_block(
 
         if format_option.aggressive:
 
-            if whitespace_lines(related_source_lines):
+            if is_blank_lines(related_source_lines):
 
                 # FIXME this branch seems unreachable?
                 # TODO Use git-blame to find the initial intention.

@@ -7,7 +7,15 @@ from numbers import Number
 from typing import TYPE_CHECKING, Literal, TypeAlias
 
 from .treedist import pqgram, zhangshasha
-from .utils import cached_splitlines, constantfunc, hamming_distance, iequal, ireverse
+from .utils import (
+    cached_splitlines,
+    constantfunc,
+    hamming_distance,
+    iequal,
+    ireverse,
+    is_blank_line,
+    is_comment_line,
+)
 
 
 __all__ = [
@@ -31,13 +39,6 @@ __all__ = [
 
 
 # TODO rewrite this whole module with libCST as drop-in replacement of the builtin ast module
-
-
-def is_blank_line(line: str) -> bool:
-    return not line.strip()
-
-def is_comment_line(line: str) -> bool:
-    return line.lstrip().startswith("#")
 
 
 # FIXME a proper appraoch here is to use `sum type` feature to properly type this case.
