@@ -11,6 +11,7 @@ from typing import TypeAlias, cast
 
 import attrs
 from more_itertools import flatten
+from recipes.builtins import strict
 from recipes.misc import profile
 from recipes.operator import in_
 from typing_extensions import assert_never
@@ -353,14 +354,13 @@ def get_dependency_of_decl(decl: Declaration, py_version: PyVersion) -> set[str]
     return visitor.visit(temp_module)
 
 
+@strict
 def get_related_source_lines_of_block(
     source: str,
     decls: list[Declaration],
     format_option: FormatOption,
-) -> list[str]:
+) -> Iterator[str]:
     """ Retrieve source lines corresponding to the block of continguous declarations, from source """
-
-    source_lines = []
 
     for decl in decls:
 
@@ -368,31 +368,29 @@ def get_related_source_lines_of_block(
             source, decl
         ) + ast_get_source_lines(source, decl)
 
-        if not format_option.aggressive:
-            source_lines += related_source_lines
-        elif whitespace_lines(related_source_lines):
+        if format_option.aggressive:
 
-            # FIXME this branch seems unreachable?
-            # TODO Use git-blame to find the initial intention.
+            if whitespace_lines(related_source_lines):
 
-            # A heuristic. If only whitespaces are present, compress to two blank lines.
-            # Because it's visually bad to have zero or too many blank lines between
-            # two declarations. So we explicitly add it. Two blank lines between
-            # declarations is PEP8 style (https://pep8.org/#blank-lines)
-            source_lines += "\n\n".splitlines()
+                # FIXME this branch seems unreachable?
+                # TODO Use git-blame to find the initial intention.
 
-        elif related_source_lines[0].strip():
+                # A heuristic. If only whitespaces are present, compress to two blank
+                # lines. Because it's visually bad to have zero or too many blank lines
+                # between two declarations. So we explicitly add it. Two blank lines
+                # between declarations is conformant to the PEP-8 style (https://pep8.org/#blank-lines).
+                related_source_lines = "\n\n".splitlines()
 
-            # FIXME str.strip() strips all whitespace characters. But some are visible,
-            # like form feed character, e.g. source code in Lib/email/feedparser.py
-            # This fix also applies to str.strip() across the whole repository
+            elif related_source_lines[0].strip():
 
-            # A heuristic. It's visually bad to have no blank lines
-            # between two declarations. So we explicitly add it. Two blank lines between
-            # declarations is PEP8 style (https://pep8.org/#blank-lines)
-            source_lines += "\n\n".splitlines() + related_source_lines
+                # FIXME str.strip() strips all whitespace characters. But some are
+                # visible, like form feed character, e.g., source code in
+                # `Lib/email/feedparser.py`. This fix is also applicable to
+                # `str.strip()` across the whole source repo.
 
-        else:
-            source_lines += related_source_lines
+                # A heuristic. It's visually bad to have no blank lines between two
+                # declarations. So we explicitly add it. Two blank lines between
+                # declarations is conformant to the PEP-8 style (https://pep8.org/#blank-lines).
+                related_source_lines = "\n\n".splitlines() + related_source_lines
 
-    return source_lines
+        yield from related_source_lines
