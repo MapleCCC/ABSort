@@ -1,10 +1,10 @@
 import ast
 import copy
 import re
-from collections import deque
 from collections.abc import Iterator
 from functools import cache
 from numbers import Number
+from typing import Literal, TypeAlias
 
 from .treedist import pqgram, zhangshasha
 from .utils import cached_splitlines, constantfunc, hamming_distance, iequal, ireverse
@@ -28,15 +28,29 @@ __all__ = [
 ]
 
 
+# TODO rewrite this whole module with libCST as drop-in replacement of the builtin ast module
+
+
+def is_blank_line(line: str) -> bool:
+    return not line.strip()
+
+def is_comment_line(line: str) -> bool:
+    return line.lstrip().startswith("#")
+
+
+# With the advent of the `indent` keyword argument of `ast.parse()` since Python 3.9,
+# `ast.pretty_dump()` is by and large supplanted.
 def ast_pretty_dump(
     node: ast.AST, annotate_fields: bool = True, include_attributes: bool = False
 ) -> str:
     """ Use black formatting library to prettify the dumped AST """
 
+    # TODO rewrite with libCST's utilites
+
     dumped = ast.dump(node, annotate_fields, include_attributes)
 
     try:
-        import black
+        import black  # type: ignore
         return black.format_str(dumped, mode=black.FileMode())
     except ImportError:
         raise RuntimeError(
@@ -44,7 +58,7 @@ def ast_pretty_dump(
             "Try `python -m pip install -U black` to install."
         )
     except AttributeError:
-        # FIXME remove version incompatible check after black publishes the first
+        # TODO remove version incompatible check after black publishes the first
         # stable version.
         raise RuntimeError("black version incompatible")
 
@@ -68,8 +82,10 @@ def ast_strip_location_info(node: ast.AST, in_place: bool = True) -> ast.AST | N
     location_info_attrs = ("lineno", "col_offset", "end_lineno", "end_col_offset")
     for desc in ast_ordered_walk(node):
         for attr in location_info_attrs:
-            if hasattr(desc, attr):
+            try:
                 delattr(desc, attr)
+            except AttributeError:
+                pass
 
 
 def ast_get_leading_comment_and_decorator_list_source_lines(
@@ -89,8 +105,8 @@ def ast_get_leading_comment_and_decorator_list_source_lines(
     boundary_lineno = 0  # 0 is a virtual line
     for lineno, line in ireverse(zip(range(1, node.lineno), above_lines)):
         if not (
-            len(line.strip()) == 0
-            or line.lstrip().startswith("#")
+            is_blank_line(line)
+            or is_comment_line(line)
             or lineno in decorator_list_linenos
         ):
             boundary_lineno = lineno
@@ -113,16 +129,17 @@ def ast_get_leading_comment_source_lines(source: str, node: ast.AST) -> list[str
         lineno, end_lineno = decorator.lineno, decorator.end_lineno
         decorator_list_linenos.update(range(lineno, end_lineno + 1))
 
-    leading_comment_lines: deque[str] = deque()
+    leading_comment_lines: list[str] = []
     for lineno, line in ireverse(zip(range(1, node.lineno), above_lines)):
         if lineno in decorator_list_linenos:
             continue
-        elif len(line.strip()) == 0 or line.lstrip().startswith("#"):
-            leading_comment_lines.appendleft(line)
+        elif is_blank_line(line) or is_comment_line(line):
+            leading_comment_lines.append(line)
         else:
             break
 
-    return list(leading_comment_lines)
+    leading_comment_lines.reverse()
+    return leading_comment_lines
 
 
 def ast_get_decorator_list_source_lines(source: str, node: ast.AST) -> list[str]:
@@ -146,6 +163,10 @@ def ast_get_decorator_list_source_lines(source: str, node: ast.AST) -> list[str]
 
 
 def ast_get_source_lines(source: str, node: ast.AST) -> list[str]:
+    """ Retrieve source lines corresponding to the AST node, from the source """
+
+    # XXX the `linecache` stdlib module
+
     # WARNING: ast.AST.lineno and ast.AST.end_lineno are 1-indexed
 
     # Use strict_splitlines() instead of str.splitlines(), because CPython's ast.parse()
@@ -158,6 +179,7 @@ def ast_get_source_lines(source: str, node: ast.AST) -> list[str]:
     return source_lines
 
 
+# XXX Is cached_ast_iter_child_nodes usable across the whole source repository?
 @cache
 def cached_ast_iter_child_nodes(node: ast.AST) -> list[ast.AST]:
     """ A cached version of the `fast_ast_iter_child_nodes` method """
@@ -168,8 +190,8 @@ class DeprecatedASTNodeError(Exception):
     """ An exception to signal that some AST node is deprecated """
 
 
-Field = tuple[str, str]
-Fields = tuple[Field, ...]
+Field: TypeAlias = tuple[str, str]
+Fields: TypeAlias = tuple[Field, ...]
 
 
 def retrieve_ast_node_class_fields(
@@ -213,19 +235,21 @@ def retrieve_ast_node_class_fields(
 
 
 def all_ast_node_classes() -> Iterator[tuple[str, type[ast.AST]]]:  # pragma: no cover
+    # FIXME dir() is meant for interactive usage.
     for name in dir(ast):
         attr = getattr(ast, name)
         try:
             if issubclass(attr, ast.AST):
                 attr_name = str(attr)
                 m = re.fullmatch(r"<class 'ast.(?P<class_name>.*)'>", attr_name)
+                assert m is not None
                 yield m.group("class_name"), attr
         except TypeError:
             pass
 
 
 def build_ast_node_class_fields_table() -> dict[str, Fields]:  # pragma: no cover
-    table = {}  # type: dict[str, Fields]
+    table: dict[str, Fields] = {}
     for name, cls in all_ast_node_classes():
         try:
             fields = retrieve_ast_node_class_fields(cls)
@@ -407,7 +431,7 @@ ast_node_class_fields_table = {
 # Reference: https://docs.python.org/3/library/ast.html#abstract-grammar
 Terminals = ("identifier", "int", "string", "constant")
 # Reference: https://docs.python.org/3/library/ast.html#ast.Constant
-TerminalType = str | Number | None | tuple | frozenset
+TerminalType: TypeAlias = str | Number | None | tuple | frozenset
 
 
 def ast_iter_non_node_fields(
@@ -419,6 +443,9 @@ def ast_iter_non_node_fields(
     for type, name in ast_node_class_fields_table[class_name]:
         if type.rstrip("?*") in Terminals:
             yield getattr(node, name)
+
+
+# TODO Benchmark to check if it is really faster than the builtin ast.iter_child_nodes
 
 
 def fast_ast_iter_child_nodes(node: ast.AST) -> Iterator[ast.AST]:
@@ -436,25 +463,57 @@ def fast_ast_iter_child_nodes(node: ast.AST) -> Iterator[ast.AST]:
             elif type[-1] == "*":
 
                 # Edge case 1: dict unpacking
-                # Reference: "When doing dictionary unpacking using dictionary literals the expression to be expanded goes in the values list, with a None at the corresponding position in keys." from https://docs.python.org/3/library/ast.html#ast.Dict
+                #
+                # Reference:
+                #   "When doing dictionary unpacking using dictionary literals the
+                #   expression to be expanded goes in the values list, with a None at
+                #   the corresponding position in keys."
+                #   - from https://docs.python.org/3/library/ast.html#ast.Dict
                 if class_name == "Dict" and name == "keys":
+                    # Or use filter()
                     yield from (expr for expr in attr if expr is not None)
                     continue
 
+                # TODO search: What is required keyword argument default? ast official
+                # doc has example.
+
                 # Edge case 2: required keyword argument default
-                # Reference: "kw_defaults is a list of default values for keyword-only arguments. If one is None, the corresponding argument is required." from https://docs.python.org/3/library/ast.html#ast.arguments
+                #
+                # Reference:
+                #   "kw_defaults is a list of default values for keyword-only arguments.
+                #   If one is None, the corresponding argument is required."
+                #   - from https://docs.python.org/3/library/ast.html#ast.arguments
                 if class_name == "arguments" and name == "kw_defaults":
+                    # Or use filter()
                     yield from (expr for expr in attr if expr is not None)
                     continue
+
+                # XXX maybe we can simply just "if not None, yield", and no that much
+                # trouble.
+
+                # FIXME we should substitue None with a bogus AST node, instead of just
+                # deleting it. It's relevant when comparing children in
+                # `ast_shadow_equal()` / `ast_deep_equal()`.
+
+                # Uncomment below lines to activate debug mode
+                # if None in attr:
+                #     print(class_name, type, name, attr)
 
                 yield from attr
 
             else:
+
+                # Uncomment below lines to activate debug mode
+                # if attr is None:
+                #     print(class_name, type, name, attr)
+
                 yield attr
 
 
 def ast_tree_edit_distance(
-    node1: ast.AST, node2: ast.AST, algorithm: str = "ZhangShasha"
+    node1: ast.AST,
+    node2: ast.AST,
+    algorithm: Literal["ZhangShasha", "PQGram"] = "ZhangShasha"
 ) -> float:
     """
     Implementation is Zhang-Shasha's tree edit distance algorithm.
@@ -467,7 +526,8 @@ def ast_tree_edit_distance(
     Note that the rename_cost function **should** return 0 for identical nodes.
     """
 
-    # Note: one important thing to note here is that, `ast.AST() != ast.AST()`.
+    # Note: one important thing to note here is that, `ast.AST() != ast.AST()`, namely,
+    # ast.AST has no well-defined equality/identity.
 
     if algorithm == "ZhangShasha":
         # hopefully a sane default
@@ -484,6 +544,7 @@ def ast_tree_edit_distance(
         )
 
     elif algorithm == "PQGram":
+        # TODO Right now node type equality is used. Finer grained equality is called for.
         return pqgram(node1, node2, children=fast_ast_iter_child_nodes, label=type)
 
     else:
@@ -492,11 +553,12 @@ def ast_tree_edit_distance(
 
 def ast_shallow_equal(node1: ast.AST, node2: ast.AST) -> float:
     """
-    Return if two ast nodes are equal, by comparing shallow level data
-    Return zero if non-equal, and positive numbers if partially equal or completely equal
+    Return equality of two ast nodes, by comparing shallow level data.
+    Return zero if non-equal, and positive numbers if partial equal or complete equal.
 
-    For advanced usage, the returned positive number is a fraction between 0 and 1,
-    denoting how equal the two nodes are. The closer to 1 the more equal, and vice versa.
+    For advanced usage, the returned positive number is acutally a fraction between 0
+    and 1, denoting the equality degree of the two nodes. The closer to 1 the more
+    equal, and vice versa.
     """
 
     if type(node1) != type(node2):
@@ -505,14 +567,16 @@ def ast_shallow_equal(node1: ast.AST, node2: ast.AST) -> float:
     fields1 = list(ast_iter_non_node_fields(node1))
     fields2 = list(ast_iter_non_node_fields(node2))
     assert len(fields1) == len(fields2)
-    field_length = len(fields1)
-    if not field_length:
+    num_fields = len(fields1)
+    if num_fields == 0:
         return 1
-    return 1 - (hamming_distance(fields1, fields2) / len(fields1))
+    return 1 - (hamming_distance(fields1, fields2) / num_fields)
 
 
 def ast_deep_equal(node1: ast.AST, node2: ast.AST) -> bool:
     """ Return if two ast nodes are semantically equal """
+
+    # TODO rewrite with libCST's deep_equals()
 
     if type(node1) != type(node2):
         return False
