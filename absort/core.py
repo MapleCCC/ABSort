@@ -5,6 +5,7 @@ from enum import Enum, auto
 from functools import partial
 from itertools import chain, combinations
 from string import whitespace
+from typing import cast
 
 import attrs
 from more_itertools import first_true, flatten
@@ -77,6 +78,7 @@ class SortOrder(Enum):
 
 PyVersion = tuple[int, int]
 
+
 #
 # Custom Exceptions
 #
@@ -134,7 +136,10 @@ def absort_str(
 
     # Use strict_splitlines() instead of str.splitlines(), because CPython's ast.parse()
     # doesn't parse the source string "#\x0c0" as containing an expression.
+    # TODO is't a bug of CPython? What's the behavior of PyPy? Open an issue?
     new_source_lines = strict_splitlines(old_source)
+
+    # FIXME below lines are actually unnecessary at all
 
     offset = 0
     for lineno, end_lineno, decls in blocks:
@@ -165,6 +170,8 @@ def absort_str(
     return new_source
 
 
+# TODO Reuse more-itertools recipe to simplify
+
 def find_continguous_decls(
     stmts: list[ast.stmt],
 ) -> Iterator[tuple[int, int, list[DeclarationType]]]:
@@ -186,16 +193,16 @@ def find_continguous_decls(
             index += 1
         end = index
 
-        lineno = stmts[start - 1].end_lineno + 1
+        lineno = cast(int, stmts[start - 1].end_lineno) + 1
         end_lineno = stmts[end - 1].end_lineno
         assert end_lineno is not None
 
-        yield lineno, end_lineno, stmts[start:end]  # type: ignore
+        yield lineno, end_lineno, cast(list[DeclarationType], stmts[start:end])
 
 
 @profile  # type: ignore
 def absort_decls(
-    decls: Sequence[DeclarationType],
+    decls: Iterable[DeclarationType],
     py_version: PyVersion,
     format_option: FormatOption,
     sort_order: SortOrder,
@@ -217,8 +224,8 @@ def absort_decls(
         # visually/semantically similar function/class definitions near each other.
         #
         # Code similarity can be implemented in:
-        # 1. easy and naive way: source code string similarity. eg. shortest edit distance algorithm.
-        # 2. sophisticated way: syntax tree similarity. E.g. the classic Zhange-Shaha algorithm.
+        # 1. easy and naive way: source code string similarity. E.g., shortest edit distance algorithm.
+        # 2. sophisticated way: syntax tree similarity. E.g., the classic Zhange-Shaha algorithm.
 
         if format_option.no_aggressive:
             decl_name_inverse_index = {name: idx for idx, name in enumerate(decl_names)}
@@ -231,6 +238,8 @@ def absort_decls(
             same_level_decls = [name_lookup_table[name] for name in names]
             sorted_decls = sort_decls_by_syntax_tree_similarity(same_level_decls)
             return (decl.name for decl in sorted_decls)
+
+    decls = list(decls)
 
     if format_option.separate_class_and_function:
         class_decls = [decl for decl in decls if isinstance(decl, ast.ClassDef)]
@@ -250,11 +259,14 @@ def absort_decls(
 
     graph = generate_dependency_graph(decls, py_version)
 
+    # TODO Refactor
+
     if sort_order is SortOrder.TOPOLOGICAL:
         sccs = ireverse(graph.strongly_connected_components())
         sorted_names = list(flatten(same_abstract_level_sorter(scc) for scc in sccs))
 
     elif sort_order in (SortOrder.DEPTH_FIRST, SortOrder.BREADTH_FIRST):
+
         if sort_order is SortOrder.DEPTH_FIRST:
             traverse_method = graph.dfs
         elif sort_order is SortOrder.BREADTH_FIRST:
@@ -297,13 +309,14 @@ def absort_decls(
     # short-circuit to optimize.
     for name in sorted_names:
         name_matcher = lambda decl: decl.name == name
-        yield first_true(decls, pred=name_matcher)  # type: ignore
+        yield cast(DeclarationType, first_true(decls, pred=name_matcher))
 
 
 def sort_decls_by_syntax_tree_similarity(
     decls: list[DeclarationType],
 ) -> Iterator[DeclarationType]:
-    if len(decls) == 1:
+
+    if len(decls) <= 1:
         return iter(decls)
 
     algorithm = "ZhangShasha"
@@ -329,6 +342,8 @@ def generate_dependency_graph(
     decls: Sequence[DeclarationType], py_version: PyVersion
 ) -> DirectedGraph[str]:
     """ Generate a dependency graph from a continguous block of declarations """
+
+    # TODO return DGraph[DeclarationType] instead of DGraph[str]
 
     decl_names = [decl.name for decl in decls]
 
@@ -382,6 +397,9 @@ def get_related_source_lines_of_block(
             source_lines += related_source_lines
         elif whitespace_lines(related_source_lines):
 
+            # FIXME this branch seems unreachable?
+            # TODO Use git-blame to find the initial intention.
+
             # A heuristic. If only whitespaces are present, compress to two blank lines.
             # Because it's visually bad to have zero or too many blank lines between
             # two declarations. So we explicitly add it. Two blank lines between
@@ -389,6 +407,10 @@ def get_related_source_lines_of_block(
             source_lines += "\n\n".splitlines()
 
         elif related_source_lines[0].strip():
+
+            # FIXME str.strip() strips all whitespace characters. But some are visible,
+            # like form feed character, e.g. source code in Lib/email/feedparser.py
+            # This fix also applies to str.strip() across the whole repository
 
             # A heuristic. It's visually bad to have no blank lines
             # between two declarations. So we explicitly add it. Two blank lines between
