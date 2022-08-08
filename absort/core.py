@@ -92,9 +92,9 @@ class NameRedefinition(Exception):
 
 @attrs.frozen
 class FormatOption:
-    no_aggressive: bool = False
     reverse: bool = False
-    no_fix_main_to_bottom: bool = False
+    pin_main: bool = True
+    aggressive: bool = True
 
 
 #
@@ -227,15 +227,15 @@ def absort_decls(
         # 1. easy and naive way: source code string similarity. E.g., shortest edit distance algorithm.
         # 2. sophisticated way: syntax tree similarity. E.g., the classic Zhange-Shaha algorithm.
 
-        if format_option.no_aggressive:
-            return filter(in_(set(names)), decl_names)
-
-        else:
+        if format_option.aggressive:
             # Sort by putting two visually similar definitions together
 
             same_level_decls = [index[name] for name in names]
             sorted_decls = sort_decls_by_syntax_tree_similarity(same_level_decls)
             return (decl.name for decl in sorted_decls)
+
+        else:
+            return filter(in_(set(names)), decl_names)
 
     decls = list(decls)
 
@@ -290,7 +290,7 @@ def absort_decls(
     if format_option.reverse:
         sorted_names.reverse()
 
-    if not format_option.no_fix_main_to_bottom and "main" in sorted_names:
+    if format_option.pin_main and "main" in sorted_names:
         sorted_names.remove("main")
         sorted_names.append("main")
 
@@ -383,7 +383,7 @@ def get_related_source_lines_of_block(
             source, decl, comment_strategy
         )
 
-        if format_option.no_aggressive:
+        if not format_option.aggressive:
             source_lines += related_source_lines
         elif whitespace_lines(related_source_lines):
 
