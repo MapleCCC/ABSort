@@ -12,7 +12,6 @@ from hypothesis import given, settings
 from hypothesis.strategies import sampled_from
 
 from absort.__main__ import (
-    CommentStrategy,
     FormatOption,
     NameRedefinition,
     SortOrder,
@@ -48,7 +47,6 @@ TEST_FILES = list(STDLIB_DIR.rglob("*.py"))
 
 @attrs.define
 class Option:
-    comment_strategy: CommentStrategy
     format_option: FormatOption
     sort_order: SortOrder
 
@@ -57,7 +55,6 @@ class Option:
         return cls(*tup)
 
 
-all_comment_strategies = list(CommentStrategy)
 all_format_options = [
     FormatOption(*p)
     for p in product(*([(True, False)] * len(attrs.fields(FormatOption))))
@@ -65,7 +62,7 @@ all_format_options = [
 all_sort_orders = list(SortOrder)
 
 arg_options = constantfunc(
-    products(all_comment_strategies, all_format_options, all_sort_orders).map(
+    products(all_format_options, all_sort_orders).map(
         Option.from_tuple
     )
 )

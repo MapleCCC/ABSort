@@ -17,9 +17,7 @@ from typing_extensions import assert_never
 
 from .__version__ import __version__
 from .ast_utils import (
-    ast_get_decorator_list_source_lines,
     ast_get_leading_comment_and_decorator_list_source_lines,
-    ast_get_leading_comment_source_lines,
     ast_get_source_lines,
     ast_tree_edit_distance,
     ast_tree_size,
@@ -40,7 +38,6 @@ from .weighted_graph import WeightedGraph
 
 __all__ = [
     "absort_str",
-    "CommentStrategy",
     "FormatOption",
     "SortOrder",
     "NameRedefinition",
@@ -50,14 +47,6 @@ __all__ = [
 #
 # Enumerations
 #
-
-
-class CommentStrategy(Enum):
-    """ An enumeration to specify different kinds of comment strategies """
-
-    PUSH_TOP = "push-top"
-    ATTR_FOLLOW_DECL = "attr-follow-decl"
-    IGNORE = "ignore"
 
 
 class SortOrder(Enum):
@@ -106,7 +95,6 @@ class FormatOption:
 def absort_str(
     old_source: str,
     py_version: PyVersion = (3, 10),
-    comment_strategy: CommentStrategy = CommentStrategy.ATTR_FOLLOW_DECL,
     format_option: FormatOption = FormatOption(),
     sort_order: SortOrder = SortOrder.TOPOLOGICAL,
 ) -> str:
@@ -154,7 +142,7 @@ def absort_str(
     for lineno, end_lineno, decls in blocks:
         sorted_decls = list(absort_decls(decls, py_version, format_option, sort_order))
         source_lines = get_related_source_lines_of_block(
-            old_source, sorted_decls, comment_strategy, format_option
+            old_source, sorted_decls, format_option
         )
         new_source_lines[lineno - 1 + offset : end_lineno + offset] = source_lines
         offset += len(source_lines) - (end_lineno - lineno + 1)
@@ -370,7 +358,6 @@ def get_dependency_of_decl(decl: Declaration, py_version: PyVersion) -> set[str]
 def get_related_source_lines_of_block(
     source: str,
     decls: list[Declaration],
-    comment_strategy: CommentStrategy,
     format_option: FormatOption,
 ) -> list[str]:
     """ Retrieve source lines corresponding to the block of continguous declarations, from source """
@@ -379,9 +366,7 @@ def get_related_source_lines_of_block(
 
     for decl in decls:
 
-        related_source_lines = get_related_source_lines_of_decl(
-            source, decl, comment_strategy
-        )
+        related_source_lines = get_related_source_lines_of_decl(source, decl)
 
         if not format_option.aggressive:
             source_lines += related_source_lines
@@ -410,37 +395,15 @@ def get_related_source_lines_of_block(
         else:
             source_lines += related_source_lines
 
-    if comment_strategy is CommentStrategy.PUSH_TOP:
-        total_comment_lines = []
-        for decl in decls:
-            comment_lines = ast_get_leading_comment_source_lines(source, decl)
-
-            # A heuristic to return empty result if only whitespaces are present
-            if not whitespace_lines(comment_lines):
-                total_comment_lines += comment_lines
-
-        source_lines = total_comment_lines + source_lines
-
     return source_lines
 
 
-def get_related_source_lines_of_decl(
-    source: str, node: ast.AST, comment_strategy: CommentStrategy
-) -> list[str]:
+def get_related_source_lines_of_decl(source: str, node: ast.AST) -> list[str]:
     """ Retrieve source lines corresponding to the AST node, from the source """
 
     source_lines = []
 
-    if comment_strategy is CommentStrategy.ATTR_FOLLOW_DECL:
-        source_lines += ast_get_leading_comment_and_decorator_list_source_lines(
-            source, node
-        )
-    elif comment_strategy in (CommentStrategy.PUSH_TOP, CommentStrategy.IGNORE):
-        source_lines += ast_get_decorator_list_source_lines(source, node)
-    else:
-        # Alternative: `typing.assert_never(comment_strategy)`
-        raise ValueError
-
+    source_lines += ast_get_leading_comment_and_decorator_list_source_lines(source, node)
     source_lines += ast_get_source_lines(source, node)
 
     return source_lines

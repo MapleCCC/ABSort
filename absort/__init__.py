@@ -1,5 +1,4 @@
 from .__main__ import (
-    CommentStrategy,
     FileAction,
     FormatOption,
     SortOrder,
@@ -16,7 +15,6 @@ __all__ = [
     "absort_str",
     "absort_file",
     "absort_files",
-    "CommentStrategy",
     "FormatOption",
     "FileAction",
     "SortOrder",
