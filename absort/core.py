@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import ast
 from collections import Counter
 from collections.abc import Iterable, Iterator, Sequence
@@ -24,7 +26,7 @@ from .ast_utils import (
 from .cluster import chenyu
 from .collections_extra import OrderedSet
 from .directed_graph import DirectedGraph
-from .typing_extra import Declaration, DeclarationType
+from .typing_extra import Declaration
 from .utils import (
     duplicated,
     identityfunc,
@@ -175,7 +177,7 @@ def absort_str(
 
 def find_continguous_decls(
     stmts: list[ast.stmt],
-) -> Iterator[tuple[int, int, list[DeclarationType]]]:
+) -> Iterator[tuple[int, int, list[Declaration]]]:
     """ Yield blocks of continguous declarations """
 
     # WARNING: lineno and end_lineno are 1-indexed
@@ -198,16 +200,16 @@ def find_continguous_decls(
         end_lineno = stmts[end - 1].end_lineno
         assert end_lineno is not None
 
-        yield lineno, end_lineno, cast(list[DeclarationType], stmts[start:end])
+        yield lineno, end_lineno, cast(list[Declaration], stmts[start:end])
 
 
 @profile  # type: ignore
 def absort_decls(
-    decls: Iterable[DeclarationType],
+    decls: Iterable[Declaration],
     py_version: PyVersion,
     format_option: FormatOption,
     sort_order: SortOrder,
-) -> Iterator[DeclarationType]:
+) -> Iterator[Declaration]:
     """ Sort a continguous block of declarations """
 
     def same_abstract_level_sorter(names: Iterable[str]) -> Iterator[str]:
@@ -313,8 +315,8 @@ def absort_decls(
 
 
 def sort_decls_by_syntax_tree_similarity(
-    decls: list[DeclarationType],
-) -> Iterator[DeclarationType]:
+    decls: list[Declaration],
+) -> Iterator[Declaration]:
 
     if len(decls) <= 1:
         return iter(decls)
@@ -331,7 +333,7 @@ def sort_decls_by_syntax_tree_similarity(
         clusters = chenyu(decls, _ast_tree_edit_distance, k=3)
         return chain.from_iterable(clusters)
 
-    graph: WeightedGraph[DeclarationType] = WeightedGraph()
+    graph: WeightedGraph[Declaration] = WeightedGraph()
     for decl1, decl2 in combinations(decls, 2):
         distance = ast_tree_edit_distance(decl1, decl2, algorithm)
         graph.add_edge(decl1, decl2, distance)
@@ -339,11 +341,11 @@ def sort_decls_by_syntax_tree_similarity(
 
 
 def generate_dependency_graph(
-    decls: Sequence[DeclarationType], py_version: PyVersion
+    decls: Sequence[Declaration], py_version: PyVersion
 ) -> DirectedGraph[str]:
     """ Generate a dependency graph from a continguous block of declarations """
 
-    # TODO return DGraph[DeclarationType] instead of DGraph[str]
+    # TODO return DGraph[Declaration] instead of DGraph[str]
 
     decl_names = [decl.name for decl in decls]
 
@@ -369,7 +371,7 @@ def generate_dependency_graph(
     return graph
 
 
-def get_dependency_of_decl(decl: DeclarationType, py_version: PyVersion) -> set[str]:
+def get_dependency_of_decl(decl: Declaration, py_version: PyVersion) -> set[str]:
     """ Calculate the dependencies (as set of symbols) of the declaration """
 
     temp_module = ast.Module(body=[decl], type_ignores=[])
@@ -379,7 +381,7 @@ def get_dependency_of_decl(decl: DeclarationType, py_version: PyVersion) -> set[
 
 def get_related_source_lines_of_block(
     source: str,
-    decls: list[DeclarationType],
+    decls: list[Declaration],
     comment_strategy: CommentStrategy,
     format_option: FormatOption,
 ) -> list[str]:
