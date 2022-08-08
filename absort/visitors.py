@@ -1,7 +1,9 @@
 import ast
 from collections.abc import Sequence
 
-from .exceptions import Unreachable
+from recipes.exceptions import Unreachable
+from typing_extensions import assert_never
+
 from .utils import identityfunc
 
 
@@ -76,7 +78,7 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
         elif obj is None:
             return
         else:
-            raise ValueError
+            assert_never(obj)
 
     def visit_Module(self, node: ast.Module) -> None:
         self._namespaces.append({})

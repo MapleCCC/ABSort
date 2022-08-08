@@ -15,9 +15,9 @@ from typing import IO, Any, Generic, TypeVar
 
 import attrs
 from more_itertools import UnequalIterablesError, zip_equal
+from recipes.exceptions import Unreachable
 from recipes.misc import bright_green, bright_red
 
-from .exceptions import Unreachable
 
 __all__ = [
     "ireverse",

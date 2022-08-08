@@ -9,7 +9,7 @@ from shutil import copy2
 from subprocess import CalledProcessError
 from tempfile import TemporaryDirectory
 
-from absort.exceptions import Unreachable
+from recipes.exceptions import Unreachable
 
 
 STDLIB_DIR = Path(sys.executable).with_name("Lib")

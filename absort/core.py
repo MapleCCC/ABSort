@@ -6,6 +6,7 @@ from itertools import chain, combinations
 
 import attrs
 from more_itertools import first_true, flatten
+from typing_extensions import assert_never
 
 from .__version__ import __version__
 from .ast_utils import (
@@ -19,7 +20,6 @@ from .ast_utils import (
 from .cluster import chenyu
 from .collections_extra import OrderedSet
 from .directed_graph import DirectedGraph
-from .exceptions import Unreachable
 from .typing_extra import Declaration, DeclarationType
 from .utils import (
     duplicated,
@@ -247,7 +247,7 @@ def absort_decls(
         elif sort_order is SortOrder.BREADTH_FIRST:
             traverse_method = graph.bfs
         else:
-            raise Unreachable
+            assert_never(sort_order)
 
         sources = list(graph.find_sources())
         num_src = len(sources)
@@ -270,7 +270,8 @@ def absort_decls(
         sorted_names.extend(same_abstract_level_sorter(remaining_names))
 
     else:
-        raise Unreachable
+        # Alternative: `typing.assert_never(sort_order)`
+        raise ValueError
 
     if format_option.reverse:
         sorted_names.reverse()
@@ -412,7 +413,8 @@ def get_related_source_lines_of_decl(
     elif comment_strategy in (CommentStrategy.PUSH_TOP, CommentStrategy.IGNORE):
         source_lines += ast_get_decorator_list_source_lines(source, node)
     else:
-        raise Unreachable
+        # Alternative: `typing.assert_never(comment_strategy)`
+        raise ValueError
 
     source_lines += ast_get_source_lines(source, node)
 
