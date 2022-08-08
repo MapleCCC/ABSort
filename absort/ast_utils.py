@@ -7,14 +7,7 @@ from functools import cache
 from numbers import Number
 
 from .treedist import pqgram, zhangshasha
-from .utils import (
-    cached_splitlines,
-    constantfunc,
-    hamming_distance,
-    identityfunc,
-    iequal,
-    ireverse,
-)
+from .utils import cached_splitlines, constantfunc, hamming_distance, iequal, ireverse
 
 
 __all__ = [
@@ -33,13 +26,6 @@ __all__ = [
     "ast_deep_equal",
     "ast_tree_size",
 ]
-
-
-# Note: the name `profile` will be injected by line-profiler at run-time
-try:
-    profile  # type: ignore
-except NameError:
-    profile = identityfunc
 
 
 def ast_pretty_dump(

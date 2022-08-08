@@ -11,6 +11,7 @@ from typing import cast
 
 import attrs
 from more_itertools import flatten
+from recipes.misc import profile
 from recipes.operator import in_
 from typing_extensions import assert_never
 
@@ -29,7 +30,6 @@ from .directed_graph import DirectedGraph
 from .typing_extra import Declaration
 from .utils import (
     duplicated,
-    identityfunc,
     ireverse,
     strict_splitlines,
     whitespace_lines,
@@ -45,13 +45,6 @@ __all__ = [
     "SortOrder",
     "NameRedefinition",
 ]
-
-
-# Note: the name `profile` will be injected by line-profiler at run-time
-try:
-    profile  # type: ignore
-except NameError:
-    profile = identityfunc
 
 
 #
@@ -110,7 +103,7 @@ class FormatOption:
 #
 
 
-@profile  # type: ignore
+@profile
 def absort_str(
     old_source: str,
     py_version: PyVersion = (3, 10),
@@ -203,7 +196,7 @@ def find_continguous_decls(
         yield lineno, end_lineno, cast(list[Declaration], stmts[start:end])
 
 
-@profile  # type: ignore
+@profile
 def absort_decls(
     decls: Iterable[Declaration],
     py_version: PyVersion,
@@ -314,6 +307,7 @@ def absort_decls(
     return [index[name] for name in sorted_names]
 
 
+@profile
 def sort_decls_by_syntax_tree_similarity(
     decls: list[Declaration],
 ) -> Iterator[Declaration]:
@@ -340,6 +334,7 @@ def sort_decls_by_syntax_tree_similarity(
     return graph.minimum_spanning_tree()
 
 
+@profile
 def generate_dependency_graph(
     decls: Sequence[Declaration], py_version: PyVersion
 ) -> DirectedGraph[str]:

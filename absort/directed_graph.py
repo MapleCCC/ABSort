@@ -8,14 +8,11 @@ from collections.abc import Callable, Hashable, Iterator, Sequence
 from typing import Generic, Optional, TypeVar
 
 from more_itertools import first, ilen
+from recipes.misc import profile
 
 from .collections_extra import OrderedSet
 from .utils import identityfunc
 
-try:
-    profile  # type: ignore
-except NameError:
-    profile = identityfunc
 
 #
 # Thin semantic type abstraction
@@ -297,7 +294,7 @@ class DirectedGraph(Generic[Node]):
                 + "or detect_back_edge() to find back edges."
             )
 
-    @profile  # type: ignore
+    @profile
     def strongly_connected_components(self) -> Iterator[SCC[Node]]:
         """
         Find all strongly connected components.

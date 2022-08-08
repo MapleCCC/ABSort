@@ -4,17 +4,8 @@ from collections.abc import Sequence
 from recipes.exceptions import Unreachable
 from typing_extensions import assert_never
 
-from .utils import identityfunc
-
 
 __all__ = ["GetUndefinedVariableVisitor"]
-
-
-# Note: the name `profile` will be injected by line-profiler at run-time
-try:
-    profile  # type: ignore
-except NameError:
-    profile = identityfunc
 
 
 def retrieve_names_from_args(args: ast.arguments) -> set[str]:

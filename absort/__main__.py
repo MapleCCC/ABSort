@@ -19,7 +19,7 @@ import cchardet
 import click
 from colorama import colorama_text
 from more_itertools import take
-from recipes.misc import bright_green, bright_yellow
+from recipes.misc import bright_green, bright_yellow, profile
 
 from .__version__ import __version__
 from .collections_extra import PriorityQueue
@@ -31,12 +31,7 @@ from .core import (
     SortOrder,
     absort_str,
 )
-from .utils import (
-    colorized_unified_diff,
-    identityfunc,
-    no_color_context,
-    silent_context,
-)
+from .utils import colorized_unified_diff, no_color_context, silent_context
 
 
 __all__ = [
@@ -50,13 +45,6 @@ __all__ = [
     "NameRedefinition",
     "BypassPromptLevel",
 ]
-
-
-# Note: the name `profile` will be injected by line-profiler at run-time
-try:
-    profile  # type: ignore
-except NameError:
-    profile = identityfunc
 
 
 #
@@ -319,7 +307,7 @@ class BypassPromptParamType(click.ParamType):
 @click.pass_context
 # TODO add command line option to ignore files specified by .gitignore
 # TODO add command line option to customize cache location
-@profile  # type: ignore
+@profile
 def main(
     ctx: click.Context,
     filepaths: tuple[str, ...],
@@ -510,7 +498,7 @@ def absort_files(
     return asyncio.run(entry())
 
 
-@profile  # type: ignore
+@profile
 async def absort_file(
     file: str,
     encoding: str = "utf-8",
