@@ -7,7 +7,7 @@ from enum import Enum, auto
 from functools import partial
 from itertools import chain, combinations
 from string import whitespace
-from typing import cast
+from typing import TypeAlias, cast
 
 import attrs
 from more_itertools import flatten
@@ -72,7 +72,7 @@ class SortOrder(Enum):
 # Type Annotations
 #
 
-PyVersion = tuple[int, int]
+PyVersion: TypeAlias = tuple[int, int]
 
 
 #
@@ -111,6 +111,7 @@ def absort_str(
     sort_order: SortOrder = SortOrder.TOPOLOGICAL,
 ) -> str:
     """ Sort the source code in string """
+    # TODO detail docstring. Specify exceptions raised under respective condition.
 
     def preliminary_sanity_check(top_level_stmts: list[ast.stmt]) -> None:
         # TODO add more sanity checks
@@ -120,6 +121,19 @@ def absort_str(
 
         if duplicated(decl_names):
             raise NameRedefinition("Name redefinition exists. Not supported yet.")
+
+    def post_sanity_check(old_source: str, new_source: str) -> None:
+
+        # TODO purely functional multiset. persistent counter. persistent/frozen/immutable map/dict.
+        # Take inspiration from clojure's builtin functions naming
+
+        # Sanity check: only whitespace changes
+        diff = Counter(new_source)
+        # Shouldn't use the `-` subtraction operator, because it automatically discards
+        # non-positive counts. This side effect is undesirable here.
+        diff.subtract(Counter(old_source))
+        diff_chars = set(diff)
+        assert diff_chars <= set(whitespace)
 
     module_tree = ast.parse(old_source, feature_version=py_version)
 
@@ -151,16 +165,7 @@ def absort_str(
     # start of the document. So we explicitly remove them.
     new_source = new_source.lstrip()
 
-    # TODO purely functional multiset. persistent counter. persistent/frozen/immutable map/dict.
-    # Take inspiration from clojure's builtin functions naming
-
-    # Sanity check: only whitespace changes
-    diff = Counter(new_source)
-    # Shouldn't use the `-` subtraction operator, because it automatically discards
-    # non-positive counts. This side effect is undesirable here.
-    diff.subtract(Counter(old_source))
-    diff_chars = set(diff)
-    assert diff_chars <= set(whitespace)
+    post_sanity_check(old_source, new_source)
 
     return new_source
 
@@ -201,7 +206,7 @@ def absort_decls(
     py_version: PyVersion,
     format_option: FormatOption,
     sort_order: SortOrder,
-) -> Iterator[Declaration]:
+) -> list[Declaration]:
     """ Sort a continguous block of declarations """
 
     def same_abstract_level_sorter(names: Iterable[str]) -> Iterator[str]:
@@ -240,6 +245,7 @@ def absort_decls(
 
     index = {decl.name: decl for decl in decls}
 
+    # TODO Use DGraph[Declaration] instead of DGraph[str]
     graph = generate_dependency_graph(decls, py_version)
 
     # TODO Refactor
