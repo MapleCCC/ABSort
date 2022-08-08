@@ -305,6 +305,9 @@ def absort_decls(
         sorted_names.remove("main")
         sorted_names.append("main")
 
+    # Sanity check
+    assert len(sorted_names) == len(decl_names) and set(sorted_names) == set(decl_names)
+
     # There is always one, and only one, decl that matches the name, we use
     # short-circuit to optimize.
     for name in sorted_names:
