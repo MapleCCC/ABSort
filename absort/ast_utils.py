@@ -8,7 +8,6 @@ from numbers import Number
 
 from .treedist import pqgram, zhangshasha
 from .utils import (
-    beginswith,
     cached_splitlines,
     constantfunc,
     hamming_distance,
@@ -105,7 +104,7 @@ def ast_get_leading_comment_and_decorator_list_source_lines(
     for lineno, line in ireverse(zip(range(1, node.lineno), above_lines)):
         if not (
             len(line.strip()) == 0
-            or beginswith(line.lstrip(), "#")
+            or line.lstrip().startswith("#")
             or lineno in decorator_list_linenos
         ):
             boundary_lineno = lineno
@@ -132,7 +131,7 @@ def ast_get_leading_comment_source_lines(source: str, node: ast.AST) -> list[str
     for lineno, line in ireverse(zip(range(1, node.lineno), above_lines)):
         if lineno in decorator_list_linenos:
             continue
-        elif len(line.strip()) == 0 or beginswith(line.lstrip(), "#"):
+        elif len(line.strip()) == 0 or line.lstrip().startswith("#"):
             leading_comment_lines.appendleft(line)
         else:
             break

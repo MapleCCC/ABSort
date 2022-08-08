@@ -22,7 +22,6 @@ from .exceptions import Unreachable
 __all__ = [
     "ireverse",
     "xreverse",
-    "beginswith",
     "bright_red",
     "bright_green",
     "bright_blue",
@@ -69,11 +68,6 @@ def xreverse(iterable: Iterable[T]) -> list[T]:
     and return non-lazy result
     """
     return list(iterable)[::-1]
-
-
-def beginswith(s: str, prefix: str) -> bool:
-    """ Inverse of the `str.endswith` method """
-    return s[: len(prefix)] == prefix
 
 
 def bright_red(s: str) -> str:
