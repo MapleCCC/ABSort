@@ -18,6 +18,7 @@ from typing_extensions import assert_never
 
 from .__version__ import __version__
 from .ast_utils import (
+    Declaration,
     ast_get_leading_comment_and_decorator_list_source_lines,
     ast_get_source_lines,
     ast_tree_edit_distance,
@@ -26,7 +27,6 @@ from .ast_utils import (
 from .cluster import chenyu
 from .collections_extra import OrderedSet
 from .directed_graph import DirectedGraph
-from .typing_extra import Declaration
 from .utils import (
     duplicated,
     ireverse,
