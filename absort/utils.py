@@ -73,11 +73,7 @@ def xreverse(iterable: Iterable[T]) -> list[T]:
 
 def beginswith(s: str, prefix: str) -> bool:
     """ Inverse of the `str.endswith` method """
-
-    if len(s) < len(prefix):
-        return False
-    else:
-        return s[: len(prefix)] == prefix
+    return s[: len(prefix)] == prefix
 
 
 def bright_red(s: str) -> str:
