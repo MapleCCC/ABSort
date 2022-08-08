@@ -171,7 +171,7 @@ def find_continguous_decls(
         while index < n and not isinstance(stmts[index], Declaration):
             index += 1
 
-        if index == n - 1:
+        if index == n:
             return
 
         start = index
@@ -179,7 +179,7 @@ def find_continguous_decls(
             index += 1
         end = index
 
-        lineno = cast(int, stmts[start - 1].end_lineno) + 1
+        lineno = (cast(int, stmts[start - 1].end_lineno) + 1) if start else 1
         end_lineno = stmts[end - 1].end_lineno
         assert end_lineno is not None
 
