@@ -1,8 +1,10 @@
 import ast
+from collections import Counter
 from collections.abc import Iterable, Iterator, Sequence
 from enum import Enum, auto
 from functools import partial
 from itertools import chain, combinations
+from string import whitespace
 
 import attrs
 from more_itertools import first_true, flatten
@@ -148,6 +150,17 @@ def absort_str(
     # This line is a heuristic. It's visually bad to have blank lines at the
     # start of the document. So we explicitly remove them.
     new_source = new_source.lstrip()
+
+    # TODO purely functional multiset. persistent counter. persistent/frozen/immutable map/dict.
+    # Take inspiration from clojure's builtin functions naming
+
+    # Sanity check: only whitespace changes
+    diff = Counter(new_source)
+    # Shouldn't use the `-` subtraction operator, because it automatically discards
+    # non-positive counts. This side effect is undesirable here.
+    diff.subtract(Counter(old_source))
+    diff_chars = set(diff)
+    assert diff_chars <= set(whitespace)
 
     return new_source
 
