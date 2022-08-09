@@ -5,7 +5,7 @@ import math
 import operator
 import os
 import sys
-from collections import OrderedDict
+from collections import Counter, OrderedDict
 from collections.abc import Callable, Collection, Hashable, Iterable, Iterator
 from decimal import Decimal
 from functools import cache
@@ -465,3 +465,20 @@ def maxmin(*args, key=identityfunc, default=None):
             curr_min = elem
 
     return curr_max, curr_min
+
+
+def char_diff(text1: str, text2: str) -> Counter[str]:
+
+    # TODO purely functional multiset. persistent counter. persistent/frozen/immutable
+    # map/dict. Take inspiration from clojure's builtin functions naming.
+
+    # NOTE be careful that arithmetic operations between Counters could lead to
+    # inadvertent removal of entries with non-positive counts. The only reliable way to
+    # introduce negative counts is to use the `Counter.subtract()` method.
+
+    c1 = Counter(text1)
+    c2 = Counter(text2)
+    a = c1 - c2
+    b = c2 - c1
+    b.subtract(a)
+    return b

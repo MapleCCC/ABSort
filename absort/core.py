@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from collections import Counter
 from collections.abc import Iterable, Iterator, Sequence as Seq
 from enum import Enum, auto
 from functools import partial
@@ -20,7 +19,7 @@ from .collections_extra import OrderedSet
 from .directed_graph import DirectedGraph as DGraph
 from .neoast import Declaration
 from .typing_extra import PyVersion
-from .utils import duplicated, ireverse, strict_splitlines
+from .utils import char_diff, duplicated, ireverse, strict_splitlines
 from .weighted_graph import WeightedGraph as WGraph
 
 
@@ -97,15 +96,9 @@ def absort_str(
             raise NameRedefinition("Name redefinition exists. Not supported yet.")
 
     def post_sanity_check(old_source: str, new_source: str) -> None:
-
-        # TODO purely functional multiset. persistent counter. persistent/frozen/immutable map/dict.
-        # Take inspiration from clojure's builtin functions naming
-
-        # Sanity check: only whitespace changes
-        c1 = Counter(old_source)
-        c2 = Counter(new_source)
-        diff = set((c1 - c2) + (c2 - c1))
-        assert diff <= set(whitespace), f"{diff=}"
+        # Sanity check: only whitespace changes are introduced.
+        chars = set(char_diff(old_source, new_source))
+        assert chars <= set(whitespace), f"{chars=}"
 
     module_tree = ast.parse(old_source, feature_version=py_version)
 
