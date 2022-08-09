@@ -458,7 +458,9 @@ ast_node_class_fields_table = {
 # Reference: https://docs.python.org/3/library/ast.html#abstract-grammar
 Terminals = ("identifier", "int", "string", "constant")
 # Reference: https://docs.python.org/3/library/ast.html#ast.Constant
-TerminalType: TypeAlias = str | Number | None | tuple | frozenset
+TerminalType: TypeAlias = (
+    str | Number | None | tuple["TerminalType"] | frozenset["TerminalType"]
+)
 
 
 def ast_iter_non_node_fields(
