@@ -9,9 +9,8 @@ from string import whitespace
 from typing import cast
 
 import attrs
-from more_itertools import flatten
+from more_itertools import flatten, one
 from recipes.misc import profile
-from recipes.operator import in_
 from typing_extensions import assert_never
 
 from . import neoast as ast
@@ -185,7 +184,7 @@ def absort_decls(
 ) -> list[Declaration]:
     """ Sort a continguous block of declarations """
 
-    def same_abstract_level_sorter(names: Iterable[str]) -> Iterator[str]:
+    def same_abstract_level_sorter(same_level_decls: Iterable[Declaration]) -> Iterator[Declaration]:
         """ Specify how to sort declarations within the same abstract level """
 
         # If the `--no-aggressive` option is set, sort by retaining their original relative
@@ -205,21 +204,16 @@ def absort_decls(
 
         if format_option.aggressive:
             # Sort by putting two visually similar definitions together
-
-            same_level_decls = [index[name] for name in names]
-            sorted_decls = sort_decls_by_syntax_tree_similarity(same_level_decls)
-            return (decl.name for decl in sorted_decls)
+            return sort_decls_by_syntax_tree_similarity(same_level_decls)
 
         else:
-            return filter(in_(set(names)), decl_names)
+            orders = {decl: idx for idx, decl in enumerate(decls)}
+            return iter(sorted(same_level_decls, key=orders.__getitem__))
 
     decls = list(decls)
 
-    decl_names = [decl.name for decl in decls]
-    if duplicated(decl_names):
+    if duplicated(decl.name for decl in decls):
         raise NameRedefinition("Name redefinition exists. Not supported yet.")
-
-    index = {decl.name: decl for decl in decls}
 
     # TODO Use DGraph[Declaration] instead of DGraph[str]
     graph = generate_dependency_graph(decls, py_version)
@@ -228,7 +222,7 @@ def absort_decls(
 
     if sort_order is SortOrder.TOPOLOGICAL:
         sccs = ireverse(graph.strongly_connected_components())
-        sorted_names = list(flatten(same_abstract_level_sorter(scc) for scc in sccs))
+        sorted_decls = list(flatten(same_abstract_level_sorter(scc) for scc in sccs))
 
     elif sort_order in (SortOrder.DEPTH_FIRST, SortOrder.BREADTH_FIRST):
 
@@ -242,44 +236,49 @@ def absort_decls(
         sources = list(graph.find_sources())
         num_src = len(sources)
 
+        sorted_decls: list[Declaration]
+
         if num_src == 1:
             # 1. There is one entry point
-            sorted_names = list(traverse_method(sources[0]))
+            sorted_decls = list(traverse_method(sources[0]))
 
         elif num_src > 1:
             # 2. There are more than one entry points
-            sorted_names = []
+            sorted_decls = []
             for src in sources:
-                sorted_names.extend(traverse_method(src))
-            sorted_names = list(OrderedSet(sorted_names))
+                sorted_decls.extend(traverse_method(src))
+            sorted_decls = list(OrderedSet(sorted_decls))
 
         else:
-            sorted_names = []
+            sorted_decls = []
 
-        remaining_names = OrderedSet(decl_names) - sorted_names
-        sorted_names.extend(same_abstract_level_sorter(remaining_names))
+        remaining_decls = OrderedSet(decls) - sorted_decls
+        sorted_decls.extend(same_abstract_level_sorter(remaining_decls))
 
     else:
         # Alternative: `typing.assert_never(sort_order)`
         raise ValueError
 
     if format_option.reverse:
-        sorted_names.reverse()
+        sorted_decls.reverse()
 
-    if format_option.pin_main and "main" in sorted_names:
-        sorted_names.remove("main")
-        sorted_names.append("main")
+    if format_option.pin_main:
+        main_decl = one(decl for decl in sorted_decls if decl.name == "main")
+        sorted_decls.remove(main_decl)
+        sorted_decls.append(main_decl)
 
     # Sanity check
-    assert len(sorted_names) == len(decl_names) and set(sorted_names) == set(decl_names)
+    assert len(sorted_decls) == len(decls) and set(sorted_decls) == set(decls)
 
-    return [index[name] for name in sorted_names]
+    return sorted_decls
 
 
 @profile
 def sort_decls_by_syntax_tree_similarity(
-    decls: list[Declaration],
+    decls: Iterable[Declaration],
 ) -> Iterator[Declaration]:
+
+    decls = list(decls)
 
     if len(decls) <= 1:
         return iter(decls)
@@ -306,14 +305,16 @@ def sort_decls_by_syntax_tree_similarity(
 @profile
 def generate_dependency_graph(
     decls: Seq[Declaration], py_version: PyVersion
-) -> DGraph[str]:
+) -> DGraph[Declaration]:
     """ Generate a dependency graph from a continguous block of declarations """
 
     # TODO return DGraph[Declaration] instead of DGraph[str]
 
-    decl_names = [decl.name for decl in decls]
+    assert not duplicated(decl.name for decl in decls)
 
-    graph = DGraph[str]()
+    index = {decl.name: decl for decl in decls}
+
+    graph = DGraph[Declaration]()
 
     for decl in decls:
         deps = get_dependency_of_decl(decl, py_version)
@@ -324,13 +325,13 @@ def generate_dependency_graph(
             # 2. the dependency is of the same name with the decl itself. It can be inferred
             # that the dependency must come from other places, thus no need to add it to
             # the dependency graph anyway. One example: https://github.com/pytest-dev/py/blob/92e36e60b22e2520337748f950e3d885e0c7c551/py/_log/warning.py#L3
-            if dep not in decl_names or dep == decl.name:
+            if dep not in index or dep == decl.name:
                 continue
 
-            graph.add_edge(decl.name, dep)
+            graph.add_edge(decl, index[dep])
 
         # Below line is necessary for adding node with zero out-degree to the graph.
-        graph.add_node(decl.name)
+        graph.add_node(decl)
 
     return graph
 
