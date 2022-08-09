@@ -224,8 +224,7 @@ def hamming_distance(
     return distance
 
 
-# TODO add `keepends` argument
-def strict_splitlines(s: str) -> list[str]:
+def strict_splitlines(s: str, keepends: bool = False) -> list[str]:
     """
     Similar to the str.splitlines() function, except that the line boundaries are NOT a
     superset of universal newlines.
@@ -236,12 +235,19 @@ def strict_splitlines(s: str) -> list[str]:
     if not s:
         return []
 
-    res = s.split("\n")
+    lines = s.split("\n")
 
-    if res[-1] == "":
-        res.pop()
+    if lines[-1] == "":
+        lines.pop()
 
-    return res
+    if keepends:
+        for i in range(len(lines) - 1):
+            lines[i] += "\n"
+        if s[-1] == "\n":
+            lines[-1] += "\n"
+        return lines
+    else:
+        return lines
 
 
 def constantfunc(const: T) -> Callable[..., T]:
