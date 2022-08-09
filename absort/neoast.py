@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Literal, cast
 
 from typing_extensions import Self
 
-from .ast_utils import (
+from .astutils import (
     TerminalType,
     ast_tree_size,
     ast_tree_edit_distance,

@@ -8,7 +8,7 @@ import sys
 import click
 
 sys.path.append(os.getcwd())
-from absort.ast_utils import ast_pretty_dump
+from absort.astutils import ast_pretty_dump
 
 
 @click.command()
