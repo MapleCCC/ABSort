@@ -13,3 +13,5 @@ exclude_lines =
     raise .*
     if __name__ == .__main__.:
     return NotImplemented
+
+# TODO add exclude rules for click-decorated main entry, as we don't want to test CLI interface.

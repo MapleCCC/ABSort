@@ -46,6 +46,8 @@ __all__ = [
     "maxmin",
 ]
 
+# TODO use more_itertools library's recipes to replace some functions here.
+
 
 T = TypeVar("T")
 S = TypeVar("S")
@@ -73,6 +75,8 @@ def colorized_unified_diff(
 ) -> Iterator[str]:
     """ Return unified diff view between a and b, with color """
 
+    # for line in difflib.ndiff(a, b, *args, **kwargs):
+    # for line in difflib.context_diff(a, b, *args, **kwargs):
     for line in difflib.unified_diff(a, b, *args, **kwargs):
         code = line[0]
         if line[:3] in ("---", "+++") or line[:2] == "@@":
@@ -273,6 +277,7 @@ def iequal(
     zip_func = zip_equal if strict else zip
 
     try:
+        # XXX Depend on whether partial-equalable, equalable, commutativity, transxxxx, etc.
         for elements in zip_func(*iterables):
             for e1, e2 in combinations(elements, 2):
                 if not equal(e1, e2):
@@ -385,6 +390,8 @@ def cached_splitlines(s: str, strict: bool = False) -> list[str]:
     When strict is set to True, only '\n' line feed character is deemed line boundary.
     """
 
+    # XXX the `linecache` stdlib module
+
     if strict:
         return strict_splitlines(s)
     else:
@@ -394,8 +401,9 @@ def cached_splitlines(s: str, strict: bool = False) -> list[str]:
 @contextlib.contextmanager
 def no_color_context() -> Iterator[None]:
     """
-    Return a context manager. Within the context, the environment variable $NO_COLOR is set.
-    Utilities supporting the NO_COLOR movement (https://no-color.org/) should automatically adjust their color output behavior.
+    Return a context manager. Within the context, the environment variable $NO_COLOR is
+    set. Utilities supporting the NO_COLOR movement (https://no-color.org/) should
+    automatically adjust their color output behavior.
     """
 
     orig_value = os.environ.get("NO_COLOR")
@@ -404,6 +412,7 @@ def no_color_context() -> Iterator[None]:
     try:
         yield
     finally:
+        # TODO how to elegantly unify these two cases.
         if orig_value is None:
             del os.environ["NO_COLOR"]
         else:

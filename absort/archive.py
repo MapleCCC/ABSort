@@ -36,7 +36,7 @@ def cache_with_key(
     class CacheInfo:
         hit: int = 0
         miss: int = 0
-        maxsize: int = 0
+        maxsize: int | None = None
         currsize: int = 0
 
     class decorator:

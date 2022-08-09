@@ -540,7 +540,7 @@ def fast_ast_iter_child_nodes(node: ast.AST) -> Iterator[ast.AST]:
 def ast_tree_edit_distance(
     node1: ast.AST,
     node2: ast.AST,
-    algorithm: Literal["ZhangShasha", "PQGram"] = "ZhangShasha"
+    algorithm: Literal["ZhangShasha", "PQGram"] = "ZhangShasha",
 ) -> float:
     """
     Implementation is Zhang-Shasha's tree edit distance algorithm.
@@ -554,7 +554,7 @@ def ast_tree_edit_distance(
     """
 
     # Note: one important thing to note here is that, `ast.AST() != ast.AST()`, namely,
-    # ast.AST has no well-defined equality/identity.
+    # ast.AST has no well-defined equality/identity/hashability.
 
     if algorithm == "ZhangShasha":
         # hopefully a sane default

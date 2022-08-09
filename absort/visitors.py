@@ -1,11 +1,24 @@
 import ast
-from collections.abc import Sequence
+from collections.abc import Sequence as Seq
 
 from recipes.exceptions import Unreachable
 from typing_extensions import assert_never
 
 
 __all__ = ["GetUndefinedVariableVisitor"]
+
+
+# TODO the abstract grammar is changed started from CPython 3.9, update accordingly.
+# E.g., starargs and kwargs of ClassDef from https://docs.python.org/3/library/ast.html#ast.ClassDef,
+# though they don't show up in the abstract grammar from https://docs.python.org/3/library/ast.html#abstract-grammar.
+# Why the inconsistency? Try to parse a source to figure out.
+
+# TODO Read through the new Python 3.9 ast doc, to see if any thing has updated and need
+# to be changed in this module.
+
+# TODO read the doc of libCST, and see if there are inconsistencies between libCST and
+# ast. Whether libCST can be used as a drop-in replacement of the builtin ast module or
+# not?
 
 
 def retrieve_names_from_args(args: ast.arguments) -> set[str]:
@@ -55,19 +68,19 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
         super().visit(node)
         return self._undefined_vars
 
-    def _visit(self, obj: ast.AST | Sequence[ast.AST] | None) -> None:
+    def _visit(self, obj: ast.AST | Seq[ast.AST] | None) -> None:
         """
         A handy helper method that can accept either an ast node, or None, or a list of ast nodes.
         This method is aimed to simplify programming, relieving wordy code.
         """
 
-        if isinstance(obj, list):
-            for node in obj:
-                self.visit(node)
+        if obj is None:
+            return
         elif isinstance(obj, ast.AST):
             self.visit(obj)
-        elif obj is None:
-            return
+        elif isinstance(obj, Seq):
+            for node in obj:
+                self.visit(node)
         else:
             assert_never(obj)
 

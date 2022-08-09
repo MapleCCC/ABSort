@@ -15,6 +15,11 @@ from .weighted_graph import WeightedGraph
 __all__ = ["chenyu"]
 
 
+# TODO kmeans++, scalable kmeans, tiny techniques to improve upon vanilla kmeans
+
+# TODO other more advanced and battle-tested cluster algorithms
+
+
 Point = TypeVar("Point", bound=Hashable)
 Cluster = list[Point]
 
@@ -49,6 +54,8 @@ def chenyu(
         for p in points:
             nearest_centroid = min(centroids, key=lambda x: distance(x, p))
             clusters[nearest_centroid].append(p)
+
+        # FIXME encounter bug when points are [(0, 0), (0, 0), (0, 1)]
 
         # If all points overlap
         if len(clusters) == 1:

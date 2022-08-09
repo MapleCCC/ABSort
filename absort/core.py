@@ -127,7 +127,7 @@ def absort_str(
 
     offset = 0
     for lineno, end_lineno, decls in blocks:
-        sorted_decls = list(absort_decls(decls, py_version, format_option, sort_order))
+        sorted_decls = absort_decls(decls, py_version, format_option, sort_order)
         related_source = get_related_source_of_block(
             old_source, sorted_decls, format_option
         )
@@ -294,8 +294,8 @@ def sort_decls_by_syntax_tree_similarity(
     # property to reduce time complexity when sorting decls. e.g. no need to calculate all
     # n**2 distances.
     if len(decls) > 10:
-        _ast_tree_edit_distance = partial(ast_tree_edit_distance, algorithm=algorithm)
-        clusters = chenyu(decls, _ast_tree_edit_distance, k=3)
+        dist = partial(ast_tree_edit_distance, algorithm=algorithm)
+        clusters = chenyu(decls, dist, k=3)
         return chain.from_iterable(clusters)
 
     graph: WeightedGraph[Declaration] = WeightedGraph()
