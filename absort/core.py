@@ -11,28 +11,16 @@ from typing import TypeAlias, cast
 
 import attrs
 from more_itertools import flatten
-from recipes.builtins import strict
 from recipes.misc import profile
 from recipes.operator import in_
 from typing_extensions import assert_never
 
 from .__version__ import __version__
-from .ast_utils import (
-    Declaration,
-    ast_get_leading_comment_and_decorator_list_source_lines,
-    ast_get_source_lines,
-    ast_tree_edit_distance,
-    ast_tree_size,
-)
+from .ast_utils import Declaration, ast_get_source, ast_tree_edit_distance, ast_tree_size
 from .cluster import chenyu
 from .collections_extra import OrderedSet
 from .directed_graph import DirectedGraph
-from .utils import (
-    duplicated,
-    ireverse,
-    strict_splitlines,
-    is_blank_lines,
-)
+from .utils import duplicated, ireverse, strict_splitlines
 from .visitors import GetUndefinedVariableVisitor
 from .weighted_graph import WeightedGraph
 
@@ -140,11 +128,11 @@ def absort_str(
     offset = 0
     for lineno, end_lineno, decls in blocks:
         sorted_decls = list(absort_decls(decls, py_version, format_option, sort_order))
-        source_lines = get_related_source_lines_of_block(
+        related_source = get_related_source_of_block(
             old_source, sorted_decls, format_option
         )
-        new_source_lines[lineno - 1 + offset : end_lineno + offset] = source_lines
-        offset += len(source_lines) - (end_lineno - lineno + 1)
+        new_source_lines[lineno - 1 + offset : end_lineno + offset] = [related_source]
+        offset -= end_lineno - lineno
 
     new_source = "\n".join(new_source_lines)
 
@@ -357,23 +345,22 @@ def get_dependency_of_decl(decl: Declaration, py_version: PyVersion) -> set[str]
     return visitor.visit(temp_module)
 
 
-@strict
-def get_related_source_lines_of_block(
+def get_related_source_of_block(
     source: str,
     decls: list[Declaration],
     format_option: FormatOption,
-) -> Iterator[str]:
-    """ Retrieve source lines corresponding to the block of continguous declarations, from source """
+) -> str:
+    """ Retrieve source corresponding to the block of continguous declarations, from source """
+
+    related_source = ""
 
     for decl in decls:
 
-        related_source_lines = ast_get_leading_comment_and_decorator_list_source_lines(
-            source, decl
-        ) + ast_get_source_lines(source, decl)
+        decl_source = ast_get_source(source, decl)
 
         if format_option.aggressive:
 
-            if is_blank_lines(related_source_lines):
+            if not decl_source.strip():
 
                 # FIXME this branch seems unreachable?
                 # TODO Use git-blame to find the initial intention.
@@ -382,9 +369,9 @@ def get_related_source_lines_of_block(
                 # lines. Because it's visually bad to have zero or too many blank lines
                 # between two declarations. So we explicitly add it. Two blank lines
                 # between declarations is conformant to the PEP-8 style (https://pep8.org/#blank-lines).
-                related_source_lines = "\n\n".splitlines()
+                decl_source = "\n\n"
 
-            elif related_source_lines[0].strip():
+            elif decl_source.splitlines()[0].strip():
 
                 # FIXME str.strip() strips all whitespace characters. But some are
                 # visible, like form feed character, e.g., source code in
@@ -394,6 +381,8 @@ def get_related_source_lines_of_block(
                 # A heuristic. It's visually bad to have no blank lines between two
                 # declarations. So we explicitly add it. Two blank lines between
                 # declarations is conformant to the PEP-8 style (https://pep8.org/#blank-lines).
-                related_source_lines = "\n\n".splitlines() + related_source_lines
+                decl_source = "\n\n" + decl_source
 
-        yield from related_source_lines
+        related_source += decl_source
+
+    return related_source

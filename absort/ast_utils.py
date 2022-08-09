@@ -28,6 +28,7 @@ __all__ = [
     "ast_get_leading_comment_source_lines",
     "ast_get_decorator_list_source_lines",
     "ast_get_source_lines",
+    "ast_get_source",
     "cached_ast_iter_child_nodes",
     "ast_iter_non_node_fields",
     "fast_ast_iter_child_nodes",
@@ -193,6 +194,16 @@ def ast_get_source_lines(source: str, node: ast.AST) -> list[str]:
     source_lines = whole_source_lines[lineno - 1 : end_lineno]
 
     return source_lines
+
+
+def ast_get_source(source: str, node: ast.AST) -> str:
+
+    # TODO compared with ast.source_segment() ?
+
+    return "\n".join(
+        ast_get_leading_comment_and_decorator_list_source_lines(source, node)
+        + ast_get_source_lines(source, node)
+    )
 
 
 # XXX Is cached_ast_iter_child_nodes usable across the whole source repository?
