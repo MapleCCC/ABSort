@@ -121,7 +121,7 @@ def absort_str(
     # Use strict_splitlines() instead of str.splitlines(), because CPython's ast.parse()
     # doesn't parse the source string "#\x0c0" as containing an expression.
     # TODO is't a bug of CPython? What's the behavior of PyPy? Open an issue?
-    new_source_lines = strict_splitlines(old_source)
+    new_source_lines = strict_splitlines(old_source, keepends=True)
 
     # FIXME below lines are actually unnecessary at all
 
@@ -134,7 +134,7 @@ def absort_str(
         new_source_lines[lineno - 1 + offset : end_lineno + offset] = [related_source]
         offset -= end_lineno - lineno
 
-    new_source = "\n".join(new_source_lines)
+    new_source = "".join(new_source_lines)
 
     # This line is a heuristic. It's visually bad to have blank lines at the
     # start and end of the document. So we explicitly remove them.
