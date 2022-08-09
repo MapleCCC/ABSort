@@ -81,7 +81,9 @@ class NeoAST(ast.AST):
         return ast_get_source(source, self)
 
     def edit_distance(
-        self, other: ast.AST, algorithm: Literal["ZhangShasha", "PQGram"] = "ZhangShasha"
+        self,
+        other: ast.AST,
+        algorithm: Literal["ZhangShasha", "PQGram"] = "ZhangShasha",
     ) -> float:
         return ast_tree_edit_distance(self, other, algorithm)
 
@@ -113,7 +115,7 @@ class NeoAST(ast.AST):
 
     @classmethod
     def from_source(
-        cls, source: str, *, feature_version: tuple[int, int] | None = None
+        cls, source: str, *, feature_version: PyVersion | None = None
     ) -> Module:
         return cast(Module, cls(ast.parse(source, feature_version=feature_version)))
 
@@ -260,6 +262,9 @@ class unaryop(ast.unaryop, NeoAST): __slots__ = ()
 class withitem(ast.withitem, NeoAST): __slots__ = ()
 # fmt: on
 
+
+# FIXME a proper appraoch here is to use `sum type` feature to properly type this case.
+# Reference: "Support for sealed classes" - https://mail.python.org/archives/list/typing-sig@python.org/thread/AKXUBJUUHBBKTLNIAFCA6HII5QQA2WFX/
 
 if TYPE_CHECKING:
     Declaration = FunctionDef | AsyncFunctionDef | ClassDef

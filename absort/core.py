@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 from collections import Counter
-from collections.abc import Iterable, Iterator, Sequence
+from collections.abc import Iterable, Iterator, Sequence as Seq
 from enum import Enum, auto
 from functools import partial
-from itertools import chain, combinations
+from itertools import combinations
 from string import whitespace
 from typing import cast
 
@@ -18,11 +18,11 @@ from . import neoast as ast
 from .__version__ import __version__
 from .cluster import chenyu
 from .collections_extra import OrderedSet
-from .directed_graph import DirectedGraph
+from .directed_graph import DirectedGraph as DGraph
 from .neoast import Declaration
 from .typing_extra import PyVersion
 from .utils import duplicated, ireverse, strict_splitlines
-from .weighted_graph import WeightedGraph
+from .weighted_graph import WeightedGraph as WGraph
 
 
 __all__ = [
@@ -294,9 +294,9 @@ def sort_decls_by_syntax_tree_similarity(
     if len(decls) > 10:
         dist = partial(ast.AST.edit_distance, algorithm=algorithm)
         clusters = chenyu(decls, dist, k=3)
-        return chain.from_iterable(clusters)
+        return flatten(clusters)
 
-    graph: WeightedGraph[Declaration] = WeightedGraph()
+    graph = WGraph[Declaration]()
     for decl1, decl2 in combinations(decls, 2):
         distance = decl1.edit_distance(decl2, algorithm)
         graph.add_edge(decl1, decl2, distance)
@@ -305,15 +305,15 @@ def sort_decls_by_syntax_tree_similarity(
 
 @profile
 def generate_dependency_graph(
-    decls: Sequence[Declaration], py_version: PyVersion
-) -> DirectedGraph[str]:
+    decls: Seq[Declaration], py_version: PyVersion
+) -> DGraph[str]:
     """ Generate a dependency graph from a continguous block of declarations """
 
     # TODO return DGraph[Declaration] instead of DGraph[str]
 
     decl_names = [decl.name for decl in decls]
 
-    graph: DirectedGraph[str] = DirectedGraph()
+    graph = DGraph[str]()
 
     for decl in decls:
         deps = get_dependency_of_decl(decl, py_version)

@@ -40,10 +40,6 @@ __all__ = [
 # TODO rewrite this whole module with libCST as drop-in replacement of the builtin ast module
 
 
-# FIXME a proper appraoch here is to use `sum type` feature to properly type this case.
-# Reference: "Support for sealed classes" - https://mail.python.org/archives/list/typing-sig@python.org/thread/AKXUBJUUHBBKTLNIAFCA6HII5QQA2WFX/
-
-
 # With the advent of the `indent` keyword argument of `ast.parse()` since Python 3.9,
 # `ast.pretty_dump()` is by and large supplanted.
 def ast_pretty_dump(
@@ -192,6 +188,7 @@ def ast_get_source(source: str, node: ast.AST) -> str:
     lines = ast_get_leading_comment_and_decorator_list_source_lines(
         source, node
     ) + ast_get_source_lines(source, node)
+    # FIXME on the case that the file doesn't have an EOF final newline
     return "\n".join(lines) + "\n"
 
 
@@ -277,7 +274,7 @@ def build_ast_node_class_fields_table() -> dict[str, Fields]:  # pragma: no cove
 
 # The table is automatically built by calling the function build_ast_node_class_fields_table(),
 # as it will be too tedious to manually build and maintain the table.
-ast_node_class_fields_table = {
+AST_NODE_CLASS_FIELDS_TABLE: dict[str, Fields] = {
     "Add": (),
     "And": (),
     "AnnAssign": (
@@ -458,7 +455,7 @@ def ast_iter_non_node_fields(
     """ Complement of the ast.iter_child_nodes function """
 
     class_name = node.__class__.__name__
-    for type, name in ast_node_class_fields_table[class_name]:
+    for type, name in AST_NODE_CLASS_FIELDS_TABLE[class_name]:
         if type.rstrip("?*") in Terminals:
             yield getattr(node, name)
 
@@ -470,62 +467,65 @@ def fast_ast_iter_child_nodes(node: ast.AST) -> Iterator[ast.AST]:
     """ Faster version of ast.iter_child_nodes """
 
     class_name = node.__class__.__name__
-    for type, name in ast_node_class_fields_table[class_name]:
-        if type.rstrip("?*") not in Terminals:
-            attr = getattr(node, name)
+    for type, name in AST_NODE_CLASS_FIELDS_TABLE[class_name]:
 
-            if type[-1] == "?":
-                if attr is not None:
-                    yield attr
+        if type.rstrip("?*") in Terminals:
+            continue
 
-            elif type[-1] == "*":
+        attr = getattr(node, name)
 
-                # Edge case 1: dict unpacking
-                #
-                # Reference:
-                #   "When doing dictionary unpacking using dictionary literals the
-                #   expression to be expanded goes in the values list, with a None at
-                #   the corresponding position in keys."
-                #   - from https://docs.python.org/3/library/ast.html#ast.Dict
-                if class_name == "Dict" and name == "keys":
-                    # Or use filter()
-                    yield from (expr for expr in attr if expr is not None)
-                    continue
-
-                # TODO search: What is required keyword argument default? ast official
-                # doc has example.
-
-                # Edge case 2: required keyword argument default
-                #
-                # Reference:
-                #   "kw_defaults is a list of default values for keyword-only arguments.
-                #   If one is None, the corresponding argument is required."
-                #   - from https://docs.python.org/3/library/ast.html#ast.arguments
-                if class_name == "arguments" and name == "kw_defaults":
-                    # Or use filter()
-                    yield from (expr for expr in attr if expr is not None)
-                    continue
-
-                # XXX maybe we can simply just "if not None, yield", and no that much
-                # trouble.
-
-                # FIXME we should substitue None with a bogus AST node, instead of just
-                # deleting it. It's relevant when comparing children in
-                # `ast_shadow_equal()` / `ast_deep_equal()`.
-
-                # Uncomment below lines to activate debug mode
-                # if None in attr:
-                #     print(class_name, type, name, attr)
-
-                yield from attr
-
-            else:
-
-                # Uncomment below lines to activate debug mode
-                # if attr is None:
-                #     print(class_name, type, name, attr)
-
+        if type[-1] == "?":
+            if attr is not None:
                 yield attr
+
+        elif type[-1] == "*":
+
+            # Edge case 1: dict unpacking
+            #
+            # Reference:
+            #   "When doing dictionary unpacking using dictionary literals the
+            #   expression to be expanded goes in the values list, with a None at the
+            #   corresponding position in keys."
+            #   - from https://docs.python.org/3/library/ast.html#ast.Dict
+            if class_name == "Dict" and name == "keys":
+                # Or use filter()
+                yield from (expr for expr in attr if expr is not None)
+                continue
+
+            # TODO search: What is required keyword argument default? ast official
+            # doc has example.
+
+            # Edge case 2: required keyword argument default
+            #
+            # Reference:
+            #   "kw_defaults is a list of default values for keyword-only arguments. If
+            #   one is None, the corresponding argument is required."
+            #   - from https://docs.python.org/3/library/ast.html#ast.arguments
+            if class_name == "arguments" and name == "kw_defaults":
+                # Or use filter()
+                yield from (expr for expr in attr if expr is not None)
+                continue
+
+            # XXX maybe we can simply just "if not None, yield", and no that much
+            # trouble.
+
+            # FIXME we should substitue None with a bogus AST node, instead of just
+            # deleting it. It's relevant when comparing children in
+            # `ast_shadow_equal()` / `ast_deep_equal()`.
+
+            # Uncomment below lines to activate debug mode
+            # if None in attr:
+            #     print(class_name, type, name, attr)
+
+            yield from attr
+
+        else:
+
+            # Uncomment below lines to activate debug mode
+            # if attr is None:
+            #     print(class_name, type, name, attr)
+
+            yield attr
 
 
 def ast_tree_edit_distance(
