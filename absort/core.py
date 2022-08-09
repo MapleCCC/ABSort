@@ -7,7 +7,7 @@ from enum import Enum, auto
 from functools import partial
 from itertools import chain, combinations
 from string import whitespace
-from typing import TypeAlias, cast
+from typing import cast
 
 import attrs
 from more_itertools import flatten
@@ -20,6 +20,7 @@ from .ast_utils import Declaration, ast_get_source, ast_tree_edit_distance, ast_
 from .cluster import chenyu
 from .collections_extra import OrderedSet
 from .directed_graph import DirectedGraph
+from .typing_extra import PyVersion
 from .utils import duplicated, ireverse, strict_splitlines
 from .visitors import GetUndefinedVariableVisitor
 from .weighted_graph import WeightedGraph
@@ -49,8 +50,6 @@ class SortOrder(Enum):
 #
 # Type Annotations
 #
-
-PyVersion: TypeAlias = tuple[int, int]
 
 
 #

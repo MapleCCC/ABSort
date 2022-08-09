@@ -1,11 +1,14 @@
 from abc import abstractmethod
-from typing import Any, Protocol, TypeVar
+from typing import Any, Protocol, TypeAlias, TypeVar
 
 
-__all__ = ["Comparable"]
+__all__ = ["PyVersion", "Comparable"]
 
 
 CT = TypeVar("CT", bound="Comparable")
+
+
+PyVersion: TypeAlias = tuple[int, int]
 
 
 class Comparable(Protocol):

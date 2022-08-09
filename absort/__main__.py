@@ -27,10 +27,10 @@ from .core import (
     CommentStrategy,
     FormatOption,
     NameRedefinition,
-    PyVersion,
     SortOrder,
     absort_str,
 )
+from .typing_extra import PyVersion
 from .utils import colorized_unified_diff, no_color_context, silent_context
 
 

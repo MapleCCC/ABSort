@@ -4,6 +4,8 @@ from collections.abc import Sequence as Seq
 from recipes.exceptions import Unreachable
 from typing_extensions import assert_never
 
+from .typing_extra import PyVersion
+
 
 __all__ = ["GetUndefinedVariableVisitor"]
 
@@ -49,12 +51,12 @@ class GetUndefinedVariableVisitor(ast.NodeVisitor):
     ```
     """
 
-    def __init__(self, py_version: tuple[int, int]) -> None:
+    def __init__(self, py_version: PyVersion) -> None:
         super().__init__()
 
         self._undefined_vars: set[str] = set()
         self._namespaces: list[dict[str, ast.AST]] = []
-        self._py_version: tuple[int, int] = py_version
+        self._py_version: PyVersion = py_version
 
     __slots__ = ("_undefined_vars", "_namespaces", "_py_version")
 
