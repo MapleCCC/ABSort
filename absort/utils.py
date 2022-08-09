@@ -6,7 +6,7 @@ import operator
 import os
 import sys
 from collections import OrderedDict
-from collections.abc import Callable, Collection, Hashable, Iterable, Iterator, Sequence
+from collections.abc import Callable, Collection, Hashable, Iterable, Iterator
 from decimal import Decimal
 from functools import cache
 from itertools import combinations, zip_longest
@@ -194,18 +194,19 @@ class dispatch:
         return decorator
 
 
-def duplicated(sequence: Sequence) -> bool:
-    """
-    Determine if a sequence contains duplicate elements
-    """
+def duplicated(elems: Iterable) -> bool:
+    """ Detect duplicate elements """
+
+    elems = list(elems)
 
     try:
-        return len(set(sequence)) < len(sequence)
+        return len(set(elems)) < len(elems)
 
     except TypeError:
-        # If elements are unhashable
+        # Elements are unhashable.
+        # O(n**2) worst-case time complexity.
         seen = []
-        for elem in sequence:
+        for elem in elems:
             if elem in seen:
                 return True
             else:
