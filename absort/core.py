@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import ast
 from collections import Counter
 from collections.abc import Iterable, Iterator, Sequence
 from enum import Enum, auto
@@ -15,14 +14,14 @@ from recipes.misc import profile
 from recipes.operator import in_
 from typing_extensions import assert_never
 
+from . import neoast as ast
 from .__version__ import __version__
-from .ast_utils import Declaration, ast_get_source, ast_tree_edit_distance, ast_tree_size
 from .cluster import chenyu
 from .collections_extra import OrderedSet
 from .directed_graph import DirectedGraph
+from .neoast import Declaration
 from .typing_extra import PyVersion
 from .utils import duplicated, ireverse, strict_splitlines
-from .visitors import GetUndefinedVariableVisitor
 from .weighted_graph import WeightedGraph
 
 
@@ -286,20 +285,20 @@ def sort_decls_by_syntax_tree_similarity(
         return iter(decls)
 
     algorithm = "ZhangShasha"
-    if any(ast_tree_size(decl) > 10 for decl in decls):
+    if any(decl.size() > 10 for decl in decls):
         algorithm = "PQGram"
 
     # Normalized PQGram distance and xxxxxxx has pseudo-metric properties. We can utilize this
     # property to reduce time complexity when sorting decls. e.g. no need to calculate all
     # n**2 distances.
     if len(decls) > 10:
-        dist = partial(ast_tree_edit_distance, algorithm=algorithm)
+        dist = partial(ast.AST.edit_distance, algorithm=algorithm)
         clusters = chenyu(decls, dist, k=3)
         return chain.from_iterable(clusters)
 
     graph: WeightedGraph[Declaration] = WeightedGraph()
     for decl1, decl2 in combinations(decls, 2):
-        distance = ast_tree_edit_distance(decl1, decl2, algorithm)
+        distance = decl1.edit_distance(decl2, algorithm)
         graph.add_edge(decl1, decl2, distance)
     return graph.minimum_spanning_tree()
 
@@ -338,10 +337,7 @@ def generate_dependency_graph(
 
 def get_dependency_of_decl(decl: Declaration, py_version: PyVersion) -> set[str]:
     """ Calculate the dependencies (as set of symbols) of the declaration """
-
-    temp_module = ast.Module(body=[decl], type_ignores=[])
-    visitor = GetUndefinedVariableVisitor(py_version=py_version)
-    return visitor.visit(temp_module)
+    return decl.free_symbols(py_version)
 
 
 def get_related_source_of_block(
@@ -355,7 +351,7 @@ def get_related_source_of_block(
 
     for decl in decls:
 
-        decl_source = ast_get_source(source, decl)
+        decl_source = decl.source(source)
 
         if format_option.aggressive:
 

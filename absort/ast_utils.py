@@ -4,7 +4,7 @@ import re
 from collections.abc import Iterator
 from functools import cache
 from numbers import Number
-from typing import TYPE_CHECKING, Literal, TypeAlias
+from typing import Literal, TypeAlias
 
 from .treedist import pqgram, zhangshasha
 from .utils import (
@@ -19,8 +19,6 @@ from .utils import (
 
 
 __all__ = [
-    "Declaration",
-    "Decoratable",
     "ast_pretty_dump",
     "ast_ordered_walk",
     "ast_strip_location_info",
@@ -44,15 +42,6 @@ __all__ = [
 
 # FIXME a proper appraoch here is to use `sum type` feature to properly type this case.
 # Reference: "Support for sealed classes" - https://mail.python.org/archives/list/typing-sig@python.org/thread/AKXUBJUUHBBKTLNIAFCA6HII5QQA2WFX/
-
-
-if TYPE_CHECKING:
-    Declaration = ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef
-else:
-    Declaration = (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)
-
-
-Decoratable = Declaration
 
 
 # With the advent of the `indent` keyword argument of `ast.parse()` since Python 3.9,
