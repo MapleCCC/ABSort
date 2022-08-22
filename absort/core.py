@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import sys
 from collections.abc import Iterable, Iterator, Sequence as Seq
 from enum import Enum, auto
 from functools import partial
@@ -79,7 +80,7 @@ class FormatOption:
 @profile
 def absort_str(
     old_source: str,
-    py_version: PyVersion = (3, 10),
+    py_version: PyVersion = sys.version_info[:2],
     format_option: FormatOption = FormatOption(),
     sort_order: SortOrder = SortOrder.TOPOLOGICAL,
 ) -> str:
